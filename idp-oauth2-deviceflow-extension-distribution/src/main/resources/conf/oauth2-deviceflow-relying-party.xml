@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+	default-init-method="initialize" default-destroy-method="destroy">
+
+	<bean id="OAUTH2.Device"
+		class="fi.csc.idpextension.oauth2.config.OAuth2DeviceFlowConfiguration"
+		p:securityConfiguration-ref="%{idp.security.oauth2.deviceflow.config:shibboleth.oidc.DefaultSecurityConfiguration}"
+		p:deviceCodeLength="%{idp.oauth2.deviceflow.deviceCode.defaultLength:16}"
+		p:userCodeLength="%{idp.oauth2.deviceflow.userCode.defaultLength:6}"
+		p:accessTokenLifetime="%{idp.oauth2.deviceflow.accessToken.defaultLifetime:PT10M}"
+		p:deviceCodeLifetime="%{idp.oauth2.deviceflow.deviceCode.defaultLifetime:PT10M}"
+		p:tokenEndpointAuthMethods="%{idp.oauth2.deviceflow.tokenEndpointAuthMethods:client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt}"
+		p:servletRequest-ref="shibboleth.HttpServletRequest" />
+
+</beans>
