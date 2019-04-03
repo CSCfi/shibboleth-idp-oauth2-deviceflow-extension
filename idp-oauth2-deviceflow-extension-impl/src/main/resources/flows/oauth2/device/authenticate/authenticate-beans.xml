@@ -45,10 +45,6 @@
 		class="fi.csc.idpextension.oauth2.profile.impl.InitializeAuthenticationContext"
 		scope="prototype" />
 
-	<bean id="ProcessRequestedAuthnContext"
-		class="fi.csc.idpextension.oauth2.profile.impl.ProcessRequestedAuthnContext"
-		scope="prototype" />
-
 	<bean id="InitializeRelyingPartyContext"
 		class="org.geant.idpextension.oidc.profile.impl.InitializeRelyingPartyContext"
 		scope="prototype"
