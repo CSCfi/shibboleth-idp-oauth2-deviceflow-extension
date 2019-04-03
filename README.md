@@ -16,6 +16,8 @@ Next you need to import oauth2-deviceflow-relying-party.xml to oidc-relying-part
 
     edit /opt/shibboleth-idp/conf/oidc-relying-party.xml
 
+Add following line:
+
     <import resource="oauth2-deviceflow-relying-party.xml"/>
     
 While editing the file add the new profile also to profileResponders map.
@@ -28,7 +30,7 @@ While editing the file add the new profile also to profileResponders map.
        	<entry key-ref="OIDC.Device" value="#{getObject('issuer')}" />
     </util:map>
 
-Then you need to list the new properties file
+Then you need to list the new idp-oauth2-deviceflow.properties properties file in the main properties file.
 
     edit /opt/shibboleth-idp/conf/idp.properties
 
