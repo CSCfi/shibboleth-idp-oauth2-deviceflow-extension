@@ -36,7 +36,7 @@ Then you need to list the new idp-oauth2-deviceflow.properties properties file i
 
     idp.additionalProperties=/conf/ldap.properties, /conf/saml-nameid.properties, /conf/services.properties,/conf/authn/duo.properties, /conf/oidc-subject.properties, /conf/idp-oidc.properties, idp-oauth2-deviceflow.properties
     
-Now we need to acticate still the profile configuration by adding OAUTH.Device to relying-party.xml
+Now we need to activate still the profile configuration by adding OAUTH.Device to relying-party.xml
 
     edit /opt/shibboleth-idp/conf/relying-party.xml
     
