@@ -27,7 +27,7 @@ While editing the file add the new profile also to profileResponders map.
         <entry key-ref="OIDC.SSO" value="#{getObject('issuer')}" />
         <entry key-ref="OIDC.Registration" value="#{getObject('issuer')}" />
         <entry key-ref="OIDC.Configuration" value="#{getObject('issuer')}" />
-       	<entry key-ref="OIDC.Device" value="#{getObject('issuer')}" />
+        <entry key-ref="OIDC.Device" value="#{getObject('issuer')}" />
     </util:map>
 
 Then you need to list the new idp-oauth2-deviceflow.properties properties file in the main properties file.
