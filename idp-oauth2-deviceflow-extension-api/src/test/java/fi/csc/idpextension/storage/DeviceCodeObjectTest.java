@@ -26,33 +26,33 @@ import fi.csc.idpextension.storage.DeviceCodeObject;
 
 public class DeviceCodeObjectTest {
 
-	private DeviceCodeObject deviceCodeObject;
+    private DeviceCodeObject deviceCodeObject;
 
-	@Test
-	public void testConstructorAndSerialization() {
-		deviceCodeObject = new DeviceCodeObject("deviceCode_XYZ", new ClientID("clientID_XYZ"), new Scope("scope_XYZ"));
-		Assert.assertEquals(deviceCodeObject.getDeviceCode(), "deviceCode_XYZ");
-		Assert.assertEquals(deviceCodeObject.getClientID().getValue(), "clientID_XYZ");
-		Assert.assertTrue(deviceCodeObject.getScope().contains("scope_XYZ"));
-		DeviceCodeObject newDeviceCodeObject = DeviceCodeObject.fromJSONObject(deviceCodeObject.toJSONObject());
-		Assert.assertEquals(newDeviceCodeObject.getDeviceCode(), "deviceCode_XYZ");
-		Assert.assertEquals(newDeviceCodeObject.getClientID().getValue(), "clientID_XYZ");
-		Assert.assertTrue(newDeviceCodeObject.getScope().contains("scope_XYZ"));
-	}
+    @Test
+    public void testConstructorAndSerialization() {
+        deviceCodeObject = new DeviceCodeObject("deviceCode_XYZ", new ClientID("clientID_XYZ"), new Scope("scope_XYZ"));
+        Assert.assertEquals(deviceCodeObject.getDeviceCode(), "deviceCode_XYZ");
+        Assert.assertEquals(deviceCodeObject.getClientID().getValue(), "clientID_XYZ");
+        Assert.assertTrue(deviceCodeObject.getScope().contains("scope_XYZ"));
+        DeviceCodeObject newDeviceCodeObject = DeviceCodeObject.fromJSONObject(deviceCodeObject.toJSONObject());
+        Assert.assertEquals(newDeviceCodeObject.getDeviceCode(), "deviceCode_XYZ");
+        Assert.assertEquals(newDeviceCodeObject.getClientID().getValue(), "clientID_XYZ");
+        Assert.assertTrue(newDeviceCodeObject.getScope().contains("scope_XYZ"));
+    }
 
-	@Test(expectedExceptions = IllegalArgumentException.class)
-	public void testConstructorNullArgument() {
-		new DeviceCodeObject(null, new ClientID("clientID_XYZ"), new Scope("scope_XYZ"));
-	}
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testConstructorNullArgument() {
+        new DeviceCodeObject(null, new ClientID("clientID_XYZ"), new Scope("scope_XYZ"));
+    }
 
-	@Test(expectedExceptions = IllegalArgumentException.class)
-	public void testConstructorNullArgument2() {
-		new DeviceCodeObject("deviceCode_XYZ", null, new Scope("scope_XYZ"));
-	}
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testConstructorNullArgument2() {
+        new DeviceCodeObject("deviceCode_XYZ", null, new Scope("scope_XYZ"));
+    }
 
-	@Test
-	public void testConstructorNullArgument3() {
-		deviceCodeObject = new DeviceCodeObject("deviceCode_XYZ", new ClientID("clientID_XYZ"), null);
-		Assert.assertNull(deviceCodeObject.getScope());
-	}
+    @Test
+    public void testConstructorNullArgument3() {
+        deviceCodeObject = new DeviceCodeObject("deviceCode_XYZ", new ClientID("clientID_XYZ"), null);
+        Assert.assertNull(deviceCodeObject.getScope());
+    }
 }

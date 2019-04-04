@@ -22,6 +22,8 @@ import javax.annotation.Nonnull;
 
 import org.geant.idpextension.oidc.profile.impl.AbstractOIDCResponseAction;
 import org.opensaml.messaging.context.MessageContext;
+import org.opensaml.profile.action.ActionSupport;
+import org.opensaml.profile.action.EventIds;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 
 import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceTokenRequest;
+import fi.csc.idpextension.oauth2.profile.DeviceEventIds;
 import fi.csc.idpextension.storage.DeviceCodesCache;
 import fi.csc.idpextension.storage.DeviceStateObject;
 import fi.csc.idpextension.storage.DeviceStateObject.State;
@@ -41,8 +44,6 @@ import net.shibboleth.utilities.java.support.component.ComponentSupport;
 import net.shibboleth.utilities.java.support.logic.Constraint;
 
 /**
- * Action that forms outbound token revocation success message. Formed message is set to
- * {@link ProfileRequestContext#getOutboundMessageContext()}.
  */
 
 @SuppressWarnings("rawtypes")
@@ -82,20 +83,32 @@ public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponse
         String deviceCode = request.getDeviceCode();
         try {
             DeviceStateObject stateObject = deviceCodesCache.getDeviceState(deviceCode);
-            State state = stateObject.getState();
-            log.debug("StateObject {} {} {} {}", stateObject.getState(), stateObject.getAccessToken(),
-                    stateObject.getExpiresAt());
-            if (state == State.APPROVED && stateObject.getAccessToken() != null) {
-                AccessToken accesToken =
-                        new BearerAccessToken(stateObject.getAccessToken(), stateObject.getExpiresAt(), null);
-                AccessTokenResponse response = new AccessTokenResponse(new Tokens(accesToken, null));
-                ((MessageContext) getOidcResponseContext().getParent()).setMessage(response);
+            if (stateObject == null) {
+                log.debug("{} Device code {} has exipred", getLogPrefix(), deviceCode);
+                ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.EXPIRED_TOKEN);
                 return;
             }
+            State state = stateObject.getState();
+            if (state == State.PENDING) {
+                log.debug("{} Request is still pending for device code {}", getLogPrefix(), deviceCode);
+                ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.AUTHORIZATION_PENDING);
+                return;
+            }
+            if (state == State.DENIED) {
+                log.debug("{} User has denied request for device code {}", getLogPrefix(), deviceCode);
+                ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.USER_DENIED);
+                return;
+            }
+            // TODO: Set the accepted scope in authn phase to DeviceStateObject and set it
+            // here to response.
+            AccessToken accesToken =
+                    new BearerAccessToken(stateObject.getAccessToken(), stateObject.getExpiresAt(), null);
+            AccessTokenResponse response = new AccessTokenResponse(new Tokens(accesToken, null));
+            ((MessageContext) getOidcResponseContext().getParent()).setMessage(response);
 
         } catch (IOException | ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("{} Error occurred while handling DeviceStateObject {}", getLogPrefix(), e);
+            ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
         }
 
     }

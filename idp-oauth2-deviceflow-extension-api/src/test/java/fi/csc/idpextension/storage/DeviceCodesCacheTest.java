@@ -39,91 +39,92 @@ import org.opensaml.storage.impl.MemoryStorageService;;
  */
 public class DeviceCodesCacheTest {
 
-	private MemoryStorageService storageService;
+    private MemoryStorageService storageService;
 
-	private DeviceCodesCache deviceCodesCache;
+    private DeviceCodesCache deviceCodesCache;
 
-	private DeviceCodeObject deviceCodeObject;
-	private String userCode = "user_code_XYZ";
+    private DeviceCodeObject deviceCodeObject;
 
-	@BeforeMethod
-	protected void setUp() throws Exception {
+    private String userCode = "user_code_XYZ";
 
-		storageService = new MemoryStorageService();
-		storageService.setId("test");
-		storageService.initialize();
+    @BeforeMethod
+    protected void setUp() throws Exception {
 
-		deviceCodesCache = new DeviceCodesCache();
-		deviceCodesCache.setStorage(storageService);
-		deviceCodesCache.initialize();
+        storageService = new MemoryStorageService();
+        storageService.setId("test");
+        storageService.initialize();
 
-		deviceCodeObject = new DeviceCodeObject("device_code_XYZ", new ClientID("client_id_XYZ"),
-				new Scope("device_scope"));
-	}
+        deviceCodesCache = new DeviceCodesCache();
+        deviceCodesCache.setStorage(storageService);
+        deviceCodesCache.initialize();
 
-	@AfterMethod
-	protected void tearDown() {
-		deviceCodesCache.destroy();
-		deviceCodesCache = null;
+        deviceCodeObject =
+                new DeviceCodeObject("device_code_XYZ", new ClientID("client_id_XYZ"), new Scope("device_scope"));
+    }
 
-		storageService.destroy();
-		storageService = null;
-	}
+    @AfterMethod
+    protected void tearDown() {
+        deviceCodesCache.destroy();
+        deviceCodesCache = null;
 
-	@Test
-	public void testInit() {
-		deviceCodesCache = new DeviceCodesCache();
-		try {
-			deviceCodesCache.setStorage(null);
-			Assert.fail("Null StorageService should have caused constraint violation");
-		} catch (Exception e) {
-		}
+        storageService.destroy();
+        storageService = null;
+    }
 
-		try {
-			deviceCodesCache.setStorage(new ClientStorageService());
+    @Test
+    public void testInit() {
+        deviceCodesCache = new DeviceCodesCache();
+        try {
+            deviceCodesCache.setStorage(null);
+            Assert.fail("Null StorageService should have caused constraint violation");
+        } catch (Exception e) {
+        }
 
-			Assert.fail("ClientStorageService should have caused constraint violation");
-		} catch (Exception e) {
-		}
-	}
+        try {
+            deviceCodesCache.setStorage(new ClientStorageService());
 
-	@Test
-	public void testStorageGetter() throws ComponentInitializationException {
-		Assert.assertEquals(storageService, deviceCodesCache.getStorage());
-	}
+            Assert.fail("ClientStorageService should have caused constraint violation");
+        } catch (Exception e) {
+        }
+    }
 
-	@Test
-	public void testStore() throws ComponentInitializationException, IOException, ParseException {
-		Assert.assertTrue(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200));
-		DeviceCodeObject deviceCodeFromStore = deviceCodesCache.getDeviceCode(userCode);
-		Assert.assertEquals(deviceCodeObject.toJSONObject().toJSONString(),
-				deviceCodeFromStore.toJSONObject().toJSONString());
-		Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getState(),
-				DeviceStateObject.State.PENDING);
-		Assert.assertFalse(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200));
-	}
+    @Test
+    public void testStorageGetter() throws ComponentInitializationException {
+        Assert.assertEquals(storageService, deviceCodesCache.getStorage());
+    }
 
-	@Test
-	public void testStaleObject()
-			throws ComponentInitializationException, IOException, ParseException, InterruptedException {
-		deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 1);
-		Thread.sleep(5);
-		Assert.assertNull(deviceCodesCache.getDeviceCode(userCode));
-		Assert.assertNull(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()));
-	}
+    @Test
+    public void testStore() throws ComponentInitializationException, IOException, ParseException {
+        Assert.assertTrue(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200));
+        DeviceCodeObject deviceCodeFromStore = deviceCodesCache.getDeviceCode(userCode);
+        Assert.assertEquals(deviceCodeObject.toJSONObject().toJSONString(),
+                deviceCodeFromStore.toJSONObject().toJSONString());
+        Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getState(),
+                DeviceStateObject.State.PENDING);
+        Assert.assertFalse(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200));
+    }
 
-	@Test
-	public void testUpdate() throws ComponentInitializationException, IOException, ParseException {
-		Assert.assertTrue(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200));
-		Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getState(),
-				DeviceStateObject.State.PENDING);
-		DeviceStateObject deviceStateObject = new DeviceStateObject(DeviceStateObject.State.APPROVED, "accessToken",
-				171717171L);
-		Assert.assertTrue(deviceCodesCache.updateDeviceState(deviceCodeObject.getDeviceCode(), deviceStateObject, 200));
-		Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getState(),
-				DeviceStateObject.State.APPROVED);
-		Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getAccessToken(),
-				"accessToken");
-	}
+    @Test
+    public void testStaleObject()
+            throws ComponentInitializationException, IOException, ParseException, InterruptedException {
+        deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 1);
+        Thread.sleep(5);
+        Assert.assertNull(deviceCodesCache.getDeviceCode(userCode));
+        Assert.assertNull(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()));
+    }
+
+    @Test
+    public void testUpdate() throws ComponentInitializationException, IOException, ParseException {
+        Assert.assertTrue(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200));
+        Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getState(),
+                DeviceStateObject.State.PENDING);
+        DeviceStateObject deviceStateObject =
+                new DeviceStateObject(DeviceStateObject.State.APPROVED, "accessToken", 171717171L);
+        Assert.assertTrue(deviceCodesCache.updateDeviceState(deviceCodeObject.getDeviceCode(), deviceStateObject, 200));
+        Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getState(),
+                DeviceStateObject.State.APPROVED);
+        Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getAccessToken(),
+                "accessToken");
+    }
 
 }

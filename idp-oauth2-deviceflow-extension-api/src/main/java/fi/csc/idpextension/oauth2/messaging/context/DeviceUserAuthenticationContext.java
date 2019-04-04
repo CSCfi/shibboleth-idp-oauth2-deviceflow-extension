@@ -19,28 +19,27 @@ package fi.csc.idpextension.oauth2.messaging.context;
 import org.opensaml.messaging.context.BaseContext;
 
 /**
- * Subcontext carrying user code. This context appears as a subcontext of the
- * inbound {@link MessageContext}.
+ * Subcontext carrying user code. This context appears as a subcontext of the inbound {@link MessageContext}.
  */
 public class DeviceUserAuthenticationContext extends BaseContext {
 
-	private String UserCode;
+    private String UserCode;
 
-	private boolean userApproved;
+    private boolean userApproved;
 
-	public boolean isUserApproved() {
-		return userApproved;
-	}
+    public boolean isUserApproved() {
+        return userApproved;
+    }
 
-	public void setUserApproved(boolean userApproved) {
-		this.userApproved = userApproved;
-	}
+    public void setUserApproved(boolean userApproved) {
+        this.userApproved = userApproved;
+    }
 
-	public String getUserCode() {
-		return UserCode;
-	}
+    public String getUserCode() {
+        return UserCode;
+    }
 
-	public void setUserCode(String userCode) {
-		UserCode = userCode;
-	}
+    public void setUserCode(String userCode) {
+        UserCode = userCode;
+    }
 }

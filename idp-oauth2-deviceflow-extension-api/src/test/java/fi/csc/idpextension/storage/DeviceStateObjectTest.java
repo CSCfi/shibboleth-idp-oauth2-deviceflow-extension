@@ -24,31 +24,31 @@ import fi.csc.idpextension.storage.DeviceStateObject.State;
 
 public class DeviceStateObjectTest {
 
-	private DeviceStateObject deviceStateObject;
+    private DeviceStateObject deviceStateObject;
 
-	@Test
-	public void testConstructorAndSerialization() {
-		deviceStateObject = new DeviceStateObject(State.APPROVED, "accessToken_XYZ", 1000000L);
-		Assert.assertEquals(deviceStateObject.getState(), State.APPROVED);
-		Assert.assertEquals(deviceStateObject.getAccessToken(), "accessToken_XYZ");
-		Assert.assertEquals(deviceStateObject.getExpiresAt(), (Long) 1000000L);
-		DeviceStateObject newDeviceStateObject = DeviceStateObject.fromJSONObject(deviceStateObject.toJSONObject());
-		Assert.assertEquals(newDeviceStateObject.getState(), State.APPROVED);
-		Assert.assertEquals(newDeviceStateObject.getAccessToken(), "accessToken_XYZ");
-		Assert.assertEquals(newDeviceStateObject.getExpiresAt(), (Long) 1000000L);
-	}
+    @Test
+    public void testConstructorAndSerialization() {
+        deviceStateObject = new DeviceStateObject(State.APPROVED, "accessToken_XYZ", 1000000L);
+        Assert.assertEquals(deviceStateObject.getState(), State.APPROVED);
+        Assert.assertEquals(deviceStateObject.getAccessToken(), "accessToken_XYZ");
+        Assert.assertEquals(deviceStateObject.getExpiresAt(), (Long) 1000000L);
+        DeviceStateObject newDeviceStateObject = DeviceStateObject.fromJSONObject(deviceStateObject.toJSONObject());
+        Assert.assertEquals(newDeviceStateObject.getState(), State.APPROVED);
+        Assert.assertEquals(newDeviceStateObject.getAccessToken(), "accessToken_XYZ");
+        Assert.assertEquals(newDeviceStateObject.getExpiresAt(), (Long) 1000000L);
+    }
 
-	@Test(expectedExceptions = IllegalArgumentException.class)
-	public void testConstructorNullArgument() {
-		new DeviceStateObject(State.APPROVED, null, null);
-	}
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testConstructorNullArgument() {
+        new DeviceStateObject(State.APPROVED, null, null);
+    }
 
-	@Test
-	public void testDefaultConstructor() {
-		deviceStateObject = new DeviceStateObject();
-		Assert.assertEquals(deviceStateObject.getState(), State.PENDING);
-		Assert.assertNull(deviceStateObject.getAccessToken());
-		Assert.assertNull(deviceStateObject.getExpiresAt());
-	}
+    @Test
+    public void testDefaultConstructor() {
+        deviceStateObject = new DeviceStateObject();
+        Assert.assertEquals(deviceStateObject.getState(), State.PENDING);
+        Assert.assertNull(deviceStateObject.getAccessToken());
+        Assert.assertNull(deviceStateObject.getExpiresAt());
+    }
 
 }

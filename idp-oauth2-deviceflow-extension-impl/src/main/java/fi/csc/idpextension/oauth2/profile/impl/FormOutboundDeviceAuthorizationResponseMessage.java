@@ -82,6 +82,9 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     /** Relying party context. */
     private RelyingPartyContext rpCtx;
 
+    /** Authentication endpoint not including server name and protocol. */
+    private String authenticationEndpoint = "/idp/profile/oauth2/device/authenticate";
+
     /**
      * Inbound request. Nonnull after pre-execute.
      */
@@ -95,6 +98,15 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
             }
         };
         relyingPartyContextLookupStrategy = new ChildContextLookup<>(RelyingPartyContext.class);
+    }
+
+    /**
+     * Set authentication endpoint not including server name and protocol.
+     * 
+     * @param endpoint authentication endpoint not including server name and protocol
+     */
+    public void setAuthenticationEndpoint(String endpoint) {
+        authenticationEndpoint = endpoint;
     }
 
     /**
@@ -218,10 +230,9 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
         try {
             ((MessageContext) getOidcResponseContext().getParent())
                     .setMessage(new OAuth2DeviceAuthorizationSuccessResponse(deviceCode, userCode,
-                            new URI("https://" + getHttpServletRequest().getServerName()
-                                    + "/idp/profile/oauth2/device/authentication"),
-                            new URI("https://" + getHttpServletRequest().getServerName()
-                                    + "/idp/profile/oauth2/device/authentication?user_code=" + userCode),
+                            new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint),
+                            new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint
+                                    + "?user_code=" + userCode),
                             (int) expiration / 1000, null));
         } catch (URISyntaxException e) {
             log.error("{} URI malformed {}", getLogPrefix(), e);
