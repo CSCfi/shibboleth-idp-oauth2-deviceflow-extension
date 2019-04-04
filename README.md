@@ -60,4 +60,25 @@ Now we need to activate still the profile configuration by adding OAUTH.Device t
     </property>
     </bean>
 
-## Configuring the client
+## Configuring OP for the Device Flow client
+The client must have have urn:ietf:params:oauth:grant-type:device_code grant type listed in the metadata.
+
+    [
+      {
+        "scope":"device",
+        "client_id":"test_rp",
+        "client_secret":"testSecret1234",
+        "grant_types":["urn:ietf:params:oauth:grant-type:device_code"]
+      }
+    ]
+ For implementation limitations (alpha release, remember) it is mandatory to list atleast one scope in client's metadata even if the scope was not applied. 
+
+The sub claim must be resolved naturally also for the Device Flow client. Remember to take of that in attribute filter.
+
+## Configuring Client for the Device Flow
+
+Authorization Endpoint: idp/profile/oauth2/device/authorize
+Token Endpoint: idp/profile/oauth2/device/token
+
+
+    
