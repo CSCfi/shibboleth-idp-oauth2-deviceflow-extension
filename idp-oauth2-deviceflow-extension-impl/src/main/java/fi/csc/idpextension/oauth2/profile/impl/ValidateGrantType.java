@@ -33,7 +33,7 @@ import net.shibboleth.idp.profile.AbstractProfileAction;
 
 /**
  * An action that validates the grant type is registered to the requesting RP. This action is used in Token end point to
- * check if authorization code or refresh token has been registered to be used as a grant.
+ * check if urn:ietf:params:oauth:grant-type:device_code been registered to be used as a grant.
  */
 @SuppressWarnings("rawtypes")
 public class ValidateGrantType extends AbstractProfileAction {
