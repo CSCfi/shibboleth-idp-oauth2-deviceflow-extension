@@ -73,7 +73,7 @@ The client must have have urn:ietf:params:oauth:grant-type:device_code grant typ
     ]
  For implementation limitations (alpha release, remember) it is mandatory to list atleast one scope in client's metadata even if the scope was not applied. 
 
-The sub claim must be resolved also for the Device Flow client. Remember to take care of that in attribute filter.
+Make sure your attribute filter is such that sub claim is resolved also for the Device Flow client. 
 
 ## Configuring Client for the Device Flow
 
