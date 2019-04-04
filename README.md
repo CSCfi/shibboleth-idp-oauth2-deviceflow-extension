@@ -1,5 +1,5 @@
 # shibboleth-idp-oauth2-deviceflow-extension
-OAuth2 Device Flow extension for shibboleth-idp-oidc-extension. 
+OAuth2 Device Flow extension for shibboleth-idp-oidc-extension. See https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15.
 
 ## Prerequisite for installation
 - Shibboleth IdP 3.4+ 
