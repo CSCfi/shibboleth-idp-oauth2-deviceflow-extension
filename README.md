@@ -77,8 +77,9 @@ The sub claim must be resolved naturally also for the Device Flow client. Rememb
 
 ## Configuring Client for the Device Flow
 
-Authorization Endpoint: idp/profile/oauth2/device/authorize
-Token Endpoint: idp/profile/oauth2/device/token
+* Authorization Endpoint: idp/profile/oauth2/device/authorize
+* Token Endpoint: idp/profile/oauth2/device/token
+* UserInfo Endpoint: Standard endpoint of your installation
 
 
     
