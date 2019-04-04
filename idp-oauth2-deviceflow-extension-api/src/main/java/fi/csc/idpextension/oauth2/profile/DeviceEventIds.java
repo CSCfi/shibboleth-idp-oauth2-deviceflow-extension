@@ -21,24 +21,44 @@ import javax.annotation.Nonnull;
 import net.shibboleth.utilities.java.support.annotation.constraint.NotEmpty;
 
 /**
- * OAuth2 Device Flow -specific constants to use for
- * {@link org.opensaml.profile.action.ProfileAction}
+ * OAuth2 Device Flow -specific constants to use for {@link org.opensaml.profile.action.ProfileAction}
  * {@link org.opensaml.profile.context.EventContext}s.
  */
 public final class DeviceEventIds {
 
-	/**
-	 * ID of event returned if user code is not available.
-	 */
-	@Nonnull
-	@NotEmpty
-	public static final String NO_USER_CODE = "NoUserCode";
+    /**
+     * ID of event returned if user code is not available.
+     */
+    @Nonnull
+    @NotEmpty
+    public static final String NO_USER_CODE = "NoUserCode";
 
-	/**
-	 * Constructor.
-	 */
-	private DeviceEventIds() {
-		// no op
-	}
+    /**
+     * ID of event returned if user has not responded yet.
+     */
+    @Nonnull
+    @NotEmpty
+    public static final String AUTHORIZATION_PENDING = "AuthorizationPending";
+
+    /**
+     * ID of event returned if user has denied the request.
+     */
+    @Nonnull
+    @NotEmpty
+    public static final String USER_DENIED = "UserDenied";
+
+    /**
+     * ID of event returned if device code has expired.
+     */
+    @Nonnull
+    @NotEmpty
+    public static final String EXPIRED_TOKEN = "ExpiredToken";
+
+    /**
+     * Constructor.
+     */
+    private DeviceEventIds() {
+        // no op
+    }
 
 }

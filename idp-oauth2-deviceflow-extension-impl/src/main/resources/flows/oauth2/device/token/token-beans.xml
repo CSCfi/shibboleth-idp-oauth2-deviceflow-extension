@@ -94,6 +94,15 @@
 				<entry
 					key="#{T(org.opensaml.profile.action.EventIds).ACCESS_DENIED}"
 					value="#{T(com.nimbusds.oauth2.sdk.OAuth2Error).INVALID_CLIENT}" />
+				<entry
+					key="#{T(fi.csc.idpextension.oauth2.profile.DeviceEventIds).AUTHORIZATION_PENDING}"
+					value="#{T(fi.csc.idpextension.oauth2.messaging.error.OAuth2DeviceError).AUTHORIZATION_PENDING}" />
+				<entry
+					key="#{T(fi.csc.idpextension.oauth2.profile.DeviceEventIds).EXPIRED_TOKEN}"
+					value="#{T(fi.csc.idpextension.oauth2.messaging.error.OAuth2DeviceError).EXPIRED_TOKEN}" />
+				<entry
+					key="#{T(fi.csc.idpextension.oauth2.profile.DeviceEventIds).USER_DENIED}"
+					value="#{T(com.nimbusds.oauth2.sdk.OAuth2Error).ACCESS_DENIED}" />
 			</map>
 		</property>
 	</bean>
