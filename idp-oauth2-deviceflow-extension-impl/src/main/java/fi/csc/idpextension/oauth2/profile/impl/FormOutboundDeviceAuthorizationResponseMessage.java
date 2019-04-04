@@ -85,6 +85,9 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     /** Authentication endpoint not including server name and protocol. */
     private String authenticationEndpoint = "/idp/profile/oauth2/device/authenticate";
 
+    /** Interval between polling requests. */
+    private long interval;
+
     /**
      * Inbound request. Nonnull after pre-execute.
      */
@@ -174,6 +177,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
             deviceCodeLength = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLength();
             userCodeLength = ((OAuth2DeviceFlowConfiguration) pc).getUserCodeLength();
             expiration = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLifetime();
+            interval = ((OAuth2DeviceFlowConfiguration) pc).getPollingInterval();
         } else {
             log.error("{} No oauth2 device flow profile configuration associated with this profile request",
                     getLogPrefix());
@@ -233,7 +237,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
                             new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint),
                             new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint
                                     + "?user_code=" + userCode),
-                            (int) expiration / 1000, null));
+                            (int) expiration / 1000, (int) interval / 1000));
         } catch (URISyntaxException e) {
             log.error("{} URI malformed {}", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);

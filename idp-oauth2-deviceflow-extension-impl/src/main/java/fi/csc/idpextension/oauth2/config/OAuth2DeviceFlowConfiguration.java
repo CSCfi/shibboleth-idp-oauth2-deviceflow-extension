@@ -116,6 +116,15 @@ public class OAuth2DeviceFlowConfiguration extends AbstractOIDCClientAuthenticab
     @Duration
     private long deviceCodeLifetime;
 
+    /** Lookup function to supply {@link #pollingInterval} property. */
+    @SuppressWarnings("rawtypes")
+    @Nullable
+    private Function<ProfileRequestContext, Long> pollingIntervalLookupStrategy;
+
+    /** Allowed Interval between polling requests. Defaults to 5s. */
+    @Positive
+    private long pollingInterval;
+
     /**
      * Constructor.
      */
@@ -138,6 +147,7 @@ public class OAuth2DeviceFlowConfiguration extends AbstractOIDCClientAuthenticab
         deviceCodeLifetime = 5 * 60 * 1000;
         deviceCodeLength = 16;
         userCodeLength = 6;
+        pollingInterval = 5;
     }
 
     @Override
@@ -343,6 +353,37 @@ public class OAuth2DeviceFlowConfiguration extends AbstractOIDCClientAuthenticab
     public long getDeviceCodeLifetime() {
         return Constraint.isGreaterThan(0, getIndirectProperty(deviceCodeLifetimeLookupStrategy, deviceCodeLifetime),
                 "device code lifetime must be greater than 0");
+    }
+
+    /**
+     * Set a lookup strategy for the {@link #pollingInterval} property.
+     *
+     * @param strategy lookup strategy
+     */
+    public void setPollingIntervalLookupStrategy(
+            @SuppressWarnings("rawtypes") @Nullable final Function<ProfileRequestContext, Long> strategy) {
+        pollingIntervalLookupStrategy = strategy;
+    }
+
+    /**
+     * Set the polling interval.
+     * 
+     * @param interval polling interval in milliseconds
+     */
+    public void setPollingInterval(@Positive @Duration final long interval) {
+        pollingInterval = Constraint.isGreaterThan(0, interval, "polling interval must be greater than 0");
+    }
+
+    /**
+     * Get polling interval.
+     * 
+     * @return polling interval in milliseconds
+     */
+    @Positive
+    @Duration
+    public long getPollingInterval() {
+        return Constraint.isGreaterThan(0, getIndirectProperty(pollingIntervalLookupStrategy, pollingInterval),
+                "polling interval must be greater than 0");
     }
 
 }
