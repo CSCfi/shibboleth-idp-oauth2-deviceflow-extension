@@ -28,7 +28,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest.Method;
 
 import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthenticationRequest;
-import junit.framework.Assert;
+import org.testng.Assert;
 
 /**
  * Unit tests for {@link OAuth2DeviceAuthenticationRequest}.
