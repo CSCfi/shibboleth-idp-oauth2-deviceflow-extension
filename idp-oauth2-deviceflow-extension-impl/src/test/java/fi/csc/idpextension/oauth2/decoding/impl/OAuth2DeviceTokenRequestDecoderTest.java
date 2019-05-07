@@ -22,28 +22,27 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import fi.csc.idpextension.oauth2.decoding.impl.OAuth2DeviceAuthorizationRequestDecoder;
-import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
+import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceTokenRequest;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 
 /**
- * Unit tests for {@link OAuth2DeviceAuthorizationRequestDecoder}.
+ * Unit tests for {@link OAuth2DeviceTokenRequestDecoder}.
  */
-public class OAuth2DeviceAuthorizationRequestDecoderTest {
+public class OAuth2DeviceTokenRequestDecoderTest {
 
     private MockHttpServletRequest httpRequest;
 
-    private OAuth2DeviceAuthorizationRequestDecoder decoder;
+    private OAuth2DeviceTokenRequestDecoder decoder;
 
     @BeforeMethod
     protected void setUp() throws Exception {
         httpRequest = new MockHttpServletRequest();
         httpRequest.setMethod("POST");
         httpRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        httpRequest.addParameter("scope", "value");
         httpRequest.addParameter("client_id", "123456");
-        decoder = new OAuth2DeviceAuthorizationRequestDecoder();
+        httpRequest.addParameter("device_code", "123456");
+        httpRequest.addParameter("grant_type", "urn:ietf:params:oauth:grant-type:device_code");
+        decoder = new OAuth2DeviceTokenRequestDecoder();
         decoder.setHttpServletRequest(httpRequest);
         decoder.initialize();
     }
@@ -51,10 +50,8 @@ public class OAuth2DeviceAuthorizationRequestDecoderTest {
     @Test
     public void testRequestDecoding() throws MessageDecodingException {
         decoder.decode();
-        MessageContext<OAuth2DeviceAuthorizationRequest> messageContext = decoder.getMessageContext();
+        MessageContext<OAuth2DeviceTokenRequest> messageContext = decoder.getMessageContext();
         Assert.assertEquals(messageContext.getMessage().getClientID().toString(), "123456");
-        Assert.assertEquals("value", messageContext.getMessage().getScope().toString());
-
     }
 
     @Test(expectedExceptions = MessageDecodingException.class)
@@ -63,17 +60,16 @@ public class OAuth2DeviceAuthorizationRequestDecoderTest {
         decoder.decode();
     }
 
-    //TODO: Remove as unrelated as the message class gets it's own tests 
+    // TODO: Remove as unrelated as the message class gets it's own tests
     @Test
     public void testClientInHeaders() throws MessageDecodingException, ComponentInitializationException {
         httpRequest.addHeader("Authorization", "Basic dGVzdDp0ZXN0");
         httpRequest.removeParameter("client_id");
-        decoder = new OAuth2DeviceAuthorizationRequestDecoder();
+        decoder = new OAuth2DeviceTokenRequestDecoder();
         decoder.setHttpServletRequest(httpRequest);
         decoder.initialize();
         decoder.decode();
-        MessageContext<OAuth2DeviceAuthorizationRequest> messageContext = decoder.getMessageContext();
-        Assert.assertEquals("value", messageContext.getMessage().getScope().toString());
+        MessageContext<OAuth2DeviceTokenRequest> messageContext = decoder.getMessageContext();
         Assert.assertEquals(messageContext.getMessage().getClientAuthentication().getClientID().getValue(), "test");
     }
 }
