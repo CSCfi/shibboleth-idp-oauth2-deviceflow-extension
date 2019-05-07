@@ -16,30 +16,64 @@
 
 package fi.csc.idpextension.oauth2.messaging.context;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.opensaml.messaging.context.BaseContext;
+import net.shibboleth.utilities.java.support.logic.Constraint;
 
 /**
- * Subcontext carrying user code. This context appears as a subcontext of the inbound {@link MessageContext}.
+ * Subcontext carrying user code and user approval status. This context appears as a subcontext of the inbound
+ * {@link MessageContext}.
  */
 public class DeviceUserAuthenticationContext extends BaseContext {
 
-    private String UserCode;
+    /**
+     * The end-user verification code described in
+     * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.2.
+     */
+    private String userCode;
 
+    /**
+     * Whether user has approved or denied request described in
+     * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.3.
+     */
     private boolean userApproved;
 
+    /**
+     * Get whether user has approved or denied request.
+     * 
+     * @return true if user has approved the request, otherwise false.
+     */
     public boolean isUserApproved() {
         return userApproved;
     }
 
+    /**
+     * Set whether user has approved or denied request.
+     * 
+     * @param userApproved true if user has approved the request, otherwise false.
+     */
     public void setUserApproved(boolean userApproved) {
         this.userApproved = userApproved;
     }
 
+    /**
+     * Get the end-user verification code.
+     * 
+     * @return The end-user verification code
+     */
+    @Nullable
     public String getUserCode() {
-        return UserCode;
+        return userCode;
     }
 
-    public void setUserCode(String userCode) {
-        UserCode = userCode;
+    /**
+     * Set the end-user verification code.
+     * 
+     * @param code The end-user verification code
+     */
+    public void setUserCode(@Nonnull String code) {
+        Constraint.isNotNull(code, "User code must not be null");
+        userCode = code;
     }
 }
