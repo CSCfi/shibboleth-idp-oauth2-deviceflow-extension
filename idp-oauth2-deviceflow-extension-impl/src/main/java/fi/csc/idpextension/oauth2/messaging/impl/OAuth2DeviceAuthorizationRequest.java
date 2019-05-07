@@ -25,6 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.nimbusds.oauth2.sdk.AbstractOptionallyIdentifiedRequest;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -39,68 +42,93 @@ import com.nimbusds.oauth2.sdk.util.MultivaluedMapUtils;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
 
+/**
+ * Class implementing Authorization Request message as described in
+ * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.1.
+ */
 public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifiedRequest {
 
+    /** OPTIONAL. The scope of the access request. */
+    @Nullable
     private final Scope scope;
 
+    /**
+     * Constructor.
+     * 
+     * @param uri The URI of the endpoint (HTTP or HTTPS) for which the request is intended, {@code null} if not
+     *            specified (if, for example, the {@link #toHTTPRequest()} method will not be used).
+     * @param clientAuth The client authentication, {@code null} if none.
+     * @param scope The scope of the access request, {@code null} if none.
+     */
     public OAuth2DeviceAuthorizationRequest(final URI uri, ClientAuthentication clientAuth, Scope scope) {
         super(uri, clientAuth);
         this.scope = scope;
     }
 
+    /**
+     * Constructor.
+     * 
+     * @param uri The URI of the endpoint (HTTP or HTTPS) for which the request is intended, {@code null} if not
+     *            specified (if, for example, the {@link #toHTTPRequest()} method will not be used).
+     * @param clientID The client identifier, {@code null} if not specified.
+     * @param scope The scope of the access request, {@code null} if none.
+     */
     public OAuth2DeviceAuthorizationRequest(final URI uri, ClientID clientID, Scope scope) {
         super(uri, clientID);
         this.scope = scope;
     }
 
+    /**
+     * Get the scope of the access request.
+     * 
+     * @return The scope of the access request
+     */
+    @Nullable
     public Scope getScope() {
         return scope;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
+    @Nonnull
     public HTTPRequest toHTTPRequest() {
-
         if (getEndpointURI() == null)
             throw new SerializeException("The endpoint URI is not specified");
-
         URL url;
-
         try {
             url = getEndpointURI().toURL();
-
         } catch (MalformedURLException e) {
-
             throw new SerializeException(e.getMessage(), e);
         }
-
         HTTPRequest httpRequest = new HTTPRequest(HTTPRequest.Method.POST, url);
         httpRequest.setContentType(CommonContentTypes.APPLICATION_URLENCODED);
-
         Map<String, List<String>> params = new HashMap<>();
-
         if (getClientID() != null) {
             // public client
             params.put("client_id", Collections.singletonList(getClientID().getValue()));
         }
-
         if (scope != null && !scope.isEmpty()) {
             params.put("scope", Collections.singletonList(scope.toString()));
         }
-
         httpRequest.setQuery(URLUtils.serializeParameters(params));
-
         if (getClientAuthentication() != null) {
             getClientAuthentication().applyTo(httpRequest);
         }
-
         return httpRequest;
     }
 
+    /**
+     * Parses request from http request.
+     * 
+     * @param httpRequest request to parse.
+     * @return parsed request.
+     * @throws ParseException if parsing failed.
+     */
     public static OAuth2DeviceAuthorizationRequest parse(final HTTPRequest httpRequest) throws ParseException {
-
         httpRequest.ensureMethod(HTTPRequest.Method.POST);
         httpRequest.ensureContentType(CommonContentTypes.APPLICATION_URLENCODED);
-
         ClientAuthentication clientAuth;
         try {
             clientAuth = ClientAuthentication.parse(httpRequest);
@@ -108,9 +136,7 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
             throw new ParseException(e.getMessage(),
                     OAuth2Error.INVALID_REQUEST.appendDescription(": " + e.getMessage()));
         }
-
         Map<String, List<String>> params = httpRequest.getQueryParameters();
-
         if (clientAuth instanceof ClientSecretBasic) {
             if (StringUtils.isNotBlank(MultivaluedMapUtils.getFirstValue(params, "client_assertion"))
                     || StringUtils.isNotBlank(MultivaluedMapUtils.getFirstValue(params, "client_assertion_type"))) {
@@ -118,20 +144,17 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
                 throw new ParseException(msg, OAuth2Error.INVALID_REQUEST.appendDescription(": " + msg));
             }
         }
-
         String scopeValue = MultivaluedMapUtils.getFirstValue(params, "scope");
         Scope scope = null;
         if (scopeValue != null) {
             scope = Scope.parse(scopeValue);
         }
-
         URI uri;
         try {
             uri = httpRequest.getURL().toURI();
         } catch (URISyntaxException e) {
             throw new ParseException(e.getMessage(), e);
         }
-
         if (clientAuth != null) {
             return new OAuth2DeviceAuthorizationRequest(uri, clientAuth, scope);
         }
