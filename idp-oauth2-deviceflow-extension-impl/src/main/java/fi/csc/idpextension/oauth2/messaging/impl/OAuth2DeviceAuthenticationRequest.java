@@ -25,6 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.nimbusds.oauth2.sdk.AbstractRequest;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.SerializeException;
@@ -32,19 +35,43 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.util.MultivaluedMapUtils;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
 
+/**
+ * Class implementing Authentication Request message for https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15.
+ * The request is not generic, only for this implementation.
+ */
 public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
 
+    /**
+     * The end-user verification code described in
+     * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.2.
+     */
     private final String user_code;
 
-    public OAuth2DeviceAuthenticationRequest(URI uri, String user_code) {
+    /**
+     * Constructor.
+     * 
+     * @param uri The URI of the endpoint (HTTP or HTTPS) for which the request is intended, {@code null} if not
+     *            specified (if, for example, the {@link #toHTTPRequest()} method will not be used).
+     * @param user_code The end-user verification code.
+     */
+    public OAuth2DeviceAuthenticationRequest(@Nonnull URI uri, @Nullable String user_code) {
         super(uri);
         this.user_code = user_code;
     }
 
+    /**
+     * Get end-user verification code.
+     * 
+     * @return end-user verification code
+     */
+    @Nullable
     public String getUserCode() {
         return user_code;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public HTTPRequest toHTTPRequest() {
 
@@ -69,6 +96,14 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
         return httpRequest;
     }
 
+    /**
+     * Parses request from uri and parameters. Only user_code parameter is supported, others ignored.
+     * 
+     * @param uri The URI of the endpoint (HTTP or HTTPS) for which the request is intended.
+     * @param params request parameters, only user_code is supported, others ignored.
+     * @return parsed request.
+     * @throws ParseException if parsing failed.
+     */
     public static OAuth2DeviceAuthenticationRequest parse(final URI uri, final Map<String, List<String>> params)
             throws ParseException {
 
@@ -76,10 +111,25 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
         return new OAuth2DeviceAuthenticationRequest(uri, user_code);
     }
 
+    /**
+     * Parses request from uri and parameters. Only user_code parameter is supported, others ignored.
+     * 
+     * @param uri The URI of the endpoint (HTTP or HTTPS) for which the request is intended.
+     * @param query request parameters in query string. Only user_code is supported, others ignored.
+     * @return parsed request.
+     * @throws ParseException if parsing failed.
+     */
     public static OAuth2DeviceAuthenticationRequest parse(final URI uri, final String query) throws ParseException {
         return parse(uri, URLUtils.parseParameters(query));
     }
 
+    /**
+     * Parses request from http request. Only user_code parameter is supported, others ignored.
+     * 
+     * @param httpRequest request to parse.
+     * @return parsed request.
+     * @throws ParseException if parsing failed.
+     */
     public static OAuth2DeviceAuthenticationRequest parse(final HTTPRequest httpRequest) throws ParseException {
 
         String query = httpRequest.getQuery();
@@ -92,6 +142,11 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
         return parse(endpointURI, query);
     }
 
+    /**
+     * Request parameters as query string.
+     * 
+     * @return request parameters as query string
+     */
     public String toQueryString() {
 
         Map<String, List<String>> params = new HashMap<>();
@@ -101,7 +156,6 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
         if (user_code != null) {
             params.put("user_code", Arrays.asList(user_code));
         }
-
         return URLUtils.serializeParameters(params);
     }
 
