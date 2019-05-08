@@ -39,7 +39,8 @@ import net.shibboleth.utilities.java.support.component.ComponentSupport;
 import net.shibboleth.utilities.java.support.logic.Constraint;
 
 /**
- * 
+ * ClientID lookup function for Authentication end point. The lookup locates a {@link DeviceCodeObject} from
+ * {@DeviceCodesCache} by user code and returns {@link DeviceCodeObject#getClientID()}
  */
 @SuppressWarnings("rawtypes")
 public class DeviceClientIDLookupFunction extends AbstractInitializableComponent
@@ -49,23 +50,37 @@ public class DeviceClientIDLookupFunction extends AbstractInitializableComponent
     @Nonnull
     private Logger log = LoggerFactory.getLogger(DeviceClientIDLookupFunction.class);
 
+    /** Strategy to locate user code. */
     @Nonnull
     private Function<MessageContext, String> userCodeLookupStrategy;
 
+    /** Cache for device codes. */
+    @NonnullAfterInit
+    private DeviceCodesCache deviceCodesCache;
+
+    /**
+     * Constructor.
+     */
     public DeviceClientIDLookupFunction() {
         userCodeLookupStrategy = new DeviceUserCodeLookupFunction();
     }
 
+    /**
+     * Set strategy to locate user code.
+     * 
+     * @param strategy Strategy to locate user code
+     */
     public void setDeviceUserCodeLookupStrategy(@Nonnull final Function<MessageContext, String> strategy) {
         ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
         userCodeLookupStrategy =
                 Constraint.isNotNull(strategy, "DeviceUserCodeLookupStrategy lookup strategy cannot be null");
     }
 
-    /** . */
-    @NonnullAfterInit
-    private DeviceCodesCache deviceCodesCache;
-
+    /**
+     * Set cache for device codes.
+     * 
+     * @param cache Cache for device codes
+     */
     public void setDeviceCodesCache(@Nonnull final DeviceCodesCache cache) {
         ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
         deviceCodesCache = Constraint.isNotNull(cache, "DeviceCodesCache cannot be null");
@@ -98,7 +113,6 @@ public class DeviceClientIDLookupFunction extends AbstractInitializableComponent
             return null;
         }
         return obj.getClientID();
-
     }
 
 }
