@@ -27,7 +27,9 @@ import fi.csc.idpextension.oauth2.messaging.context.DeviceUserAuthenticationCont
 import net.shibboleth.utilities.java.support.component.AbstractInitializableComponent;
 
 /**
- * 
+ * Locates user approval from {@link DeviceUserAuthenticationContext#isUserApproved()}.
+ * {@link DeviceUserAuthenticationContext} is assumed to reside under {@link MessageContext}. Returns false in the cases
+ * approval cannot be located.
  */
 @SuppressWarnings("rawtypes")
 public class DeviceUserApprovalLookupFunction extends AbstractInitializableComponent
