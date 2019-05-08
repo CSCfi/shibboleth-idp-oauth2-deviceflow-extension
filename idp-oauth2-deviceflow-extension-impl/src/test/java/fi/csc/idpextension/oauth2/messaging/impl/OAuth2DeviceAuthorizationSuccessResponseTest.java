@@ -22,7 +22,6 @@ import org.opensaml.messaging.decoder.MessageDecodingException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.http.CommonContentTypes;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import net.minidev.json.JSONObject;
 import org.testng.Assert;
