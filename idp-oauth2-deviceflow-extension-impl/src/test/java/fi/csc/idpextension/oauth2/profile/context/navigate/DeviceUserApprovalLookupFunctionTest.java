@@ -55,7 +55,7 @@ public class DeviceUserApprovalLookupFunctionTest {
     @Test
     public void lookupFailNoAuthContext() {
         msgCtx.removeSubcontext(DeviceUserAuthenticationContext.class);
-        Assert.assertFalse(lookup.apply(null));
+        Assert.assertFalse(lookup.apply(msgCtx));
     }
 
     @Test
