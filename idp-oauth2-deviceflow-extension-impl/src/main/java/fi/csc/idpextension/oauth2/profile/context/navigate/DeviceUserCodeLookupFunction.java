@@ -28,7 +28,10 @@ import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthenticationReque
 import net.shibboleth.utilities.java.support.component.AbstractInitializableComponent;
 
 /**
- * 
+ * Primarily locates user code from {@link DeviceUserAuthenticationContext#getUserCode()}.
+ * {@link DeviceUserAuthenticationContext} is assumed to reside under {@link MessageContext}. The authentication request
+ * {@link OAuth2DeviceAuthenticationRequest} of the {@link MessageContext} is the secondary source for the information.
+ * If both fail to produce the value, a null is returned.
  */
 @SuppressWarnings("rawtypes")
 public class DeviceUserCodeLookupFunction extends AbstractInitializableComponent
