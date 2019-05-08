@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import com.nimbusds.oauth2.sdk.AbstractOptionallyIdentifiedRequest;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -38,87 +40,128 @@ import com.nimbusds.oauth2.sdk.util.MultivaluedMapUtils;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
 
+/**
+ * Class implementing Authorization Request message as described in
+ * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.4.
+ */
 public class OAuth2DeviceTokenRequest extends AbstractOptionallyIdentifiedRequest {
 
+    /** Grant Type value for Device Token Request. */
+    public final static String grantTypeValue = "urn:ietf:params:oauth:grant-type:device_code";
+
+    /**
+     * REQUIRED. Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code".
+     */
     private final String grantType;
 
+    /**
+     * REQUIRED. The device verification code, "device_code" from the Device Authorization Response, defined in
+     * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.2
+     */
     private final String deviceCode;
 
+    /**
+     * Constructor.
+     * 
+     * @param uri The URI of the endpoint (HTTP or HTTPS) for which the request is intended, {@code null} if not
+     *            specified (if, for example, the {@link #toHTTPRequest()} method will not be used).
+     * @param clientAuth The client authentication, {@code null} if none.
+     * @param grantType Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code"
+     * @param deviceCode The device verification code
+     */
     public OAuth2DeviceTokenRequest(final URI uri, ClientAuthentication clientAuth, String grantType,
             String deviceCode) {
         super(uri, clientAuth);
+        if (!grantTypeValue.equals(grantType)) {
+            throw new IllegalArgumentException("The grant type must be " + grantTypeValue);
+        }
+        if (deviceCode == null || deviceCode.isEmpty()) {
+            throw new IllegalArgumentException("The device code must not be null or empty");
+        }
         this.grantType = grantType;
         this.deviceCode = deviceCode;
-        if (!"urn:ietf:params:oauth:grant-type:device_code".equals(this.grantType)) {
-            throw new IllegalArgumentException("The grant type must be  urn:ietf:params:oauth:grant-type:device_code");
-        }
-        if (this.deviceCode == null) {
-            throw new IllegalArgumentException("The device code is not specified");
-        }
     }
 
+    /**
+     * Constructor.
+     * 
+     * @param uri The URI of the endpoint (HTTP or HTTPS) for which the request is intended, {@code null} if not
+     *            specified (if, for example, the {@link #toHTTPRequest()} method will not be used).
+     * @param clientID The client identifier, {@code null} if not specified.
+     * @param grantType Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code"
+     * @param deviceCode The device verification code
+     */
     public OAuth2DeviceTokenRequest(final URI uri, ClientID clientID, String grantType, String deviceCode) {
         super(uri, clientID);
+        if (!grantTypeValue.equals(grantType)) {
+            throw new IllegalArgumentException("The grant type must be " + grantTypeValue);
+        }
+        if (deviceCode == null || deviceCode.isEmpty()) {
+            throw new IllegalArgumentException("The device code must not be null or empty");
+        }
         this.grantType = grantType;
         this.deviceCode = deviceCode;
-        if (!"urn:ietf:params:oauth:grant-type:device_code".equals(this.grantType)) {
-            throw new IllegalArgumentException("The grant type must be  urn:ietf:params:oauth:grant-type:device_code");
-        }
-        if (this.deviceCode == null) {
-            throw new IllegalArgumentException("The device code is not specified");
-        }
     }
 
+    /**
+     * Get grant type value.
+     * 
+     * @return "urn:ietf:params:oauth:grant-type:device_code" or null.
+     */
+    @Nullable
     public String getGrantType() {
         return grantType;
     }
 
+    /**
+     * Get device verification code.
+     * 
+     * @return device verification code or null.
+     */
+    @Nullable
     public String getDeviceCode() {
         return deviceCode;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public HTTPRequest toHTTPRequest() {
-
         if (getEndpointURI() == null)
             throw new SerializeException("The endpoint URI is not specified");
         URL url;
-
         try {
             url = getEndpointURI().toURL();
-
         } catch (MalformedURLException e) {
-
             throw new SerializeException(e.getMessage(), e);
         }
-
         HTTPRequest httpRequest = new HTTPRequest(HTTPRequest.Method.POST, url);
         httpRequest.setContentType(CommonContentTypes.APPLICATION_URLENCODED);
-
         Map<String, List<String>> params = new HashMap<>();
-
         if (getClientID() != null) {
             // public client
             params.put("client_id", Collections.singletonList(getClientID().getValue()));
         }
-
         params.put("grant_type", Collections.singletonList(grantType));
         params.put("device_code", Collections.singletonList(deviceCode));
-
         httpRequest.setQuery(URLUtils.serializeParameters(params));
-
         if (getClientAuthentication() != null) {
             getClientAuthentication().applyTo(httpRequest);
         }
-
         return httpRequest;
     }
 
+    /**
+     * Parses request from http request.
+     * 
+     * @param httpRequest request to parse.
+     * @return parsed request.
+     * @throws ParseException if parsing failed.
+     */
     public static OAuth2DeviceTokenRequest parse(final HTTPRequest httpRequest) throws ParseException {
-
         httpRequest.ensureMethod(HTTPRequest.Method.POST);
         httpRequest.ensureContentType(CommonContentTypes.APPLICATION_URLENCODED);
-
         ClientAuthentication clientAuth;
         try {
             clientAuth = ClientAuthentication.parse(httpRequest);
@@ -126,9 +169,7 @@ public class OAuth2DeviceTokenRequest extends AbstractOptionallyIdentifiedReques
             throw new ParseException(e.getMessage(),
                     OAuth2Error.INVALID_REQUEST.appendDescription(": " + e.getMessage()));
         }
-
         Map<String, List<String>> params = httpRequest.getQueryParameters();
-
         if (clientAuth instanceof ClientSecretBasic) {
             if (StringUtils.isNotBlank(MultivaluedMapUtils.getFirstValue(params, "client_assertion"))
                     || StringUtils.isNotBlank(MultivaluedMapUtils.getFirstValue(params, "client_assertion_type"))) {
@@ -136,17 +177,14 @@ public class OAuth2DeviceTokenRequest extends AbstractOptionallyIdentifiedReques
                 throw new ParseException(msg, OAuth2Error.INVALID_REQUEST.appendDescription(": " + msg));
             }
         }
-
         String grantType = MultivaluedMapUtils.getFirstValue(params, "grant_type");
         String deviceCode = MultivaluedMapUtils.getFirstValue(params, "device_code");
-
         URI uri;
         try {
             uri = httpRequest.getURL().toURI();
         } catch (URISyntaxException e) {
             throw new ParseException(e.getMessage(), e);
         }
-
         if (clientAuth != null) {
             return new OAuth2DeviceTokenRequest(uri, clientAuth, grantType, deviceCode);
         }
