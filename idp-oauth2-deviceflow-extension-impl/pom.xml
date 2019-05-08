@@ -13,7 +13,7 @@
 	<artifactId>idp-oauth2-deviceflow-extension-impl</artifactId>
 	<packaging>jar</packaging>
 	<dependencies>
-	    <!-- Compile dependencies -->
+		<!-- Compile dependencies -->
 		<dependency>
 			<groupId>fi.csc</groupId>
 			<artifactId>idp-oauth2-deviceflow-extension-api</artifactId>
