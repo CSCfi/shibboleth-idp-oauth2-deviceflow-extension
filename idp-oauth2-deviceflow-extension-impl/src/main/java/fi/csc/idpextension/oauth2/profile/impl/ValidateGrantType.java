@@ -29,11 +29,14 @@ import org.slf4j.LoggerFactory;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.ParseException;
 
+import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceTokenRequest;
 import net.shibboleth.idp.profile.AbstractProfileAction;
+import net.shibboleth.utilities.java.support.logic.Constraint;
 
 /**
- * An action that validates the grant type is registered to the requesting RP. This action is used in Token end point to
- * check if urn:ietf:params:oauth:grant-type:device_code been registered to be used as a grant.
+ * An action that validates the grant type is registered to the requesting RP and is of expected type. For example in
+ * Device Flow the grant type is expected to be urn:ietf:params:oauth:grant-type:device_code. Action does not check the
+ * existence or value of the grant in the actual request.
  */
 @SuppressWarnings("rawtypes")
 public class ValidateGrantType extends AbstractProfileAction {
@@ -42,9 +45,21 @@ public class ValidateGrantType extends AbstractProfileAction {
     @Nonnull
     private Logger log = LoggerFactory.getLogger(ValidateGrantType.class);
 
-    /** OIDC Metadata context. */
     @Nonnull
+    private String expectedGrantType = OAuth2DeviceTokenRequest.grantTypeValue;
+
+    /** OIDC Metadata context. */
     private OIDCMetadataContext oidcMetadataContext;
+
+    /**
+     * Set expected grant type.
+     * 
+     * @param type expected grant type
+     */
+    public void setExpectedGrantType(@Nonnull String type) {
+        Constraint.isNotEmpty(type, "Expected grant type must not be null or empty");
+        expectedGrantType = type;
+    }
 
     /** {@inheritDoc} */
     @SuppressWarnings("unchecked")
@@ -72,21 +87,16 @@ public class ValidateGrantType extends AbstractProfileAction {
     /** {@inheritDoc} */
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
-        // TODO: grant value to be compared with setter method
-        // "urn:ietf:params:oauth:grant-type:device_code" -> setter/getter
         final Set<GrantType> registeredTypes = oidcMetadataContext.getClientInformation().getMetadata().getGrantTypes();
         try {
             if (registeredTypes == null || registeredTypes.isEmpty()
-                    || !registeredTypes.contains(GrantType.parse("urn:ietf:params:oauth:grant-type:device_code"))) {
-                log.error("{} The grant type {} is not registered for this RP", getLogPrefix(),
-                        "urn:ietf:params:oauth:grant-type:device_code");
+                    || !registeredTypes.contains(GrantType.parse(expectedGrantType))) {
+                log.error("{} The grant type {} is not registered for this RP", getLogPrefix(), expectedGrantType);
                 ActionSupport.buildEvent(profileRequestContext, OidcEventIds.INVALID_GRANT_TYPE);
             }
         } catch (ParseException e) {
-            log.error("{} Unable to parse grant type from {}", getLogPrefix(),
-                    "urn:ietf:params:oauth:grant-type:device_code");
+            log.error("{} Unable to parse grant type from {}", getLogPrefix(), expectedGrantType);
             ActionSupport.buildEvent(profileRequestContext, OidcEventIds.INVALID_GRANT_TYPE);
         }
-
     }
 }
