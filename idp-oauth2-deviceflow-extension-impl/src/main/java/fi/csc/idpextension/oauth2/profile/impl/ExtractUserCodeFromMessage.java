@@ -33,6 +33,11 @@ import org.opensaml.profile.action.ActionSupport;
 import net.shibboleth.utilities.java.support.component.ComponentSupport;
 import net.shibboleth.utilities.java.support.logic.Constraint;
 
+/**
+ * Actions extracts user code from message. Extracted user code is stored to {@link DeviceUserAuthenticationContext}
+ * that is placed under inbound message context. The action should be called as the first action to try the extracting
+ * of the user code.
+ */
 @SuppressWarnings("rawtypes")
 public class ExtractUserCodeFromMessage extends AbstractProfileAction {
 
@@ -58,7 +63,6 @@ public class ExtractUserCodeFromMessage extends AbstractProfileAction {
         userCodeLookupStrategy = new DeviceUserCodeLookupFunction();
     }
 
-    // Checkstyle: CyclomaticComplexity OFF
     @SuppressWarnings("unchecked")
     /** {@inheritDoc} */
     @Override
@@ -74,7 +78,6 @@ public class ExtractUserCodeFromMessage extends AbstractProfileAction {
         }
         return true;
     }
-    // Checkstyle: CyclomaticComplexity ON
 
     /** {@inheritDoc} */
     @Override
@@ -85,5 +88,4 @@ public class ExtractUserCodeFromMessage extends AbstractProfileAction {
         profileRequestContext.getInboundMessageContext().addSubcontext(ctx, true);
 
     }
-
 }
