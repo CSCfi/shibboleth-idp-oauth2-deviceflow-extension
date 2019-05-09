@@ -18,22 +18,22 @@ package fi.csc.idpextension.oauth2.profile.impl;
 
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
-
-import net.shibboleth.idp.authn.AuthnEventIds;
 import net.shibboleth.idp.profile.AbstractProfileAction;
 import net.shibboleth.utilities.java.support.annotation.constraint.NotEmpty;
 import net.shibboleth.utilities.java.support.component.ComponentSupport;
 import net.shibboleth.utilities.java.support.logic.Constraint;
 import net.shibboleth.utilities.java.support.primitive.StringSupport;
-
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import fi.csc.idpextension.oauth2.messaging.context.DeviceUserAuthenticationContext;
 import fi.csc.idpextension.oauth2.profile.DeviceEventIds;
 
+/**
+ * Actions extracts user code from form. Extracted user code is stored to {@link DeviceUserAuthenticationContext} that
+ * is placed under inbound message context.
+ */
 @SuppressWarnings("rawtypes")
 public class ExtractUserCodeFromFormRequest extends AbstractProfileAction {
 
@@ -64,17 +64,14 @@ public class ExtractUserCodeFromFormRequest extends AbstractProfileAction {
     }
 
     /** {@inheritDoc} */
-    // CheckStyle: ReturnCount OFF
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
-
         final HttpServletRequest request = getHttpServletRequest();
         if (request == null) {
             log.debug("{} Profile action does not contain an HttpServletRequest", getLogPrefix());
-            ActionSupport.buildEvent(profileRequestContext, AuthnEventIds.NO_CREDENTIALS);
+            ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.NO_USER_CODE);
             return;
         }
-
         final String userCode = request.getParameter(userCodeFieldName);
         if (userCode == null || userCode.isEmpty()) {
             log.error("{} No user code in request", getLogPrefix());
@@ -86,5 +83,4 @@ public class ExtractUserCodeFromFormRequest extends AbstractProfileAction {
         log.debug("{} Initializing DeviceUserCodeContext for user code {}", getLogPrefix(), userCode);
         profileRequestContext.getInboundMessageContext().addSubcontext(ctx, true);
     }
-    // CheckStyle: ReturnCount ON
 }
