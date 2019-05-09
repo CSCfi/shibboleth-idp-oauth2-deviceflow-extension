@@ -26,7 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
-
+ * Action creates a vanilla authentication context. If authentication context pre-exists the result of it is set as
+ * initial result.
  */
 @SuppressWarnings("rawtypes")
 public class InitializeAuthenticationContext extends AbstractProfileAction {
