@@ -66,6 +66,11 @@ import net.shibboleth.utilities.java.support.security.DataSealerException;
 import net.shibboleth.utilities.java.support.security.IdentifierGenerationStrategy;
 import net.shibboleth.utilities.java.support.security.SecureRandomIdentifierGenerationStrategy;
 
+/**
+ * Action storing user approval action, approved or denied to {@link DeviceCodesCache} as a {@link DeviceStateObject}.
+ * In the case user approved the request the {@link DeviceStateObject} contains a access token that may be queried by a
+ * trusted rp using Device Code.
+ */
 @SuppressWarnings("rawtypes")
 public class StoreDeviceState extends AbstractOIDCResponseAction {
 
