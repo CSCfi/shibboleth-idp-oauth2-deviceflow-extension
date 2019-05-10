@@ -44,8 +44,9 @@ import net.shibboleth.utilities.java.support.component.ComponentSupport;
 import net.shibboleth.utilities.java.support.logic.Constraint;
 
 /**
+ * Action forms Device Token Response {@link AccessToken} in the case user has approved the action. Cases of expired
+ * token, user denied and user action pending are handled with the events.
  */
-
 @SuppressWarnings("rawtypes")
 public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponseAction {
 
@@ -57,9 +58,9 @@ public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponse
     private DeviceCodesCache deviceCodesCache;
 
     /**
-     * Set the revocation cache instance to use.
+     * Set the device code cache instance to use.
      * 
-     * @param cache The revocationCache to set.
+     * @param cache The device code cache to set.
      */
     public void setDeviceCodesCache(@Nonnull final DeviceCodesCache cache) {
         ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
@@ -77,7 +78,12 @@ public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponse
     @SuppressWarnings("unchecked")
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
-        // blatant!
+        if (profileRequestContext.getInboundMessageContext() == null || !(profileRequestContext
+                .getInboundMessageContext().getMessage() instanceof OAuth2DeviceTokenRequest)) {
+            log.error("{} no inbound OAuth2DeviceTokenRequest available ", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_MSG_CTX);
+            return;
+        }
         OAuth2DeviceTokenRequest request =
                 (OAuth2DeviceTokenRequest) profileRequestContext.getInboundMessageContext().getMessage();
         String deviceCode = request.getDeviceCode();
@@ -110,6 +116,5 @@ public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponse
             log.error("{} Error occurred while handling DeviceStateObject {}", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
         }
-
     }
 }
