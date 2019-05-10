@@ -9,7 +9,7 @@ OAuth2 Device Flow extension for shibboleth-idp-oidc-extension. See https://tool
 First you need extract the archive and rebuild the package. Please not that you most likely *need* to change the owner and group information of the extracted files to suite your installation.
 
     cd /opt/shibboleth-idp
-    tar -xf path/to/idp-oauth2-deviceflow-extension-distribution-0.5.0-bin.tar.gz --strip-components=1
+    tar -xf path/to/idp-oauth2-deviceflow-extension-distribution-1.0.0-bin.tar.gz --strip-components=1
     bin/build.sh
 
 Next you need to import oauth2-deviceflow-relying-party.xml to oidc-relying-party.xml.
