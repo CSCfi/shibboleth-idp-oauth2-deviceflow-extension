@@ -21,7 +21,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import javax.annotation.Nonnull;
-
 import org.geant.idpextension.oidc.profile.impl.AbstractOIDCResponseAction;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
@@ -50,6 +49,11 @@ import net.shibboleth.utilities.java.support.logic.Constraint;
 import net.shibboleth.utilities.java.support.security.IdentifierGenerationStrategy;
 import net.shibboleth.utilities.java.support.security.SecureRandomIdentifierGenerationStrategy;
 
+/**
+ * Action forming device authorization response success message. Action generates user and device codes, forms a
+ * {@link DeviceCodeObject} storing it to {@link DeviceCodesCache} keyed with user code. Finally the action forms
+ * {@link OAuth2DeviceAuthorizationSuccessResponse}
+ */
 @SuppressWarnings("rawtypes")
 public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDCResponseAction {
 
@@ -160,7 +164,11 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     /** {@inheritDoc} */
     @Override
     protected boolean doPreExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
-
+        if (getHttpServletRequest() == null) {
+            log.debug("{} Profile action does not contain an HttpServletRequest", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_PROFILE_CTX);
+            return false;
+        }
         if (idGeneratorLookupStrategy.apply(profileRequestContext) == null) {
             log.error("{} No identifier generation strategy", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_PROFILE_CTX);
