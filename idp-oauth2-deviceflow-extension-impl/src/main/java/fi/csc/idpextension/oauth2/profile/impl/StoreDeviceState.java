@@ -73,9 +73,14 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     @Nonnull
     private Logger log = LoggerFactory.getLogger(StoreDeviceState.class);
 
+    /** Expiration of device/user codes in milliseconds. */
+    private long expiration;
+
+    /** Device code matching the user code. */
     @Nullable
     String deviceCode;
 
+    /** Cache for DeviceCodeObjects and DeviceStateObjects. */
     @NonnullAfterInit
     private DeviceCodesCache deviceCodesCache;
 
@@ -92,6 +97,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     @Nonnull
     private Function<ProfileRequestContext, RelyingPartyContext> relyingPartyContextLookupStrategy;
 
+    /** Relying party information. */
     @Nullable
     RelyingPartyContext rpCtx;
 
@@ -122,40 +128,13 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     @Nonnull
     private Function<ProfileRequestContext, OIDCAuthenticationResponseConsentContext> consentContextLookupStrategy;
 
+    /** Strategy to locate user code. */
     @Nonnull
     private Function<MessageContext, String> userCodeLookupStrategy;
 
+    /** Strategy to locate user approval. */
     @Nonnull
     private Function<MessageContext, Boolean> userApprovalLookupStrategy;
-
-    public void setDeviceUserCodeLookupStrategy(@Nonnull final Function<MessageContext, String> strategy) {
-        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
-        userCodeLookupStrategy =
-                Constraint.isNotNull(strategy, "DeviceUserCodeLookupStrategy lookup strategy cannot be null");
-    }
-
-    public void setDeviceUserApprovalLookupStrategy(@Nonnull final Function<MessageContext, Boolean> strategy) {
-        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
-        userApprovalLookupStrategy =
-                Constraint.isNotNull(strategy, "DeviceUserApprovalLookupStrategy lookup strategy cannot be null");
-    }
-
-    /**
-     * Set the revocation cache instance to use.
-     * 
-     * @param cache The revocationCache to set.
-     */
-    public void setDeviceCodesCache(@Nonnull final DeviceCodesCache cache) {
-        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
-        deviceCodesCache = Constraint.isNotNull(cache, "DeviceCodesCache cannot be null");
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void doInitialize() throws ComponentInitializationException {
-        super.doInitialize();
-        Constraint.isNotNull(deviceCodesCache, "DeviceCodesCache cannot be null");
-    }
 
     /**
      * Constructor.
@@ -179,6 +158,45 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
                 return new SecureRandomIdentifierGenerationStrategy();
             }
         };
+    }
+
+    /**
+     * Set strategy to locate user code.
+     * 
+     * @param strategy Strategy to locate user code
+     */
+    public void setDeviceUserCodeLookupStrategy(@Nonnull final Function<MessageContext, String> strategy) {
+        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
+        userCodeLookupStrategy =
+                Constraint.isNotNull(strategy, "DeviceUserCodeLookupStrategy lookup strategy cannot be null");
+    }
+
+    /**
+     * Set strategy to locate user approval.
+     * 
+     * @param strategy Strategy to locate user approval
+     */
+    public void setDeviceUserApprovalLookupStrategy(@Nonnull final Function<MessageContext, Boolean> strategy) {
+        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
+        userApprovalLookupStrategy =
+                Constraint.isNotNull(strategy, "DeviceUserApprovalLookupStrategy lookup strategy cannot be null");
+    }
+
+    /**
+     * Set the revocation cache instance to use.
+     * 
+     * @param cache The revocationCache to set.
+     */
+    public void setDeviceCodesCache(@Nonnull final DeviceCodesCache cache) {
+        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
+        deviceCodesCache = Constraint.isNotNull(cache, "DeviceCodesCache cannot be null");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void doInitialize() throws ComponentInitializationException {
+        super.doInitialize();
+        Constraint.isNotNull(deviceCodesCache, "DeviceCodesCache cannot be null");
     }
 
     /**
@@ -252,18 +270,23 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         if (!super.doPreExecute(profileRequestContext)) {
             return false;
         }
+        String userCode = userCodeLookupStrategy.apply(profileRequestContext.getInboundMessageContext());
+        if (userCode == null || userCode.isEmpty()) {
+            log.error("{} No user code", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_MESSAGE);
+            return false;
+        }
         try {
-            DeviceCodeObject deviceCodeObject = deviceCodesCache
-                    .getDeviceCode(userCodeLookupStrategy.apply(profileRequestContext.getInboundMessageContext()));
+            DeviceCodeObject deviceCodeObject = deviceCodesCache.getDeviceCode(userCode);
+            if (deviceCodeObject == null || deviceCodeObject.getDeviceCode() == null) {
+                log.error("{} No device code for user code", getLogPrefix());
+                ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_MESSAGE);
+                return false;
+            }
             deviceCode = deviceCodeObject.getDeviceCode();
         } catch (IOException | ParseException e) {
             log.error("{} Error accessing device code cache", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
-            return false;
-        }
-        if (deviceCode == null) {
-            log.error("{} No device code for user code", getLogPrefix());
-            ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_MESSAGE);
             return false;
         }
         rpCtx = relyingPartyContextLookupStrategy.apply(profileRequestContext);
@@ -275,12 +298,12 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         final ProfileConfiguration pc = rpCtx.getProfileConfig();
         if (pc != null && pc instanceof OAuth2DeviceFlowConfiguration) {
             accessTokenLifetime = ((OAuth2DeviceFlowConfiguration) pc).getAccessTokenLifetime();
+            expiration = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLifetime();
         } else {
             log.error("{} No oidc profile configuration associated with this profile request", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, IdPEventIds.INVALID_RELYING_PARTY_CTX);
             return false;
         }
-
         subjectCtx = profileRequestContext.getSubcontext(SubjectContext.class, false);
         if (subjectCtx == null) {
             log.error("{} No subject context", getLogPrefix());
@@ -293,7 +316,6 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
             ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_PROFILE_CTX);
             return false;
         }
-
         return true;
     }
     // Checkstyle: CyclomaticComplexity ON
@@ -301,8 +323,6 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     /** {@inheritDoc} */
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
-        // TODO: expiration from global conf
-        int expiration = 10 * 60 * 1000;
         DeviceStateObject deviceStateObject = null;
         if (!userApprovalLookupStrategy.apply(profileRequestContext.getInboundMessageContext())) {
             deviceStateObject = new DeviceStateObject(DeviceStateObject.State.DENIED);
@@ -329,7 +349,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
                 claimsSet = new AccessTokenClaimsSet.Builder(idGenerator, new ClientID(rpCtx.getRelyingPartyId()),
                         issuerLookupStrategy.apply(profileRequestContext), subjectCtx.getPrincipalName(),
                         getOidcResponseContext().getSubject(), new Date(), dateExp,
-                        /** redirect_uri is not relevant in this use case. */
+                        /** redirect_uri is not relevant in device flow as we do not redirect user. */
                         getOidcResponseContext().getAuthTime(), new URI("https://example.com"),
                         getOidcResponseContext().getScope()).setACR(getOidcResponseContext().getAcr())
                                 .setConsentableClaims(consentable).setConsentedClaims(consented).setDlClaims(claims)
@@ -356,7 +376,5 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
             log.error("{} Access Token generation failed {}", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.UNABLE_TO_ENCRYPT);
         }
-
     }
-
 }
