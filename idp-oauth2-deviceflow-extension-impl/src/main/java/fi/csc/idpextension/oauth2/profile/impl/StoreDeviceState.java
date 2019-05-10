@@ -188,9 +188,9 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     }
 
     /**
-     * Set the revocation cache instance to use.
+     * Set the device code cache instance to use.
      * 
-     * @param cache The revocationCache to set.
+     * @param cache The device code cache to set.
      */
     public void setDeviceCodesCache(@Nonnull final DeviceCodesCache cache) {
         ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
