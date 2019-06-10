@@ -30,7 +30,7 @@ While editing the file add the new profile also to profileResponders map.
         <entry key-ref="OAUTH2.Device" value="#{getObject('issuer')}" />
     </util:map>
 
-Then you need to list the new idp-oauth2-deviceflow.properties properties file in the main properties file.
+Then you need to list the new [idp-oauth2-deviceflow.properties](https://github.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/blob/master/idp-oauth2-deviceflow-extension-distribution/src/main/resources/conf/idp-oauth2-deviceflow.properties) properties file in the main properties file.
 
     edit /opt/shibboleth-idp/conf/idp.properties
 
