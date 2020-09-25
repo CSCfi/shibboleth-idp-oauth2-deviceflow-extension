@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceTokenRequest;
 /**
  * Message decoder decoding OAuth2 {@link OAuth2DeviceTokenRequest}s.
  */
-public class OAuth2DeviceTokenRequestDecoder extends AbstractHttpServletRequestMessageDecoder<OAuth2DeviceTokenRequest>
-        implements MessageDecoder<OAuth2DeviceTokenRequest> {
+public class OAuth2DeviceTokenRequestDecoder extends AbstractHttpServletRequestMessageDecoder
+        implements MessageDecoder {
 
     /** Class logger. */
     @Nonnull
@@ -44,7 +44,7 @@ public class OAuth2DeviceTokenRequestDecoder extends AbstractHttpServletRequestM
     /** {@inheritDoc} */
     @Override
     protected void doDecode() throws MessageDecodingException {
-        MessageContext<OAuth2DeviceTokenRequest> messageContext = new MessageContext<>();
+        MessageContext messageContext = new MessageContext();
         OAuth2DeviceTokenRequest req = null;
         try {
             HTTPRequest httpReq = ServletUtils.createHTTPRequest(getHttpServletRequest());

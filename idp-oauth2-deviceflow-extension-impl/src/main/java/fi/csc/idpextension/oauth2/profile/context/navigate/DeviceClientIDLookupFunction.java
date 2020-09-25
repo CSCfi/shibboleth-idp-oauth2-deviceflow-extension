@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package fi.csc.idpextension.oauth2.profile.context.navigate;
 
 import java.io.IOException;
+import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,7 +27,6 @@ import org.opensaml.messaging.context.navigate.ContextDataLookupFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
 import fi.csc.idpextension.storage.DeviceCodeObject;
@@ -42,7 +42,6 @@ import net.shibboleth.utilities.java.support.logic.Constraint;
  * ClientID lookup function for Authentication end point. The lookup locates a {@link DeviceCodeObject} from
  * {@DeviceCodesCache} by user code and returns {@link DeviceCodeObject#getClientID()}
  */
-@SuppressWarnings("rawtypes")
 public class DeviceClientIDLookupFunction extends AbstractInitializableComponent
         implements ContextDataLookupFunction<MessageContext, ClientID> {
 

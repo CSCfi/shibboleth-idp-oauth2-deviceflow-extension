@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import java.net.URI;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.oauth2.sdk.SuccessResponse;
-import com.nimbusds.oauth2.sdk.http.CommonContentTypes;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 
 import net.minidev.json.JSONObject;
@@ -200,7 +200,7 @@ public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse
     @Override
     public HTTPResponse toHTTPResponse() {
         HTTPResponse httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
-        httpResponse.setContentType(CommonContentTypes.APPLICATION_JSON);
+        httpResponse.setEntityContentType(ContentType.APPLICATION_JSON);
         httpResponse.setCacheControl("no-store");
         httpResponse.setPragma("no-cache");
         httpResponse.setContent(toJSONObject().toString());

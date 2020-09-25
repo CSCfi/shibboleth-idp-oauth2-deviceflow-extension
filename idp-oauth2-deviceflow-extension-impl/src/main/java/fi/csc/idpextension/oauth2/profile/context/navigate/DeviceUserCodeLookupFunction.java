@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@ import net.shibboleth.utilities.java.support.component.AbstractInitializableComp
  * {@link OAuth2DeviceAuthenticationRequest} of the {@link MessageContext} is the secondary source for the information.
  * If both fail to produce the value, a null is returned.
  */
-@SuppressWarnings("rawtypes")
 public class DeviceUserCodeLookupFunction extends AbstractInitializableComponent
         implements ContextDataLookupFunction<MessageContext, String> {
 

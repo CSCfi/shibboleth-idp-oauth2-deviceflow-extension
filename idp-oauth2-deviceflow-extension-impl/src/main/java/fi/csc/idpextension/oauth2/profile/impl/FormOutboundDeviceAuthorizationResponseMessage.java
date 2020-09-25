@@ -19,6 +19,8 @@ package fi.csc.idpextension.oauth2.profile.impl;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
+import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 import org.geant.idpextension.oidc.profile.impl.AbstractOIDCResponseAction;
@@ -30,7 +32,6 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
@@ -47,14 +48,13 @@ import net.shibboleth.utilities.java.support.component.ComponentInitializationEx
 import net.shibboleth.utilities.java.support.component.ComponentSupport;
 import net.shibboleth.utilities.java.support.logic.Constraint;
 import net.shibboleth.utilities.java.support.security.IdentifierGenerationStrategy;
-import net.shibboleth.utilities.java.support.security.SecureRandomIdentifierGenerationStrategy;
+import net.shibboleth.utilities.java.support.security.impl.SecureRandomIdentifierGenerationStrategy;
 
 /**
  * Action forming device authorization response success message. Action generates user and device codes, forms a
  * {@link DeviceCodeObject} storing it to {@link DeviceCodesCache} keyed with user code. Finally the action forms
  * {@link OAuth2DeviceAuthorizationSuccessResponse}
  */
-@SuppressWarnings("rawtypes")
 public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDCResponseAction {
 
     /** Class logger. */
@@ -81,7 +81,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     private long userCodeLength;
 
     /** Expiration of device/user codes in milliseconds. */
-    private long expiration;
+    private Duration expiration;
 
     /** Relying party context. */
     private RelyingPartyContext rpCtx;
@@ -90,7 +90,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     private String authenticationEndpoint = "/idp/profile/oauth2/device/authenticate";
 
     /** Interval between polling requests. */
-    private long interval;
+    private Duration interval;
 
     /**
      * Inbound request. Nonnull after pre-execute.
@@ -182,10 +182,10 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
         }
         final ProfileConfiguration pc = rpCtx.getProfileConfig();
         if (pc instanceof OAuth2DeviceFlowConfiguration) {
-            deviceCodeLength = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLength();
-            userCodeLength = ((OAuth2DeviceFlowConfiguration) pc).getUserCodeLength();
-            expiration = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLifetime();
-            interval = ((OAuth2DeviceFlowConfiguration) pc).getPollingInterval();
+            deviceCodeLength = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLength(profileRequestContext);
+            userCodeLength = ((OAuth2DeviceFlowConfiguration) pc).getUserCodeLength(profileRequestContext);
+            expiration = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLifetime(profileRequestContext);
+            interval = ((OAuth2DeviceFlowConfiguration) pc).getPollingInterval(profileRequestContext);
         } else {
             log.error("{} No oauth2 device flow profile configuration associated with this profile request",
                     getLogPrefix());
@@ -229,7 +229,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
         try {
             log.debug("Storing device flow device code object {} per user code {}",
                     deviceCodeObject.toJSONObject().toString(), userCode);
-            if (!deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, expiration)) {
+            if (!deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, expiration.toMillis())) {
                 log.error("{} Failed to set device code to cache.", getLogPrefix());
                 ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
                 return;
@@ -245,7 +245,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
                             new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint),
                             new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint
                                     + "?user_code=" + userCode),
-                            (int) expiration / 1000, (int) interval / 1000));
+                             (int)expiration.toSeconds(), (int)interval.toSeconds()));
         } catch (URISyntaxException e) {
             log.error("{} URI malformed {}", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);

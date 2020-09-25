@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,11 +34,10 @@ import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthenticationRequest;
 
 /**
- * Message decoder decoding OpenID Connect {@link OAuth2DeviceOAuth2DeviceAuthenticationRequest}s.
+ * Message decoder decoding OpenID Connect {@link OAuth2DeviceAuthenticationRequest}s.
  */
-public class OAuth2DeviceAuthenticationRequestDecoder
-        extends AbstractHttpServletRequestMessageDecoder<OAuth2DeviceAuthenticationRequest>
-        implements MessageDecoder<OAuth2DeviceAuthenticationRequest> {
+public class OAuth2DeviceAuthenticationRequestDecoder extends AbstractHttpServletRequestMessageDecoder
+        implements MessageDecoder {
 
     /** Class logger. */
     @Nonnull
@@ -47,7 +46,7 @@ public class OAuth2DeviceAuthenticationRequestDecoder
     /** {@inheritDoc} */
     @Override
     protected void doDecode() throws MessageDecodingException {
-        MessageContext<OAuth2DeviceAuthenticationRequest> messageContext = new MessageContext<>();
+        MessageContext messageContext = new MessageContext();
         OAuth2DeviceAuthenticationRequest req = null;
         try {
             HTTPRequest httpReq = ServletUtils.createHTTPRequest(getHttpServletRequest());

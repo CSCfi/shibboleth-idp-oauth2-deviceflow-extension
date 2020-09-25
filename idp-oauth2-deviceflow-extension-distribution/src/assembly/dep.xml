@@ -9,13 +9,6 @@
     </formats>
     <fileSets>
         <fileSet>
-            <directory>../idp-oauth2-deviceflow-extension-impl/src/main/resources/flows</directory>
-            <outputDirectory>flows</outputDirectory>
-            <includes>
-                <include>**/*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
             <directory>../idp-oauth2-deviceflow-extension-impl/target</directory>
             <outputDirectory>edit-webapp/WEB-INF/lib</outputDirectory>
             <includes>
