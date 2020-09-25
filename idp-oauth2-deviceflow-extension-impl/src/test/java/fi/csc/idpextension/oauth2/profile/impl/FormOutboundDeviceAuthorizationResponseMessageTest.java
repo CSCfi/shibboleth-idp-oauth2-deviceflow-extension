@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.opensaml.storage.impl.MemoryStorageService;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.webflow.execution.RequestContext;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -35,7 +36,6 @@ import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthorizationReques
 import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthorizationSuccessResponse;
 import fi.csc.idpextension.storage.DeviceCodeObject;
 import fi.csc.idpextension.storage.DeviceCodesCache;
-import junit.framework.Assert;
 import net.minidev.json.parser.ParseException;
 import net.shibboleth.idp.profile.ActionTestingSupport;
 import net.shibboleth.idp.profile.IdPEventIds;
@@ -51,7 +51,6 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
 
     protected RequestContext requestCtx;
 
-    @SuppressWarnings("rawtypes")
     protected ProfileRequestContext profileRequestCtx;
 
     private FormOutboundDeviceAuthorizationResponseMessage action;
@@ -60,7 +59,6 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
 
     private DeviceCodesCache deviceCodesCache;
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @BeforeMethod
     protected void setUp() throws Exception {
         requestCtx = new RequestContextBuilder().buildRequestContext();
@@ -149,7 +147,6 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
         ActionTestingSupport.assertEvent(action.execute(requestCtx), IdPEventIds.INVALID_RELYING_PARTY_CTX);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFailNoInboudMessage() {
         profileRequestCtx.getInboundMessageContext().setMessage(null);

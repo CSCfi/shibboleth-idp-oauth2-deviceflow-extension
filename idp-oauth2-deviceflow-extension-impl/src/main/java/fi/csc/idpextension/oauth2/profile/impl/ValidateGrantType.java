@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ import net.shibboleth.utilities.java.support.logic.Constraint;
  * Device Flow the grant type is expected to be urn:ietf:params:oauth:grant-type:device_code. Action does not check the
  * existence or value of the grant in the actual request.
  */
-@SuppressWarnings("rawtypes")
 public class ValidateGrantType extends AbstractProfileAction {
 
     /** Class logger. */
@@ -62,7 +61,6 @@ public class ValidateGrantType extends AbstractProfileAction {
     }
 
     /** {@inheritDoc} */
-    @SuppressWarnings("unchecked")
     @Override
     protected boolean doPreExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
 

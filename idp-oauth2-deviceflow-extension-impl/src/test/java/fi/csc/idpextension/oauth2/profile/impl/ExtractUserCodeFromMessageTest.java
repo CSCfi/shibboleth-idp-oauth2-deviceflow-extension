@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,12 +37,10 @@ public class ExtractUserCodeFromMessageTest {
 
     protected RequestContext requestCtx;
 
-    @SuppressWarnings("rawtypes")
     protected ProfileRequestContext profileRequestCtx;
 
     private ExtractUserCodeFromMessage action;
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @BeforeMethod
     protected void setUp() throws Exception {
         requestCtx = new RequestContextBuilder().buildRequestContext();
@@ -60,7 +58,6 @@ public class ExtractUserCodeFromMessageTest {
                 .getSubcontext(DeviceUserAuthenticationContext.class)).getUserCode(), "123456");
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testNoUserCode() throws MessageDecodingException {
         profileRequestCtx.getInboundMessageContext().setMessage(new OAuth2DeviceAuthenticationRequest(null, null));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ public class ExtractUserCodeFromFormRequestTest {
 
     protected RequestContext requestCtx;
 
-    @SuppressWarnings("rawtypes")
     protected ProfileRequestContext profileRequestCtx;
 
     private ExtractUserCodeFromFormRequest action;
@@ -81,7 +80,7 @@ public class ExtractUserCodeFromFormRequestTest {
         httpRequest.addParameter("j_usercode", "");
         ActionTestingSupport.assertEvent(action.execute(requestCtx), DeviceEventIds.NO_USER_CODE);
     }
-    
+
     @Test
     public void testUserCodeFieldName() throws MessageDecodingException, ComponentInitializationException {
         httpRequest.removeAllParameters();

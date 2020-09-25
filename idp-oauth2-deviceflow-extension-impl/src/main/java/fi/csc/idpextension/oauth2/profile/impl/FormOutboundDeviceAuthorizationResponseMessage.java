@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -204,7 +204,6 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     }
 
     /** {@inheritDoc} */
-    @SuppressWarnings("unchecked")
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
         String deviceCode = idGeneratorLookupStrategy.apply(profileRequestContext).generateIdentifier();
@@ -245,7 +244,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
                             new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint),
                             new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint
                                     + "?user_code=" + userCode),
-                             (int)expiration.toSeconds(), (int)interval.toSeconds()));
+                            (int) expiration.toSeconds(), (int) interval.toSeconds()));
         } catch (URISyntaxException e) {
             log.error("{} URI malformed {}", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);

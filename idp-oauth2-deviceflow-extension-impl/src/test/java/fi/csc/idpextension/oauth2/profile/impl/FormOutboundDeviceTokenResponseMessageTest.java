@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.opensaml.storage.impl.MemoryStorageService;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.webflow.execution.RequestContext;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -37,7 +38,6 @@ import fi.csc.idpextension.storage.DeviceCodeObject;
 import fi.csc.idpextension.storage.DeviceCodesCache;
 import fi.csc.idpextension.storage.DeviceStateObject;
 import fi.csc.idpextension.storage.DeviceStateObject.State;
-import junit.framework.Assert;
 import net.minidev.json.parser.ParseException;
 import net.shibboleth.idp.profile.ActionTestingSupport;
 import net.shibboleth.idp.profile.RequestContextBuilder;
@@ -50,7 +50,6 @@ public class FormOutboundDeviceTokenResponseMessageTest {
 
     protected RequestContext requestCtx;
 
-    @SuppressWarnings("rawtypes")
     protected ProfileRequestContext profileRequestCtx;
 
     private FormOutboundDeviceTokenResponseMessage action;
@@ -61,7 +60,6 @@ public class FormOutboundDeviceTokenResponseMessageTest {
 
     private long expiresAt;
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @BeforeMethod
     protected void setUp() throws Exception {
         requestCtx = new RequestContextBuilder().buildRequestContext();
@@ -124,7 +122,6 @@ public class FormOutboundDeviceTokenResponseMessageTest {
         ActionTestingSupport.assertEvent(action.execute(requestCtx), DeviceEventIds.EXPIRED_TOKEN);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testNoMessage() throws IOException, ParseException {
         profileRequestCtx.getInboundMessageContext().setMessage(null);
