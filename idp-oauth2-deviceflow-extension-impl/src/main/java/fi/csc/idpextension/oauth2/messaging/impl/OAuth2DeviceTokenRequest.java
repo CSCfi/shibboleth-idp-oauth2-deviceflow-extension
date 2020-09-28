@@ -41,8 +41,8 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
 
 /**
- * Class implementing Authorization Request message as described in
- * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.4.
+ * Class implementing Device Access Token Request message as described in
+ * https://tools.ietf.org/html/rfc8628#section-3.4.
  */
 public class OAuth2DeviceTokenRequest extends AbstractOptionallyIdentifiedRequest {
 
@@ -56,7 +56,7 @@ public class OAuth2DeviceTokenRequest extends AbstractOptionallyIdentifiedReques
 
     /**
      * REQUIRED. The device verification code, "device_code" from the Device Authorization Response, defined in
-     * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.2
+     * https://tools.ietf.org/html/rfc8628#section-3.2
      */
     private final String deviceCode;
 

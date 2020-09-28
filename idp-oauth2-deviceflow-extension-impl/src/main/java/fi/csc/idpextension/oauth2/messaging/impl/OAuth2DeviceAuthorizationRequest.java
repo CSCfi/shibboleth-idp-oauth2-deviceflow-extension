@@ -44,7 +44,7 @@ import com.nimbusds.oauth2.sdk.util.URLUtils;
 
 /**
  * Class implementing Authorization Request message as described in
- * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.1.
+ * https://tools.ietf.org/html/rfc8628#section-3.1.
  */
 public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifiedRequest {
 

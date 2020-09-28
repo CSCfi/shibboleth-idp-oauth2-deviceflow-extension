@@ -29,7 +29,7 @@ import net.minidev.json.JSONObject;
 
 /**
  * Class implementing Authorization Response message as described in
- * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.2.
+ * https://tools.ietf.org/html/rfc8628#section-3.2.
  */
 public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse {
 
