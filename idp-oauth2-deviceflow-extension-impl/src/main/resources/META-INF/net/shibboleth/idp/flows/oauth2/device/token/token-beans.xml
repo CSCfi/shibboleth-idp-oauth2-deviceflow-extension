@@ -12,7 +12,7 @@
 
 	<!-- Import core common beans. -->
 	<import
-		resource="../../../oidc/abstract/oidc-abstract-beans.xml" />
+		resource="classpath*:/META-INF/net/shibboleth/idp/flows/oidc/abstract/oidc-abstract-beans.xml" />
 
 	<bean id="InitializeProfileRequestContext"
 		class="net.shibboleth.idp.profile.impl.InitializeProfileRequestContext"

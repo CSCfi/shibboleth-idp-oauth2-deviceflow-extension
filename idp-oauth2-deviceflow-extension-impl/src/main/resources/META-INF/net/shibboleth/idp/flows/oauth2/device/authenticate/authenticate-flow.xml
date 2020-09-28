@@ -18,6 +18,7 @@
 
 	<view-state id="DisplayUserCodePage"
 		view="#{flowRequestContext.activeFlow.id}-usercode">
+		<attribute name="csrf_excluded" value="true" type="boolean"/>
 		<on-render>
 			<evaluate expression="environment"
 				result="viewScope.environment" />
@@ -123,6 +124,7 @@
 
 	<view-state id="DisplayUserApprovalPage"
 		view="#{flowRequestContext.activeFlow.id}-userapproval">
+		<attribute name="csrf_excluded" value="true" type="boolean"/>
 		<on-render>
 			<evaluate expression="environment"
 				result="viewScope.environment" />
@@ -178,6 +180,7 @@
 
 	<end-state id="AuditedErrorView"
 		view="#{MapEventToView.apply(currentEvent)}">
+		<attribute name="csrf_excluded" value="true" type="boolean"/>
 		<on-entry>
 			<evaluate expression="ErrorViewPopulateAuditContext" />
 			<evaluate expression="WriteAuditLog" />
@@ -204,6 +207,7 @@
 
 	<end-state id="ErrorView"
 		view="#{MapEventToView.apply(currentEvent)}">
+		<attribute name="csrf_excluded" value="true" type="boolean"/>
 		<on-entry>
 			<evaluate expression="environment"
 				result="requestScope.environment" />
@@ -228,6 +232,7 @@
 
 	<end-state id="DisplayEnd"
 		view="#{flowRequestContext.activeFlow.id}-end">
+		<attribute name="csrf_excluded" value="true" type="boolean"/>
 		<on-entry>
 			<evaluate expression="environment"
 				result="requestScope.environment" />

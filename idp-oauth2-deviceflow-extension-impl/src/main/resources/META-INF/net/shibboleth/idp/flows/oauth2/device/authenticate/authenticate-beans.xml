@@ -12,7 +12,7 @@
 
 	<!-- Import core common beans. -->
 	<import
-		resource="../../../oidc/abstract/oidc-abstract-beans.xml" />
+		resource="classpath*:/META-INF/net/shibboleth/idp/flows/oidc/abstract/oidc-abstract-beans.xml" />
 
 	<bean id="InitializeProfileRequestContext"
 		class="net.shibboleth.idp.profile.impl.InitializeProfileRequestContext"
@@ -106,36 +106,34 @@
 		class="org.geant.idpextension.oidc.profile.impl.SetAuthenticationTimeToResponseContext"
 		scope="prototype" />
 
+	
 	<bean id="SetAuthenticationContextClassReferenceToResponseContext"
-		class="org.geant.idpextension.oidc.profile.impl.SetAuthenticationContextClassReferenceToResponseContext"
-		scope="prototype">
-		<property name="classRefLookupStrategy">
-			<bean
-				class="net.shibboleth.idp.authn.principal.DefaultPrincipalDeterminationStrategy"
-				c:type="org.geant.idpextension.oidc.authn.principal.AuthenticationContextClassReferencePrincipal"
-				p:weightMap="#{getObject('shibboleth.AuthenticationPrincipalWeightMap')}">
-				<constructor-arg name="principal">
-					<bean
-						class="org.geant.idpextension.oidc.authn.principal.AuthenticationContextClassReferencePrincipal"
-						c:classRef="#{T(org.geant.idpextension.oidc.authn.principal.AuthenticationContextClassReferencePrincipal).UNSPECIFIED}" />
-				</constructor-arg>
-			</bean>
-		</property>
-	</bean>
+        class="org.geant.idpextension.oidc.profile.impl.SetAuthenticationContextClassReferenceToResponseContext"
+        scope="prototype">
+        <property name="classRefLookupStrategy">
+            <bean class="net.shibboleth.idp.authn.principal.DefaultPrincipalDeterminationStrategy"
+                c:type="org.geant.idpextension.oidc.authn.principal.AuthenticationContextClassReferencePrincipal">
+                <constructor-arg name="principal">
+                    <bean
+                        class="org.geant.idpextension.oidc.authn.principal.AuthenticationContextClassReferencePrincipal"
+                        c:classRef="#{T(org.geant.idpextension.oidc.authn.principal.AuthenticationContextClassReferencePrincipal).UNSPECIFIED}" />
+                </constructor-arg>
+            </bean>
+        </property>
+    </bean>
 
-	<bean id="SetSubjectToResponseContext"
-		class="org.geant.idpextension.oidc.profile.impl.SetSubjectToResponseContext"
-		scope="prototype">
-		<property name="subjectLookupStrategy">
-			<bean
-				class="org.geant.idpextension.oidc.profile.logic.AttributeResolutionSubjectLookupFunction" />
-		</property>
-		<property name="subjectTypeLookupStrategy">
-			<bean
-				class="org.geant.idpextension.oidc.profile.logic.DefaultSubjectTypeStrategy" />
-		</property>
-	</bean>
 
+    <bean id="SetSubjectToResponseContext"
+        class="org.geant.idpextension.oidc.profile.impl.SetSubjectToResponseContext" scope="prototype">
+        <property name="subjectLookupStrategy">
+            <bean class="org.geant.idpextension.oidc.profile.logic.AttributeResolutionSubjectLookupFunction"
+                p:transcoderRegistry-ref="shibboleth.AttributeRegistryService" />
+        </property>
+        <property name="subjectTypeLookupStrategy">
+            <bean class="org.geant.idpextension.oidc.profile.logic.DefaultSubjectTypeStrategy" />
+        </property>
+    </bean>
+    
 	<bean id="InitializeOutboundMessageContext"
 		class="org.geant.idpextension.oidc.profile.impl.InitializeOutboundAuthenticationResponseMessageContext"
 		scope="prototype" />
