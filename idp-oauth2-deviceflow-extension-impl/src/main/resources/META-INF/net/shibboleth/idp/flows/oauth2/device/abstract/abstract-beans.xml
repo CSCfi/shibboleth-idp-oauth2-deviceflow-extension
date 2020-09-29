@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:c="http://www.springframework.org/schema/c" 
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p" 
+       xmlns:util="http://www.springframework.org/schema/util" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd" 
+       default-init-method="initialize" default-destroy-method="destroy">
+       
+  <import resource="classpath*:/META-INF/net/shibboleth/idp/flows/oidc/abstract/oidc-abstract-beans.xml"/>
+  
+  <bean id="InitializeProfileRequestContext" class="net.shibboleth.idp.profile.impl.InitializeProfileRequestContext" 
+    scope="prototype" p:profileId="http://csc.fi/ns/profiles/oauth2/device" p:loggingId="%{idp.service.logging.saml2sso:SSO}"/>
+      
+  <bean id="shibboleth.DeviceCodesCache" class="fi.csc.idpextension.storage.DeviceCodesCache" 
+    depends-on="shibboleth.LoggingService" p:storage-ref="#{'%{idp.oauth2.deviceCodeCache.StorageService:shibboleth.StorageService}'.trim()}"/>
+      
+</beans>
