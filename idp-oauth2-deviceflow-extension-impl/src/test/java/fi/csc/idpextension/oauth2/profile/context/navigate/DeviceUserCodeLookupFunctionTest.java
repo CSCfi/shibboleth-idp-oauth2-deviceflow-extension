@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,14 +27,12 @@ import org.testng.Assert;
 /**
  * Unit tests for {@link DeviceUserCodeLookupFunction}.
  */
-@SuppressWarnings("rawtypes")
 public class DeviceUserCodeLookupFunctionTest {
 
     private DeviceUserCodeLookupFunction lookup;
 
     private MessageContext msgCtx;
 
-    @SuppressWarnings("unchecked")
     @BeforeMethod
     protected void setUp() throws Exception {
         lookup = new DeviceUserCodeLookupFunction();
@@ -55,7 +53,6 @@ public class DeviceUserCodeLookupFunctionTest {
         Assert.assertEquals(lookup.apply(msgCtx), "userCodeMsg");
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void lookupNoCode() {
         msgCtx.removeSubcontext(DeviceUserAuthenticationContext.class);

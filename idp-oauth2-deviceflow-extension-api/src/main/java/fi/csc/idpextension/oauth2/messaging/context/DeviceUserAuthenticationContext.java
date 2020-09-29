@@ -29,13 +29,13 @@ public class DeviceUserAuthenticationContext extends BaseContext {
 
     /**
      * The end-user verification code described in
-     * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.2.
+     * https://tools.ietf.org/html/rfc8628#section-3.2.
      */
     private String userCode;
 
     /**
      * Whether user has approved or denied request described in
-     * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.3.
+     * https://tools.ietf.org/html/rfc8628#section-3.3.
      */
     private boolean userApproved;
 

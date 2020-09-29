@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import fi.csc.idpextension.oauth2.profile.DeviceEventIds;
  * Actions extracts user code from form. Extracted user code is stored to {@link DeviceUserAuthenticationContext} that
  * is placed under inbound message context.
  */
-@SuppressWarnings("rawtypes")
 public class ExtractUserCodeFromFormRequest extends AbstractProfileAction {
 
     /** Class logger. */

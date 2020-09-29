@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,14 +44,12 @@ public class ValidateGrantTypeTest {
 
     protected RequestContext requestCtx;
 
-    @SuppressWarnings("rawtypes")
     protected ProfileRequestContext profileRequestCtx;
 
     private ValidateGrantType action;
 
     private OIDCClientMetadata metaData;
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @BeforeMethod
     protected void setUp() throws Exception {
         requestCtx = new RequestContextBuilder().buildRequestContext();
@@ -96,7 +94,6 @@ public class ValidateGrantTypeTest {
         ActionTestingSupport.assertProceedEvent(action.execute(requestCtx));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testNoInboundMsgCtx() throws ParseException {
         profileRequestCtx.setInboundMessageContext(null);

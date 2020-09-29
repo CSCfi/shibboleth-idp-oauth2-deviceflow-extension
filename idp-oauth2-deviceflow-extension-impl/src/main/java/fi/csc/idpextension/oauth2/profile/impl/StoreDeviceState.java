@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@ package fi.csc.idpextension.oauth2.profile.impl;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Date;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,8 +30,6 @@ import org.opensaml.profile.action.EventIds;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSet;
 
@@ -64,14 +64,13 @@ import net.shibboleth.utilities.java.support.logic.Constraint;
 import net.shibboleth.utilities.java.support.security.DataSealer;
 import net.shibboleth.utilities.java.support.security.DataSealerException;
 import net.shibboleth.utilities.java.support.security.IdentifierGenerationStrategy;
-import net.shibboleth.utilities.java.support.security.SecureRandomIdentifierGenerationStrategy;
+import net.shibboleth.utilities.java.support.security.impl.SecureRandomIdentifierGenerationStrategy;
 
 /**
  * Action storing user approval action, approved or denied to {@link DeviceCodesCache} as a {@link DeviceStateObject}.
  * In the case user approved the request the {@link DeviceStateObject} contains a access token that may be queried by a
  * trusted rp using Device Code.
  */
-@SuppressWarnings("rawtypes")
 public class StoreDeviceState extends AbstractOIDCResponseAction {
 
     /** Class logger. */
@@ -79,7 +78,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     private Logger log = LoggerFactory.getLogger(StoreDeviceState.class);
 
     /** Expiration of device/user codes in milliseconds. */
-    private long expiration;
+    private Duration expiration;
 
     /** Device code matching the user code. */
     @Nullable
@@ -90,7 +89,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     private DeviceCodesCache deviceCodesCache;
 
     /** Access Token lifetime. */
-    private long accessTokenLifetime;
+    private Duration accessTokenLifetime;
 
     /** Data sealer for handling access token. */
     @Nonnull
@@ -149,15 +148,14 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     public StoreDeviceState(@Nonnull @ParameterName(name = "sealer") final DataSealer sealer) {
         userCodeLookupStrategy = new DeviceUserCodeLookupFunction();
         userApprovalLookupStrategy = new DeviceUserApprovalLookupFunction();
-        tokenClaimsContextLookupStrategy =
-                Functions.compose(new ChildContextLookup<>(OIDCAuthenticationResponseTokenClaimsContext.class),
-                        new OIDCAuthenticationResponseContextLookupFunction());
-        consentContextLookupStrategy =
-                Functions.compose(new ChildContextLookup<>(OIDCAuthenticationResponseConsentContext.class),
-                        new OIDCAuthenticationResponseContextLookupFunction());
+
+        tokenClaimsContextLookupStrategy = new ChildContextLookup<>(OIDCAuthenticationResponseTokenClaimsContext.class)
+                .compose(new OIDCAuthenticationResponseContextLookupFunction());
+        consentContextLookupStrategy = new ChildContextLookup<>(OIDCAuthenticationResponseConsentContext.class)
+                .compose(new OIDCAuthenticationResponseContextLookupFunction());
         relyingPartyContextLookupStrategy = new ChildContextLookup<>(RelyingPartyContext.class);
         dataSealer = Constraint.isNotNull(sealer, "DataSealer cannot be null");
-        issuerLookupStrategy = new ResponderIdLookupFunction();
+        issuerLookupStrategy = (Function<ProfileRequestContext, String>) new ResponderIdLookupFunction();
         idGeneratorLookupStrategy = new Function<ProfileRequestContext, IdentifierGenerationStrategy>() {
             public IdentifierGenerationStrategy apply(ProfileRequestContext input) {
                 return new SecureRandomIdentifierGenerationStrategy();
@@ -302,8 +300,8 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         }
         final ProfileConfiguration pc = rpCtx.getProfileConfig();
         if (pc != null && pc instanceof OAuth2DeviceFlowConfiguration) {
-            accessTokenLifetime = ((OAuth2DeviceFlowConfiguration) pc).getAccessTokenLifetime();
-            expiration = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLifetime();
+            accessTokenLifetime = ((OAuth2DeviceFlowConfiguration) pc).getAccessTokenLifetime(profileRequestContext);
+            expiration = ((OAuth2DeviceFlowConfiguration) pc).getDeviceCodeLifetime(profileRequestContext);
         } else {
             log.error("{} No oidc profile configuration associated with this profile request", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, IdPEventIds.INVALID_RELYING_PARTY_CTX);
@@ -332,7 +330,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         if (!userApprovalLookupStrategy.apply(profileRequestContext.getInboundMessageContext())) {
             deviceStateObject = new DeviceStateObject(DeviceStateObject.State.DENIED);
         } else {
-            Date dateExp = new Date(System.currentTimeMillis() + accessTokenLifetime);
+            Instant dateExp = Instant.now().plusMillis(accessTokenLifetime.toMillis());
             ClaimsSet claims = null;
             ClaimsSet claimsUI = null;
             OIDCAuthenticationResponseTokenClaimsContext tokenClaimsCtx =
@@ -353,14 +351,14 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
             try {
                 claimsSet = new AccessTokenClaimsSet.Builder(idGenerator, new ClientID(rpCtx.getRelyingPartyId()),
                         issuerLookupStrategy.apply(profileRequestContext), subjectCtx.getPrincipalName(),
-                        getOidcResponseContext().getSubject(), new Date(), dateExp,
+                        getOidcResponseContext().getSubject(), Instant.now(), dateExp,
                         /** redirect_uri is not relevant in device flow as we do not redirect user. */
                         getOidcResponseContext().getAuthTime(), new URI("https://example.com"),
                         getOidcResponseContext().getScope()).setACR(getOidcResponseContext().getAcr())
                                 .setConsentableClaims(consentable).setConsentedClaims(consented).setDlClaims(claims)
                                 .setDlClaimsUI(claimsUI).build();
                 deviceStateObject = new DeviceStateObject(DeviceStateObject.State.APPROVED,
-                        claimsSet.serialize(dataSealer), System.currentTimeMillis() + accessTokenLifetime);
+                        claimsSet.serialize(dataSealer), System.currentTimeMillis() + accessTokenLifetime.toMillis());
                 log.debug("{} Generated access token {} as {} expiring at {}", getLogPrefix(), claimsSet.serialize(),
                         deviceStateObject.getAccessToken(), deviceStateObject.getExpiresAt());
             } catch (DataSealerException | URISyntaxException e) {
@@ -370,7 +368,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
             }
         }
         try {
-            if (!deviceCodesCache.updateDeviceState(deviceCode, deviceStateObject, expiration)) {
+            if (!deviceCodesCache.updateDeviceState(deviceCode, deviceStateObject, expiration.toMillis())) {
                 log.error("{} Unable to update device state object to approved ", getLogPrefix());
                 ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
                 return;

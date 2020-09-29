@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,6 @@ import net.shibboleth.utilities.java.support.logic.Constraint;
  * Action forms Device Token Response {@link AccessToken} in the case user has approved the action. Cases of expired
  * token, user denied and user action pending are handled with the events.
  */
-@SuppressWarnings("rawtypes")
 public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponseAction {
 
     /** Class logger. */
@@ -75,7 +74,6 @@ public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponse
     }
 
     /** {@inheritDoc} */
-    @SuppressWarnings("unchecked")
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
         if (profileRequestContext.getInboundMessageContext() == null || !(profileRequestContext

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,8 +50,9 @@ public class OAuth2DeviceTokenRequestDecoderTest {
     @Test
     public void testRequestDecoding() throws MessageDecodingException {
         decoder.decode();
-        MessageContext<OAuth2DeviceTokenRequest> messageContext = decoder.getMessageContext();
-        Assert.assertEquals(messageContext.getMessage().getClientID().toString(), "123456");
+        MessageContext messageContext = decoder.getMessageContext();
+        Assert.assertEquals(((OAuth2DeviceTokenRequest) messageContext.getMessage()).getClientID().toString(),
+                "123456");
     }
 
     @Test(expectedExceptions = MessageDecodingException.class)
@@ -69,7 +70,8 @@ public class OAuth2DeviceTokenRequestDecoderTest {
         decoder.setHttpServletRequest(httpRequest);
         decoder.initialize();
         decoder.decode();
-        MessageContext<OAuth2DeviceTokenRequest> messageContext = decoder.getMessageContext();
-        Assert.assertEquals(messageContext.getMessage().getClientAuthentication().getClientID().getValue(), "test");
+        MessageContext messageContext = decoder.getMessageContext();
+        Assert.assertEquals(((OAuth2DeviceTokenRequest) messageContext.getMessage()).getClientAuthentication()
+                .getClientID().getValue(), "test");
     }
 }

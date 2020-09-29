@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 
 package fi.csc.idpextension.oauth2.profile.impl;
 
+import java.util.function.Function;
+
 import javax.annotation.Nonnull;
 
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.base.Function;
 
 import fi.csc.idpextension.oauth2.messaging.context.DeviceUserAuthenticationContext;
 import fi.csc.idpextension.oauth2.profile.DeviceEventIds;
@@ -38,7 +39,6 @@ import net.shibboleth.utilities.java.support.logic.Constraint;
  * that is placed under inbound message context. The action should be called as the first action to try the extracting
  * of the user code.
  */
-@SuppressWarnings("rawtypes")
 public class ExtractUserCodeFromMessage extends AbstractProfileAction {
 
     /** Class logger. */
@@ -63,7 +63,6 @@ public class ExtractUserCodeFromMessage extends AbstractProfileAction {
         userCodeLookupStrategy = new DeviceUserCodeLookupFunction();
     }
 
-    @SuppressWarnings("unchecked")
     /** {@inheritDoc} */
     @Override
     protected boolean doPreExecute(@Nonnull final ProfileRequestContext profileRequestContext) {

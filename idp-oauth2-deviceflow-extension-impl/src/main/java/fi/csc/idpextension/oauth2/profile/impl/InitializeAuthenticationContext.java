@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Action creates a vanilla authentication context. If authentication context pre-exists the result of it is set as
- * initial result.
+ * Action creates a vanilla authentication context.
  */
-@SuppressWarnings("rawtypes")
 public class InitializeAuthenticationContext extends AbstractProfileAction {
 
     /** Class logger. */
@@ -42,11 +40,6 @@ public class InitializeAuthenticationContext extends AbstractProfileAction {
 
         log.debug("{} Initializing authentication context", getLogPrefix());
         final AuthenticationContext authnCtx = new AuthenticationContext();
-        final AuthenticationContext initialAuthnContext =
-                profileRequestContext.getSubcontext(AuthenticationContext.class);
-        if (initialAuthnContext != null) {
-            authnCtx.setInitialAuthenticationResult(initialAuthnContext.getAuthenticationResult());
-        }
         profileRequestContext.addSubcontext(authnCtx, true);
         log.debug("{} Created authentication context: {}", getLogPrefix(), authnCtx);
     }

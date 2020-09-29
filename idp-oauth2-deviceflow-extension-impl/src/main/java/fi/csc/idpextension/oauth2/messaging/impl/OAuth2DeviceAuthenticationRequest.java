@@ -36,14 +36,13 @@ import com.nimbusds.oauth2.sdk.util.MultivaluedMapUtils;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
 
 /**
- * Class implementing Authentication Request message for https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15.
- * The request is not generic, only for this implementation.
+ * Class implementing Authentication Request message for https://tools.ietf.org/html/rfc8628.
  */
 public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
 
     /**
      * The end-user verification code described in
-     * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.2.
+     * https://tools.ietf.org/html/rfc8628#section-3.2.
      */
     private final String user_code;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ import org.geant.idpextension.oidc.profile.impl.AbstractInitializeOutboundRespon
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.profile.context.ProfileRequestContext;
 
-import com.nimbusds.oauth2.sdk.Response;
-
 /**
  * Action that adds an outbound {@link MessageContext} and related OIDC contexts to the {@link ProfileRequestContext}
  * not knowing the relying party yet.
@@ -29,6 +27,6 @@ import com.nimbusds.oauth2.sdk.Response;
  * @event {@link org.opensaml.profile.action.EventIds#PROCEED_EVENT_ID}
  */
 public class InitializeOutboundDeviceAuthorizationResponseMessageContext
-        extends AbstractInitializeOutboundResponseMessageContext<Response> {
+        extends AbstractInitializeOutboundResponseMessageContext {
 
 }

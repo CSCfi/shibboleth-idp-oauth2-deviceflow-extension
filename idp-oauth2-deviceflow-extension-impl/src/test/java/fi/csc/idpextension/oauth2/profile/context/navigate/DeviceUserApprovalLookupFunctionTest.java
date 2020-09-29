@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.testng.Assert;
 /**
  * Unit tests for {@link DeviceUserApprovalLookupFunction}.
  */
-@SuppressWarnings("rawtypes")
 public class DeviceUserApprovalLookupFunctionTest {
 
     private DeviceUserApprovalLookupFunction lookup;

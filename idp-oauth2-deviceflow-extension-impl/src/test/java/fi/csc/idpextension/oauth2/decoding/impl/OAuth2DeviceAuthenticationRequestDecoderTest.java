@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,16 +45,16 @@ public class OAuth2DeviceAuthenticationRequestDecoderTest {
     @Test
     public void testRequestDecodingNoUserCode() throws MessageDecodingException {
         decoder.decode();
-        MessageContext<OAuth2DeviceAuthenticationRequest> messageContext = decoder.getMessageContext();
-        Assert.assertNull(messageContext.getMessage().getUserCode());
+        MessageContext messageContext = decoder.getMessageContext();
+        Assert.assertNull(((OAuth2DeviceAuthenticationRequest) messageContext.getMessage()).getUserCode());
     }
 
     @Test
     public void testRequestDecodingUserCode() throws MessageDecodingException {
         httpRequest.setQueryString("user_code=123456");
         decoder.decode();
-        MessageContext<OAuth2DeviceAuthenticationRequest> messageContext = decoder.getMessageContext();
-        Assert.assertEquals(messageContext.getMessage().getUserCode(), "123456");
+        MessageContext messageContext = decoder.getMessageContext();
+        Assert.assertEquals(((OAuth2DeviceAuthenticationRequest) messageContext.getMessage()).getUserCode(), "123456");
     }
 
 }

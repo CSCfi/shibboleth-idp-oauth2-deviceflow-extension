@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.oauth2.sdk.AbstractOptionallyIdentifiedRequest;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -35,7 +36,6 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.SerializeException;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
-import com.nimbusds.oauth2.sdk.http.CommonContentTypes;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.util.MultivaluedMapUtils;
@@ -44,7 +44,7 @@ import com.nimbusds.oauth2.sdk.util.URLUtils;
 
 /**
  * Class implementing Authorization Request message as described in
- * https://tools.ietf.org/html/draft-ietf-oauth-device-flow-15#section-3.1.
+ * https://tools.ietf.org/html/rfc8628#section-3.1.
  */
 public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifiedRequest {
 
@@ -103,7 +103,7 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
             throw new SerializeException(e.getMessage(), e);
         }
         HTTPRequest httpRequest = new HTTPRequest(HTTPRequest.Method.POST, url);
-        httpRequest.setContentType(CommonContentTypes.APPLICATION_URLENCODED);
+        httpRequest.setEntityContentType(ContentType.APPLICATION_URLENCODED);
         Map<String, List<String>> params = new HashMap<>();
         if (getClientID() != null) {
             // public client
@@ -128,7 +128,7 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
      */
     public static OAuth2DeviceAuthorizationRequest parse(final HTTPRequest httpRequest) throws ParseException {
         httpRequest.ensureMethod(HTTPRequest.Method.POST);
-        httpRequest.ensureContentType(CommonContentTypes.APPLICATION_URLENCODED);
+        httpRequest.ensureEntityContentType(ContentType.APPLICATION_URLENCODED);
         ClientAuthentication clientAuth;
         try {
             clientAuth = ClientAuthentication.parse(httpRequest);

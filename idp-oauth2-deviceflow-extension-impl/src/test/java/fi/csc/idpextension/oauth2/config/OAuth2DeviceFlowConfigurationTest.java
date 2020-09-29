@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,11 @@
 
 package fi.csc.idpextension.oauth2.config;
 
-import java.security.Principal;
-import java.util.Arrays;
+import java.time.Duration;
+
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import fi.csc.idpextension.oauth2.config.OAuth2DeviceFlowConfiguration;
-import junit.framework.Assert;
-import net.shibboleth.idp.saml.authn.principal.AuthenticationMethodPrincipal;
 
 /**
  * Tests for {@link OAuth2DeviceFlowConfiguration}.
@@ -46,33 +43,15 @@ public class OAuth2DeviceFlowConfigurationTest {
 
     @Test
     public void testSetters() {
-        conf.setAccessTokenLifetime(5);
-        Assert.assertEquals(5, conf.getAccessTokenLifetime());
-        conf.setAuthenticationFlows(Arrays.asList("flow1", "flow2"));
-        Assert.assertEquals(2, conf.getAuthenticationFlows().size());
-        Assert.assertTrue(conf.getAuthenticationFlows().contains("flow1"));
-        Assert.assertTrue(conf.getAuthenticationFlows().contains("flow2"));
-        conf.setDefaultAuthenticationMethods(Arrays.asList((Principal) new AuthenticationMethodPrincipal("method1"),
-                (Principal) new AuthenticationMethodPrincipal("method2")));
-        Assert.assertEquals(2, conf.getDefaultAuthenticationMethods().size());
-        Assert.assertTrue(conf.getDefaultAuthenticationMethods()
-                .contains((Principal) new AuthenticationMethodPrincipal("method1")));
-        Assert.assertTrue(conf.getDefaultAuthenticationMethods()
-                .contains((Principal) new AuthenticationMethodPrincipal("method2")));
-        conf.setDeviceCodeLength(5);
-        Assert.assertEquals(5, conf.getDeviceCodeLength());
-        conf.setDeviceCodeLifetime(6);
-        Assert.assertEquals(6, conf.getDeviceCodeLifetime());
-        conf.setUserCodeLength(7);
-        Assert.assertEquals(7, conf.getUserCodeLength());
-        conf.setPostAuthenticationFlows(Arrays.asList("pflow1", "pflow2"));
-        Assert.assertEquals(2, conf.getPostAuthenticationFlows().size());
-        Assert.assertTrue(conf.getPostAuthenticationFlows().contains("pflow1"));
-        Assert.assertTrue(conf.getPostAuthenticationFlows().contains("pflow2"));
-        conf.setNameIDFormatPrecedence(Arrays.asList("format1", "format2"));
-        Assert.assertEquals(2, conf.getNameIDFormatPrecedence().size());
-        Assert.assertTrue(conf.getNameIDFormatPrecedence().get(0).equals("format1"));
-        Assert.assertTrue(conf.getNameIDFormatPrecedence().get(1).equals("format2"));
+        conf.setPollingInterval(Duration.ofSeconds(10));
+        conf.setDeviceCodeLifetime(Duration.ofSeconds(11));
+        conf.setDeviceCodeLength(20);
+        conf.setUserCodeLength(10);
+        Assert.assertEquals(Duration.ofSeconds(10), conf.getPollingInterval(null));
+        Assert.assertEquals(Duration.ofSeconds(11), conf.getDeviceCodeLifetime(null));
+        Assert.assertEquals((int) 20, (int) conf.getDeviceCodeLength(null));
+        Assert.assertEquals((int) 10, (int) conf.getUserCodeLength(null));
+
     }
 
 }

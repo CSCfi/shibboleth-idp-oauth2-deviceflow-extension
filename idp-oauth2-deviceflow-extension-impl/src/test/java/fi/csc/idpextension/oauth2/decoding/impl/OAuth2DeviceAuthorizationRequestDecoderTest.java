@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import fi.csc.idpextension.oauth2.decoding.impl.OAuth2DeviceAuthorizationRequestDecoder;
 import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 
@@ -51,9 +50,9 @@ public class OAuth2DeviceAuthorizationRequestDecoderTest {
     @Test
     public void testRequestDecoding() throws MessageDecodingException {
         decoder.decode();
-        MessageContext<OAuth2DeviceAuthorizationRequest> messageContext = decoder.getMessageContext();
-        Assert.assertEquals(messageContext.getMessage().getClientID().toString(), "123456");
-        Assert.assertEquals("value", messageContext.getMessage().getScope().toString());
+        MessageContext messageContext = decoder.getMessageContext();
+        Assert.assertEquals(((OAuth2DeviceAuthorizationRequest)messageContext.getMessage()).getClientID().toString(), "123456");
+        Assert.assertEquals("value", ((OAuth2DeviceAuthorizationRequest)messageContext.getMessage()).getScope().toString());
 
     }
 
@@ -72,8 +71,8 @@ public class OAuth2DeviceAuthorizationRequestDecoderTest {
         decoder.setHttpServletRequest(httpRequest);
         decoder.initialize();
         decoder.decode();
-        MessageContext<OAuth2DeviceAuthorizationRequest> messageContext = decoder.getMessageContext();
-        Assert.assertEquals("value", messageContext.getMessage().getScope().toString());
-        Assert.assertEquals(messageContext.getMessage().getClientAuthentication().getClientID().getValue(), "test");
+        MessageContext messageContext = decoder.getMessageContext();
+        Assert.assertEquals("value", ((OAuth2DeviceAuthorizationRequest)messageContext.getMessage()).getScope().toString());
+        Assert.assertEquals(((OAuth2DeviceAuthorizationRequest)messageContext.getMessage()).getClientAuthentication().getClientID().getValue(), "test");
     }
 }

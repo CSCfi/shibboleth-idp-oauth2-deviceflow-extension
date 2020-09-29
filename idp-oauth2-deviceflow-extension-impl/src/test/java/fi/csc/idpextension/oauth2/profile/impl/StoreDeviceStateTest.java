@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ package fi.csc.idpextension.oauth2.profile.impl;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Instant;
+
 import org.geant.idpextension.oidc.messaging.context.OIDCAuthenticationResponseContext;
 import org.geant.idpextension.oidc.messaging.context.OIDCMetadataContext;
 import org.opensaml.messaging.context.MessageContext;
@@ -27,6 +29,7 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.opensaml.storage.impl.MemoryStorageService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.webflow.execution.RequestContext;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,7 +41,6 @@ import fi.csc.idpextension.oauth2.messaging.context.DeviceUserAuthenticationCont
 import fi.csc.idpextension.storage.DeviceCodeObject;
 import fi.csc.idpextension.storage.DeviceCodesCache;
 import fi.csc.idpextension.storage.DeviceStateObject;
-import junit.framework.Assert;
 import net.minidev.json.parser.ParseException;
 import net.shibboleth.ext.spring.resource.ResourceHelper;
 import net.shibboleth.idp.authn.context.SubjectContext;
@@ -48,7 +50,7 @@ import net.shibboleth.idp.profile.RequestContextBuilder;
 import net.shibboleth.idp.profile.context.RelyingPartyContext;
 import net.shibboleth.idp.profile.context.navigate.WebflowRequestContextProfileRequestContextLookup;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
-import net.shibboleth.utilities.java.support.security.BasicKeystoreKeyStrategy;
+import net.shibboleth.utilities.java.support.security.impl.BasicKeystoreKeyStrategy;
 import net.shibboleth.utilities.java.support.security.DataSealer;
 
 /**
@@ -58,7 +60,6 @@ public class StoreDeviceStateTest {
 
     protected RequestContext requestCtx;
 
-    @SuppressWarnings("rawtypes")
     protected ProfileRequestContext profileRequestCtx;
 
     private StoreDeviceState action;
@@ -69,7 +70,6 @@ public class StoreDeviceStateTest {
 
     private DeviceUserAuthenticationContext deviceUserAuthenticationContext;
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @BeforeMethod
     protected void setUp() throws Exception {
         requestCtx = new RequestContextBuilder().buildRequestContext();
@@ -85,7 +85,7 @@ public class StoreDeviceStateTest {
                 .getSubcontext(OIDCAuthenticationResponseContext.class, true);
         respCtx.setSubject("sub");
         respCtx.setScope(new Scope());
-        respCtx.setAuthTime(0);
+        respCtx.setAuthTime(Instant.ofEpochMilli(0));
         ((RelyingPartyContext) profileRequestCtx.getSubcontext(RelyingPartyContext.class, true))
                 .setProfileConfig((new OAuth2DeviceFlowConfiguration()));
         ((SubjectContext) profileRequestCtx.getSubcontext(SubjectContext.class, true))

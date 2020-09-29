@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,41 +16,27 @@
 
 package fi.csc.idpextension.oauth2.config;
 
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.Duration;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.geant.idpextension.oidc.config.AbstractOIDCClientAuthenticableProfileConfiguration;
 import org.opensaml.profile.context.ProfileRequestContext;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.function.Function;
+import org.geant.idpextension.oidc.config.OIDCCoreProtocolConfiguration;
 
-import net.shibboleth.idp.authn.config.AuthenticationProfileConfiguration;
-import net.shibboleth.utilities.java.support.annotation.Duration;
-import net.shibboleth.utilities.java.support.annotation.constraint.NonnullElements;
+import net.shibboleth.utilities.java.support.annotation.constraint.NonNegative;
 import net.shibboleth.utilities.java.support.annotation.constraint.NotEmpty;
-import net.shibboleth.utilities.java.support.annotation.constraint.NotLive;
 import net.shibboleth.utilities.java.support.annotation.constraint.Positive;
-import net.shibboleth.utilities.java.support.annotation.constraint.Unmodifiable;
 import net.shibboleth.utilities.java.support.logic.Constraint;
-import net.shibboleth.utilities.java.support.primitive.StringSupport;
+import net.shibboleth.utilities.java.support.logic.FunctionSupport;
 
 /**
- * Profile configuration for the OAuth2 Device Flow.
+ * Profile configuration for the OAuth2 Device Flow. Extending {@link OIDCCoreProtocolConfiguration} as we do not have
+ * OAuth2CoreProtocolConfiguration (thus we inherit some undesired properties).
  */
-public class OAuth2DeviceFlowConfiguration extends AbstractOIDCClientAuthenticableProfileConfiguration
-        implements AuthenticationProfileConfiguration {
+public class OAuth2DeviceFlowConfiguration extends OIDCCoreProtocolConfiguration {
 
     /** OAuth2 Token Revocation URI. */
     public static final String PROTOCOL_URI = "https://oauth.net/2/device-flow/";
@@ -58,72 +44,21 @@ public class OAuth2DeviceFlowConfiguration extends AbstractOIDCClientAuthenticab
     /** ID for this profile configuration. */
     public static final String PROFILE_ID = "http://csc.fi/ns/profiles/oauth2/device";
 
-    /** Selects, and limits, the authentication contexts to use for requests. */
+    /** Lookup function to supply length of device code. */
+    @Nullable
+    private Function<ProfileRequestContext, Integer> deviceCodeLengthLookupStrategy;
+
+    /** Lookup function to supply length of User Code. */
     @Nonnull
-    @NonnullElements
-    private List<Principal> defaultAuthenticationContexts;
+    private Function<ProfileRequestContext, Integer> userCodeLengthLookupStrategy;
 
-    /** Filters the usable authentication flows. */
+    /** Lookup function to supply polling interval in seconds. */
     @Nonnull
-    @NonnullElements
-    private Set<String> authenticationFlows;
+    private Function<ProfileRequestContext, Duration> pollingIntervalLookupStrategy;
 
-    /** Enables post-authentication interceptor flows. */
+    /** Lookup function to supply lifetime of device code. */
     @Nonnull
-    @NonnullElements
-    private List<String> postAuthenticationFlows;
-
-    /** Precedence of name identifier formats to use for requests. */
-    @Nonnull
-    @NonnullElements
-    private List<String> nameIDFormatPrecedence;
-
-    /** Lookup function to supply {@link #accessTokenLifetime} property. */
-    @SuppressWarnings("rawtypes")
-    @Nullable
-    private Function<ProfileRequestContext, Long> accessTokenLifetimeLookupStrategy;
-
-    /** Lifetime of an access token in milliseconds. Default value: 5 minutes */
-    @Positive
-    @Duration
-    private long accessTokenLifetime;
-
-    /** Lookup function to supply {@link #deviceCodeLength} property. */
-    @SuppressWarnings("rawtypes")
-    @Nullable
-    private Function<ProfileRequestContext, Long> deviceCodeLengthLookupStrategy;
-
-    /** Length of the device code. Default is 16. */
-    @Positive
-    private long deviceCodeLength;
-
-    /** Lookup function to supply {@link #userCodeLength} property. */
-    @SuppressWarnings("rawtypes")
-    @Nullable
-    private Function<ProfileRequestContext, Long> userCodeLengthLookupStrategy;
-
-    /** Length of the user code.Default is 6. */
-    @Positive
-    private long userCodeLength;
-
-    /** Lookup function to supply {@link #deviceCodeLifetime} property. */
-    @SuppressWarnings("rawtypes")
-    @Nullable
-    private Function<ProfileRequestContext, Long> deviceCodeLifetimeLookupStrategy;
-
-    /** Lifetime of device/user codes. */
-    @Positive
-    @Duration
-    private long deviceCodeLifetime;
-
-    /** Lookup function to supply {@link #pollingInterval} property. */
-    @SuppressWarnings("rawtypes")
-    @Nullable
-    private Function<ProfileRequestContext, Long> pollingIntervalLookupStrategy;
-
-    /** Allowed Interval between polling requests. Defaults to 5s. */
-    @Positive
-    private long pollingInterval;
+    private Function<ProfileRequestContext, Duration> deviceCodeLifetimeLookupStrategy;
 
     /**
      * Constructor.
@@ -139,136 +74,28 @@ public class OAuth2DeviceFlowConfiguration extends AbstractOIDCClientAuthenticab
      */
     public OAuth2DeviceFlowConfiguration(@Nonnull @NotEmpty final String profileId) {
         super(profileId);
-        defaultAuthenticationContexts = Collections.emptyList();
-        authenticationFlows = Collections.emptySet();
-        postAuthenticationFlows = Collections.emptyList();
-        nameIDFormatPrecedence = Collections.emptyList();
-        accessTokenLifetime = 5 * 60 * 1000;
-        deviceCodeLifetime = 5 * 60 * 1000;
-        deviceCodeLength = 16;
-        userCodeLength = 6;
-        pollingInterval = 5;
-    }
-
-    @Override
-    public List<Principal> getDefaultAuthenticationMethods() {
-        return ImmutableList.<Principal> copyOf(defaultAuthenticationContexts);
+        deviceCodeLengthLookupStrategy = FunctionSupport.constant(Integer.valueOf(16));
+        userCodeLengthLookupStrategy = FunctionSupport.constant(Integer.valueOf(8));
+        pollingIntervalLookupStrategy = FunctionSupport.constant(Duration.ofSeconds(5));
+        deviceCodeLifetimeLookupStrategy = FunctionSupport.constant(Duration.ofMinutes(5));
     }
 
     /**
-     * Set the default authentication contexts to use, expressed as custom principals.
+     * Get device code length
      * 
-     * @param contexts default authentication contexts to use
+     * <p>
+     * Defaults to minimum 16.
+     * </p>
+     * 
+     * @param profileRequestContext profile request context
+     * @return Device code length
      */
-    public void setDefaultAuthenticationMethods(@Nonnull @NonnullElements final List<Principal> contexts) {
-        Constraint.isNotNull(contexts, "List of contexts cannot be null");
-
-        defaultAuthenticationContexts = new ArrayList<>(Collections2.filter(contexts, Predicates.notNull()));
-    }
-
-    /** {@inheritDoc} */
-    @Override
     @Nonnull
-    @NonnullElements
-    @NotLive
-    @Unmodifiable
-    public Set<String> getAuthenticationFlows() {
-        return ImmutableSet.copyOf(authenticationFlows);
-    }
-
-    /**
-     * Set the authentication flows to use.
-     * 
-     * @param flows flow identifiers to use
-     */
-    public void setAuthenticationFlows(@Nonnull @NonnullElements final Collection<String> flows) {
-        Constraint.isNotNull(flows, "Collection of flows cannot be null");
-
-        authenticationFlows = new HashSet<>(StringSupport.normalizeStringCollection(flows));
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    @Nonnull
-    @NonnullElements
-    @NotLive
-    @Unmodifiable
-    public List<String> getPostAuthenticationFlows() {
-        return postAuthenticationFlows;
-    }
-
-    /**
-     * Set the ordered collection of post-authentication interceptor flows to enable.
-     * 
-     * @param flows flow identifiers to enable
-     */
-    public void setPostAuthenticationFlows(@Nonnull @NonnullElements final Collection<String> flows) {
-        Constraint.isNotNull(flows, "Collection of flows cannot be null");
-
-        postAuthenticationFlows = new ArrayList<>(StringSupport.normalizeStringCollection(flows));
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    @Nonnull
-    @NonnullElements
-    @NotLive
-    @Unmodifiable
-    public List<String> getNameIDFormatPrecedence() {
-        return ImmutableList.copyOf(nameIDFormatPrecedence);
-    }
-
-    /**
-     * Set the name identifier formats to use.
-     * 
-     * @param formats name identifier formats to use
-     */
-    public void setNameIDFormatPrecedence(@Nonnull @NonnullElements final List<String> formats) {
-        Constraint.isNotNull(formats, "List of formats cannot be null");
-
-        nameIDFormatPrecedence = new ArrayList<>(StringSupport.normalizeStringCollection(formats));
-    }
-
-    /**
-     * Set a lookup strategy for the {@link #accessTokenLifetime} property.
-     *
-     * @param strategy lookup strategy
-     */
-    public void setAccessTokenLifetimeLookupStrategy(
-            @SuppressWarnings("rawtypes") @Nullable final Function<ProfileRequestContext, Long> strategy) {
-        accessTokenLifetimeLookupStrategy = strategy;
-    }
-
-    /**
-     * Set the lifetime of an access token.
-     * 
-     * @param lifetime lifetime of an access token in milliseconds
-     */
-    @Duration
-    public void setAccessTokenLifetime(@Positive @Duration final long lifetime) {
-        accessTokenLifetime = Constraint.isGreaterThan(0, lifetime, "access token lifetime must be greater than 0");
-    }
-
-    /**
-     * Get access token lifetime.
-     * 
-     * @return access token lifetime is ms.
-     */
     @Positive
-    @Duration
-    public long getAccessTokenLifetime() {
-        return Constraint.isGreaterThan(0, getIndirectProperty(accessTokenLifetimeLookupStrategy, accessTokenLifetime),
-                "access token lifetime must be greater than 0");
-    }
-
-    /**
-     * Set a lookup strategy for the {@link #deviceCodeLength} property.
-     *
-     * @param strategy lookup strategy
-     */
-    public void setDeviceCodeLengthLookupStrategy(
-            @SuppressWarnings("rawtypes") @Nullable final Function<ProfileRequestContext, Long> strategy) {
-        deviceCodeLengthLookupStrategy = strategy;
+    public Integer getDeviceCodeLength(@Nullable final ProfileRequestContext profileRequestContext) {
+        final Integer length = deviceCodeLengthLookupStrategy.apply(profileRequestContext);
+        Constraint.isTrue(length != null && length > 15, "Device code length must be greater than or equal to 16");
+        return length;
     }
 
     /**
@@ -276,30 +103,36 @@ public class OAuth2DeviceFlowConfiguration extends AbstractOIDCClientAuthenticab
      * 
      * @param length length of the device code.
      */
-    @Positive
-    public void setDeviceCodeLength(@Positive final long length) {
-        deviceCodeLength = Constraint.isGreaterThan(0, length, "device code length must be greater than 0");
+    public void setDeviceCodeLength(@Nonnull @Positive final Integer length) {
+        Constraint.isTrue(length != null && length > 15, "Device code length must be greater than or equal to 16");
+        deviceCodeLengthLookupStrategy = FunctionSupport.constant(length);
     }
 
     /**
-     * Get device code length.
-     * 
-     * @return device code length.
-     */
-    @Positive
-    public long getDeviceCodeLength() {
-        return Constraint.isGreaterThan(0, getIndirectProperty(deviceCodeLengthLookupStrategy, deviceCodeLength),
-                "device code length must be greater than 0");
-    }
-
-    /**
-     * Set a lookup strategy for the {@link #userCodeLength} property.
+     * Set a lookup strategy for the device code length.
      *
      * @param strategy lookup strategy
      */
-    public void setUserCodeLengthLookupStrategy(
-            @SuppressWarnings("rawtypes") @Nullable final Function<ProfileRequestContext, Long> strategy) {
-        userCodeLengthLookupStrategy = strategy;
+    public void setDeviceCodeLengthLookupStrategy(@Nonnull final Function<ProfileRequestContext, Integer> strategy) {
+        deviceCodeLengthLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
+    }
+
+    /**
+     * Get user code length
+     * 
+     * <p>
+     * Defaults to 8. 6 is minimum.
+     * </p>
+     * 
+     * @param profileRequestContext profile request context
+     * @return user code length
+     */
+    @Nonnull
+    @Positive
+    public Integer getUserCodeLength(@Nullable final ProfileRequestContext profileRequestContext) {
+        final Integer length = userCodeLengthLookupStrategy.apply(profileRequestContext);
+        Constraint.isTrue(length != null && length > 5, "User code length must be greater than or equal to 6");
+        return length;
     }
 
     /**
@@ -307,83 +140,100 @@ public class OAuth2DeviceFlowConfiguration extends AbstractOIDCClientAuthenticab
      * 
      * @param length length of the user code.
      */
-    @Positive
-    public void setUserCodeLength(@Positive final long length) {
-        userCodeLength = Constraint.isGreaterThan(0, length, "user code length must be greater than 0");
+    public void setUserCodeLength(@Nonnull @NonNegative final Integer length) {
+        Constraint.isTrue(length != null && length > 5, "User code length must be greater than or equal to 6");
+        userCodeLengthLookupStrategy = FunctionSupport.constant(length);
     }
 
     /**
-     * Get device code length.
-     * 
-     * @return device code length.
-     */
-    @Positive
-    public long getUserCodeLength() {
-        return Constraint.isGreaterThan(0, getIndirectProperty(userCodeLengthLookupStrategy, userCodeLength),
-                "user code length must be greater than 0");
-    }
-
-    /**
-     * Set a lookup strategy for the {@link #deviceCodeLifetime} property.
+     * Set a lookup strategy for the user code length.
      *
      * @param strategy lookup strategy
      */
-    public void setDeviceCodeLifetimeLookupStrategy(
-            @SuppressWarnings("rawtypes") @Nullable final Function<ProfileRequestContext, Long> strategy) {
-        deviceCodeLifetimeLookupStrategy = strategy;
+    public void setUserCodeLengthLookupStrategy(@Nonnull final Function<ProfileRequestContext, Integer> strategy) {
+        userCodeLengthLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
     }
 
     /**
-     * Set the lifetime of an device/user code.
+     * Get polling interval
      * 
-     * @param lifetime lifetime of an device/user code in milliseconds
-     */
-    @Duration
-    public void setDeviceCodeLifetime(@Positive @Duration final long lifetime) {
-        deviceCodeLifetime = Constraint.isGreaterThan(0, lifetime, "device/user code lifetime must be greater than 0");
-    }
-
-    /**
-     * Get device code lifetime.
+     * <p>
+     * Defaults to 5s.
+     * </p>
      * 
-     * @return device code lifetime is ms.
+     * @param profileRequestContext profile request context
+     * @return polling interval
      */
-    @Positive
-    @Duration
-    public long getDeviceCodeLifetime() {
-        return Constraint.isGreaterThan(0, getIndirectProperty(deviceCodeLifetimeLookupStrategy, deviceCodeLifetime),
-                "device code lifetime must be greater than 0");
-    }
-
-    /**
-     * Set a lookup strategy for the {@link #pollingInterval} property.
-     *
-     * @param strategy lookup strategy
-     */
-    public void setPollingIntervalLookupStrategy(
-            @SuppressWarnings("rawtypes") @Nullable final Function<ProfileRequestContext, Long> strategy) {
-        pollingIntervalLookupStrategy = strategy;
+    @Nonnull
+    @NonNegative
+    public Duration getPollingInterval(@Nullable final ProfileRequestContext profileRequestContext) {
+        final Duration interval = pollingIntervalLookupStrategy.apply(profileRequestContext);
+        Constraint.isTrue(interval != null && !interval.isNegative(),
+                "Polling interval must be greater than or equal to 0s");
+        return interval;
     }
 
     /**
      * Set the polling interval.
      * 
-     * @param interval polling interval in milliseconds
+     * @param interval polling interval.
      */
-    public void setPollingInterval(@Positive @Duration final long interval) {
-        pollingInterval = Constraint.isGreaterThan(0, interval, "polling interval must be greater than 0");
+    public void setPollingInterval(@Nonnull @NonNegative final Duration interval) {
+        Constraint.isTrue(interval != null && !interval.isNegative(),
+                "Polling interval must be greater than or equal to 0");
+        pollingIntervalLookupStrategy = FunctionSupport.constant(interval);
     }
 
     /**
-     * Get polling interval.
+     * Set a lookup strategy for the polling interval.
+     *
+     * @param strategy lookup strategy
+     */
+    public void setPollingIntervalLookupStrategy(@Nonnull final Function<ProfileRequestContext, Duration> strategy) {
+        pollingIntervalLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
+    }
+
+    /**
+     * Get device code lifetime.
      * 
-     * @return polling interval in milliseconds
+     * <p>
+     * Defaults to 5 minutes.
+     * </p>
+     * 
+     * @param profileRequestContext profile request context
+     * 
+     * @return device code lifetime
      */
     @Positive
-    @Duration
-    public long getPollingInterval() {
-        return Constraint.isGreaterThan(0, getIndirectProperty(pollingIntervalLookupStrategy, pollingInterval),
-                "polling interval must be greater than 0");
+    @Nonnull
+    public Duration getDeviceCodeLifetime(@Nullable final ProfileRequestContext profileRequestContext) {
+
+        final Duration lifetime = deviceCodeLifetimeLookupStrategy.apply(profileRequestContext);
+
+        Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
+                "Device code lifetime must be greater than 0");
+        return lifetime;
+    }
+
+    /**
+     * Set the lifetime of an device code.
+     * 
+     * @param lifetime lifetime of an device code in milliseconds
+     */
+    public void setDeviceCodeLifetime(@Positive @Nonnull final Duration lifetime) {
+        Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
+                "Device code lifetime must be greater than 0");
+
+        deviceCodeLifetimeLookupStrategy = FunctionSupport.constant(lifetime);
+    }
+
+    /**
+     * Set a lookup strategy for the device code lifetime.
+     *
+     * @param strategy lookup strategy
+     */
+    public void setDeviceCodeLifetimeLookupStrategy(@Nonnull final Function<ProfileRequestContext, Duration> strategy) {
+        deviceCodeLifetimeLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
     }
 
 }

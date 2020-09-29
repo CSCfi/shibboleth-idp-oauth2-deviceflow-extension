@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,17 +41,14 @@ public class DeviceScopeLookupFunctionTest {
 
     private DeviceScopeLookupFunction lookup;
 
-    @SuppressWarnings("rawtypes")
     private MessageContext msgCtx;
 
     private DeviceCodesCache cache;
 
     private MemoryStorageService storage;
 
-    @SuppressWarnings("rawtypes")
     private ProfileRequestContext prc;
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @BeforeMethod
     protected void setUp() throws Exception {
         lookup = new DeviceScopeLookupFunction();
@@ -90,7 +87,6 @@ public class DeviceScopeLookupFunctionTest {
         Assert.assertEquals(lookup.apply(prc), new Scope("device3"));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void lookupFailNoObjectForUserCode() {
         msgCtx.setMessage(new OAuth2DeviceAuthenticationRequest(null, "UC123456_NOTFOUND"));
