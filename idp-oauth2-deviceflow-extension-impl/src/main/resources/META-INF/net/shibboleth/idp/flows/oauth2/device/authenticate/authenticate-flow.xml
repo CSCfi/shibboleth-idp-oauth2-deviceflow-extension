@@ -53,9 +53,21 @@
     <evaluate expression="InitializeOutboundMessageContext"/>
     <evaluate expression="ValidateScope"/>
     <evaluate expression="'proceed'"/>
-    <transition on="proceed" to="PostInitialSetup"/>
+    <transition on="proceed" to="PopulateClientStorageLoadContext" />
   </action-state>
   
+  <action-state id="PopulateClientStorageLoadContext">
+    <evaluate expression="PopulateClientStorageLoadContext" />
+    <evaluate expression="'proceed'" />
+    <transition on="proceed" to="ClientStorageLoad" />
+    <transition on="NoLoadNeeded" to="PostInitialSetup" />
+  </action-state>
+
+  <subflow-state id="ClientStorageLoad" subflow="client-storage/read">
+    <input name="calledAsSubflow" value="true" />
+    <transition on="proceed" to="PostInitialSetup" />
+  </subflow-state>
+
   <action-state id="PostInitialSetup">
     <evaluate expression="InitializeAuthenticationContext"/>
     <evaluate expression="'proceed'"/>
@@ -67,7 +79,7 @@
     <transition on="proceed" to="SetAuthenticationInformationToResponseContext"/>
     <transition on="RestartAuthentication" to="PostInitialSetup"/>
   </subflow-state>
-  
+
   <action-state id="SetAuthenticationInformationToResponseContext">
     <evaluate expression="SetAuthenticationContextClassReferenceToResponseContext"/>
     <evaluate expression="SetAuthenticationTimeToResponseContext"/>
@@ -119,6 +131,8 @@
   </view-state>
   
   <action-state id="StoreDeviceState">
+    <evaluate expression="SetTokenDeliveryAttributesToResponseContext" />
+    <evaluate expression="SetConsentToResponseContext" />
     <evaluate expression="StoreDeviceState"/>
     <evaluate expression="WriteAuditLog"/>
     <evaluate expression="'proceed'"/>

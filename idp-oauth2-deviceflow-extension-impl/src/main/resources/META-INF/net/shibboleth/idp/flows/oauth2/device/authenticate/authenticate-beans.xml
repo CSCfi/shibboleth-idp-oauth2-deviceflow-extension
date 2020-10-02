@@ -64,9 +64,13 @@
   <bean id="shibboleth.deviceflow.ScopeLookupStrategy" class="fi.csc.idpextension.oauth2.profile.context.navigate.DeviceScopeLookupFunction" 
     scope="prototype" p:deviceCodesCache-ref="shibboleth.DeviceCodesCache"/>
     
+  <bean id="PopulateClientStorageLoadContext"
+    class="org.opensaml.storage.impl.client.PopulateClientStorageLoadContext" scope="prototype"
+    p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
+
   <bean id="SetAuthenticationTimeToResponseContext" class="org.geant.idpextension.oidc.profile.impl.SetAuthenticationTimeToResponseContext" 
     scope="prototype"/>
-    
+
   <bean id="SetAuthenticationContextClassReferenceToResponseContext" class="org.geant.idpextension.oidc.profile.impl.SetAuthenticationContextClassReferenceToResponseContext"
     scope="prototype">
     <property name="classRefLookupStrategy">
@@ -92,6 +96,11 @@
   <bean id="InitializeOutboundMessageContext" class="org.geant.idpextension.oidc.profile.impl.InitializeOutboundAuthenticationResponseMessageContext" 
     scope="prototype"/>
     
+  <bean id="SetTokenDeliveryAttributesToResponseContext" class="org.geant.idpextension.oidc.profile.impl.SetTokenDeliveryAttributesToResponseContext" scope="prototype"
+    p:transcoderRegistry-ref="shibboleth.AttributeRegistryService"/>
+
+  <bean id="SetConsentToResponseContext" class="org.geant.idpextension.oidc.profile.impl.SetConsentToResponseContext" scope="prototype" />
+
   <bean id="StoreDeviceState" class="fi.csc.idpextension.oauth2.profile.impl.StoreDeviceState" 
     scope="prototype" c:sealer-ref="tokenSealer" p:deviceCodesCache-ref="shibboleth.DeviceCodesCache"/>
     
