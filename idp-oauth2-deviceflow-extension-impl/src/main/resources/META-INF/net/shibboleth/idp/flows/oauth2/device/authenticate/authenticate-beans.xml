@@ -10,6 +10,9 @@
                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
        default-init-method="initialize" default-destroy-method="destroy">
        
+
+  <bean id="shibboleth.oidc.browserProfile" class="java.lang.Boolean" c:_0="true"/>
+
   <bean id="RethrowingFlowExecutionExceptionHandler" class="net.shibboleth.idp.profile.impl.RethrowingFlowExecutionExceptionHandler"/>
   
   <bean id="DecodeMessage" class="org.opensaml.profile.action.impl.DecodeMessage" scope="prototype">
