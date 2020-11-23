@@ -10,6 +10,7 @@
 ## encoder - HTMLEncoder class
 ## request - HttpServletRequest
 ## response - HttpServletResponse
+## userCode -  end-user verification code
 ## environment - Spring Environment object for property resolution
 ## custom - arbitrary object injected by deployer
 ##
@@ -39,10 +40,10 @@
             #set ($serviceName = $rpUIContext.serviceName)
             #if ($serviceName && !$rpContext.getRelyingPartyId().contains($serviceName))
               <legend>
-                #springMessageText("idp.login.device.loginTo", "Approve or Deny request from ") $encoder.encodeForHTML($serviceName)
+                #springMessageText("idp.login.device.loginTo.withCode", "Approve or Deny request with code ") $encoder.encodeForHTML($viewScope.userCode) #springMessageText("idp.login.device.loginTo.from", " from ") $encoder.encodeForHTML($serviceName)
               </legend>
             #end
-              #springMessageText("idp.login.device.loginTo.explanation", "Approve or Deny request")
+              #springMessageText("idp.login.device.loginTo.explanation", "Approve or Deny request with code ") $encoder.encodeForHTML($viewScope.userCode)
                         
               <div class="form-element-wrapper">
                 <button class="form-element form-button" type="submit" name="_eventId_proceed"
