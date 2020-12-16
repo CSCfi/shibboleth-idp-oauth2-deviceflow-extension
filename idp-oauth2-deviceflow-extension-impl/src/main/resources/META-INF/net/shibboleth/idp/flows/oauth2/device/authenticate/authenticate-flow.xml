@@ -19,7 +19,6 @@
   </action-state>
   
   <view-state id="DisplayUserCodePage" view="#{flowRequestContext.activeFlow.id}-usercode">
-    <attribute name="csrf_excluded" value="true" type="boolean"/>
     <on-render>
       <evaluate expression="environment" result="viewScope.environment"/>
       <evaluate expression="opensamlProfileRequestContext" result="viewScope.profileRequestContext"/>
@@ -113,7 +112,6 @@
   </action-state>
   
   <view-state id="DisplayUserApprovalPage" view="#{flowRequestContext.activeFlow.id}-userapproval">
-    <attribute name="csrf_excluded" value="true" type="boolean"/>
     <on-render>
       <evaluate expression="environment" result="viewScope.environment"/>
       <evaluate expression="opensamlProfileRequestContext" result="viewScope.profileRequestContext"/>
@@ -143,8 +141,8 @@
   <decision-state id="HandleError">
     <if test="flowRequestContext.getActiveFlow().getApplicationContext().getBean('shibboleth.LocalEventMap').containsKey(currentEvent.id) and flowRequestContext.getActiveFlow().getApplicationContext().getBean('shibboleth.LocalEventMap').get(currentEvent.id)" then="AuditedErrorView" else="ErrorView"/>
   </decision-state>
+
   <end-state id="AuditedErrorView" view="#{MapEventToView.apply(currentEvent)}">
-    <attribute name="csrf_excluded" value="true" type="boolean"/>
     <on-entry>
       <evaluate expression="ErrorViewPopulateAuditContext"/>
       <evaluate expression="WriteAuditLog"/>
@@ -159,7 +157,6 @@
   </end-state>
   
   <end-state id="ErrorView" view="#{MapEventToView.apply(currentEvent)}">
-    <attribute name="csrf_excluded" value="true" type="boolean"/>
     <on-entry>
       <evaluate expression="environment" result="requestScope.environment"/>
       <evaluate expression="opensamlProfileRequestContext" result="requestScope.profileRequestContext"/>
@@ -172,7 +169,6 @@
   </end-state>
   
   <end-state id="DisplayEnd" view="#{flowRequestContext.activeFlow.id}-end">
-    <attribute name="csrf_excluded" value="true" type="boolean"/>
     <on-entry>
       <evaluate expression="environment" result="requestScope.environment"/>
       <evaluate expression="opensamlProfileRequestContext" result="requestScope.profileRequestContext"/>

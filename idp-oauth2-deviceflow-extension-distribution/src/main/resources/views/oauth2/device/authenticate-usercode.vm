@@ -31,6 +31,7 @@
           <div class="column one">
             #parse("login-error.vm")
             <form action="$flowExecutionUrl" method="post">
+              #parse("csrf/csrf.vm")
               <div class="form-element-wrapper">
                 <label for="usercode">#springMessageText("idp.login.usercode", "User Code")</label>
                 <input class="form-element form-field" id="usercode" name="j_usercode" type="text"
