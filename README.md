@@ -1,3 +1,5 @@
+[![CodeQL](https://github.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/actions/workflows/codeql-analysis.yml)
+
 # shibboleth-idp-oauth2-deviceflow-extension
 OAuth2 Device Flow extension for shibboleth-idp-oidc-extension. See https://tools.ietf.org/html/rfc8628.
 
