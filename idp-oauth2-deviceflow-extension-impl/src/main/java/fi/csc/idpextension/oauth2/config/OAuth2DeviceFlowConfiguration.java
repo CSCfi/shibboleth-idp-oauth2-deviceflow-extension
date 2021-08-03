@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import javax.annotation.Nullable;
 import org.opensaml.profile.context.ProfileRequestContext;
 
 import java.util.function.Function;
-import org.geant.idpextension.oidc.config.OIDCCoreProtocolConfiguration;
 
+import net.shibboleth.idp.plugin.oidc.op.config.OIDCCoreProtocolConfiguration;
 import net.shibboleth.utilities.java.support.annotation.constraint.NonNegative;
 import net.shibboleth.utilities.java.support.annotation.constraint.NotEmpty;
 import net.shibboleth.utilities.java.support.annotation.constraint.Positive;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.time.Duration;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
-import org.geant.idpextension.oidc.profile.impl.AbstractOIDCResponseAction;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
@@ -40,6 +39,7 @@ import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthorizationReques
 import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthorizationSuccessResponse;
 import fi.csc.idpextension.storage.DeviceCodeObject;
 import fi.csc.idpextension.storage.DeviceCodesCache;
+import net.shibboleth.idp.plugin.oidc.op.profile.impl.AbstractOIDCResponseAction;
 import net.shibboleth.idp.profile.IdPEventIds;
 import net.shibboleth.idp.profile.config.ProfileConfiguration;
 import net.shibboleth.idp.profile.context.RelyingPartyContext;
@@ -51,7 +51,7 @@ import net.shibboleth.utilities.java.support.security.IdentifierGenerationStrate
 import net.shibboleth.utilities.java.support.security.impl.SecureRandomIdentifierGenerationStrategy;
 
 /**
- * Action forming device authorization response success message. Action generates user and device codes, forms a
+ * Action forming device authorisation response success message. Action generates user and device codes, forms a
  * {@link DeviceCodeObject} storing it to {@link DeviceCodesCache} keyed with user code. Finally the action forms
  * {@link OAuth2DeviceAuthorizationSuccessResponse}
  */

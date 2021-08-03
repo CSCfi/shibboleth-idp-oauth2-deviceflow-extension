@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import fi.csc.idpextension.oauth2.messaging.context.DeviceUserAuthenticationContext;
 import fi.csc.idpextension.oauth2.profile.DeviceEventIds;
-import net.shibboleth.idp.profile.ActionTestingSupport;
-import net.shibboleth.idp.profile.RequestContextBuilder;
+import net.shibboleth.idp.profile.testing.ActionTestingSupport;
+import net.shibboleth.idp.profile.testing.RequestContextBuilder;
 import net.shibboleth.idp.profile.context.navigate.WebflowRequestContextProfileRequestContextLookup;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 

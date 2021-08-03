@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 package fi.csc.idpextension.oauth2.profile.impl;
 
 import java.io.IOException;
-import org.geant.idpextension.oidc.messaging.context.OIDCAuthenticationResponseContext;
-import org.geant.idpextension.oidc.messaging.context.OIDCMetadataContext;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.profile.action.EventIds;
 import org.opensaml.profile.context.ProfileRequestContext;
@@ -37,9 +35,11 @@ import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthorizationSucces
 import fi.csc.idpextension.storage.DeviceCodeObject;
 import fi.csc.idpextension.storage.DeviceCodesCache;
 import net.minidev.json.parser.ParseException;
-import net.shibboleth.idp.profile.ActionTestingSupport;
+import net.shibboleth.idp.profile.testing.ActionTestingSupport;
+import net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCAuthenticationResponseContext;
+import net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCMetadataContext;
 import net.shibboleth.idp.profile.IdPEventIds;
-import net.shibboleth.idp.profile.RequestContextBuilder;
+import net.shibboleth.idp.profile.testing.RequestContextBuilder;
 import net.shibboleth.idp.profile.context.RelyingPartyContext;
 import net.shibboleth.idp.profile.context.navigate.WebflowRequestContextProfileRequestContextLookup;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;

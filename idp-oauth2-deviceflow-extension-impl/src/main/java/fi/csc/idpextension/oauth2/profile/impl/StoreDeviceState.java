@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -42,16 +43,17 @@ import fi.csc.idpextension.storage.DeviceStateObject;
 import net.minidev.json.JSONArray;
 import net.minidev.json.parser.ParseException;
 import net.shibboleth.idp.authn.context.SubjectContext;
+import net.shibboleth.idp.plugin.oidc.op.config.logic.AttributeConsentFlowEnabledPredicate;
+import net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCAuthenticationResponseConsentContext;
+import net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCAuthenticationResponseTokenClaimsContext;
+import net.shibboleth.idp.plugin.oidc.op.profile.context.navigate.OIDCAuthenticationResponseContextLookupFunction;
+import net.shibboleth.idp.plugin.oidc.op.profile.impl.AbstractOIDCResponseAction;
+import net.shibboleth.idp.plugin.oidc.op.token.support.AccessTokenClaimsSet;
 import net.shibboleth.idp.profile.IdPEventIds;
 import net.shibboleth.idp.profile.config.ProfileConfiguration;
 import net.shibboleth.idp.profile.context.RelyingPartyContext;
 import net.shibboleth.idp.profile.context.navigate.ResponderIdLookupFunction;
 
-import org.geant.idpextension.oidc.messaging.context.OIDCAuthenticationResponseConsentContext;
-import org.geant.idpextension.oidc.messaging.context.OIDCAuthenticationResponseTokenClaimsContext;
-import org.geant.idpextension.oidc.profile.context.navigate.OIDCAuthenticationResponseContextLookupFunction;
-import org.geant.idpextension.oidc.profile.impl.AbstractOIDCResponseAction;
-import org.geant.idpextension.oidc.token.support.AccessTokenClaimsSet;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
@@ -109,6 +111,10 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     @Nonnull
     private Function<ProfileRequestContext, String> issuerLookupStrategy;
 
+    /** Predicate used to check if consent is enabled with a given {@link ProfileRequestContext}. */
+    @Nonnull
+    private Predicate<ProfileRequestContext> consentEnabledPredicate;
+
     /** Subject context. */
     private SubjectContext subjectCtx;
 
@@ -154,6 +160,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         consentContextLookupStrategy = new ChildContextLookup<>(OIDCAuthenticationResponseConsentContext.class)
                 .compose(new OIDCAuthenticationResponseContextLookupFunction());
         relyingPartyContextLookupStrategy = new ChildContextLookup<>(RelyingPartyContext.class);
+        consentEnabledPredicate = new AttributeConsentFlowEnabledPredicate();
         dataSealer = Constraint.isNotNull(sealer, "DataSealer cannot be null");
         issuerLookupStrategy = (Function<ProfileRequestContext, String>) new ResponderIdLookupFunction();
         idGeneratorLookupStrategy = new Function<ProfileRequestContext, IdentifierGenerationStrategy>() {
@@ -266,6 +273,17 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         issuerLookupStrategy = Constraint.isNotNull(strategy, "IssuerLookupStrategy lookup strategy cannot be null");
     }
 
+    /**
+    * Set the predicate used to check if consent is enabled with a given {@link ProfileRequestContext}.
+    * 
+    * @param predicate predicate used to check if consent is enabled with a given {@link ProfileRequestContext}.
+    */
+    public void setConsentEnabledPredicate(@Nonnull final Predicate<ProfileRequestContext> predicate) {
+        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
+        consentEnabledPredicate =
+        Constraint.isNotNull(predicate, "predicate used to check if consent is enabled cannot be null");
+    }
+
     // Checkstyle: CyclomaticComplexity OFF
     /** {@inheritDoc} */
     @Override
@@ -330,7 +348,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         if (!userApprovalLookupStrategy.apply(profileRequestContext.getInboundMessageContext())) {
             deviceStateObject = new DeviceStateObject(DeviceStateObject.State.DENIED);
         } else {
-            Instant dateExp = Instant.now().plusMillis(accessTokenLifetime.toMillis());
+            Instant dateExp = Instant.now().plus(accessTokenLifetime);
             ClaimsSet claims = null;
             ClaimsSet claimsUI = null;
             OIDCAuthenticationResponseTokenClaimsContext tokenClaimsCtx =
@@ -340,12 +358,10 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
                 claimsUI = tokenClaimsCtx.getUserinfoClaims();
             }
             AccessTokenClaimsSet claimsSet;
-            JSONArray consentable = null;
             JSONArray consented = null;
             OIDCAuthenticationResponseConsentContext consentCtx =
                     consentContextLookupStrategy.apply(profileRequestContext);
             if (consentCtx != null) {
-                consentable = consentCtx.getConsentableAttributes();
                 consented = consentCtx.getConsentedAttributes();
             }
             try {
@@ -355,8 +371,9 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
                         /** redirect_uri is not relevant in device flow as we do not redirect user. */
                         getOidcResponseContext().getAuthTime(), new URI("https://example.com"),
                         getOidcResponseContext().getScope()).setACR(getOidcResponseContext().getAcr())
-                                .setConsentableClaims(consentable).setConsentedClaims(consented).setDlClaims(claims)
-                                .setDlClaimsUI(claimsUI).build();
+                                .setConsentedClaims(consented).setDlClaims(claims)
+                                .setDlClaimsUI(claimsUI)
+                                .setConsentEnabled(consentEnabledPredicate.test(profileRequestContext)).build();
                 deviceStateObject = new DeviceStateObject(DeviceStateObject.State.APPROVED,
                         claimsSet.serialize(dataSealer), System.currentTimeMillis() + accessTokenLifetime.toMillis());
                 log.debug("{} Generated access token {} as {} expiring at {}", getLogPrefix(), claimsSet.serialize(),

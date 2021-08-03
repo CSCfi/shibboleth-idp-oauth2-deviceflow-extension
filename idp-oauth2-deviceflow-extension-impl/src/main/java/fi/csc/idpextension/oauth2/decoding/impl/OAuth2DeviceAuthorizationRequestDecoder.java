@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package fi.csc.idpextension.oauth2.decoding.impl;
 import java.io.IOException;
 import javax.annotation.Nonnull;
 
-import org.geant.idpextension.oidc.decoding.impl.RequestUtil;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.decoder.MessageDecoder;
 import org.opensaml.messaging.decoder.MessageDecodingException;
@@ -30,6 +29,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 
 import fi.csc.idpextension.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
+import net.shibboleth.idp.plugin.oidc.op.decoding.impl.RequestUtil;
 
 /**
  * Message decoder decoding OAuth2 {@link OAuth2DeviceAuthorizationRequest}s.
