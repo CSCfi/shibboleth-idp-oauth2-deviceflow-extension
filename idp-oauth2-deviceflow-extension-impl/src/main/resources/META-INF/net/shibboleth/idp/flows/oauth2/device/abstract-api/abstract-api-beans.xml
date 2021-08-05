@@ -7,14 +7,14 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
-                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd" 
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
        default-init-method="initialize" default-destroy-method="destroy">
-       
+
   <bean id="shibboleth.oidc.browserProfile" class="java.lang.Boolean" c:_0="false"/>
-  
+
   <bean id="OIDCMetadataLookup" class="net.shibboleth.idp.profile.impl.WebFlowMessageHandlerAdaptor" scope="prototype" c:executionDirection="INBOUND">
     <constructor-arg name="messageHandler">
-      <bean class="org.geant.idpextension.oidc.profile.impl.OIDCMetadataLookupHandler" scope="prototype">
+      <bean class="net.shibboleth.idp.plugin.oidc.op.profile.impl.OIDCMetadataLookupHandler" scope="prototype">
         <property name="clientInformationResolver">
           <ref bean="shibboleth.ClientInformationResolver"/>
         </property>
@@ -24,17 +24,17 @@
       </bean>
     </constructor-arg>
   </bean>
-  
-  <bean id="shibboleth.TokenRequestClientIDLookupStrategy" class="org.geant.idpextension.oidc.profile.context.navigate.TokenRequestClientIDLookupFunction" 
+
+  <bean id="shibboleth.TokenRequestClientIDLookupStrategy" class="net.shibboleth.idp.plugin.oidc.op.profile.context.navigate.TokenRequestClientIDLookupFunction"
     scope="prototype"/>
-    
-  <bean id="InitializeRelyingPartyContext" class="org.geant.idpextension.oidc.profile.impl.InitializeRelyingPartyContext" 
+
+  <bean id="InitializeRelyingPartyContext" class="net.shibboleth.idp.plugin.oidc.op.profile.impl.InitializeRelyingPartyContext"
     scope="prototype" p:clientIDLookupStrategy-ref="shibboleth.TokenRequestClientIDLookupStrategy"/>
-    
-  <bean id="InitializeOutboundMessageContext" class="fi.csc.idpextension.oauth2.profile.impl.InitializeOutboundDeviceAuthorizationResponseMessageContext" 
+
+  <bean id="InitializeOutboundMessageContext" class="fi.csc.idpextension.oauth2.profile.impl.InitializeOutboundDeviceAuthorizationResponseMessageContext"
     scope="prototype"/>
-    
-  <bean id="ValidateEndpointAuthentication" class="org.geant.idpextension.oidc.profile.impl.ValidateEndpointAuthentication" 
+
+  <bean id="ValidateEndpointAuthentication" class="net.shibboleth.idp.plugin.oidc.op.profile.impl.ValidateEndpointAuthentication"
     scope="prototype" p:httpServletRequest-ref="shibboleth.HttpServletRequest" p:replayCache-ref="shibboleth.ReplayCache"/>
-    
+
 </beans>

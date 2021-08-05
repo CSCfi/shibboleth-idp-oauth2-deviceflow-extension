@@ -3,19 +3,19 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
       xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd" 
       abstract="true">
-  
+
   <action-state id="LogRuntimeException">
     <on-entry>
-      <evaluate expression="T(org.slf4j.LoggerFactory).getLogger('org.geant.idpextension.oidc.profile').error('Uncaught runtime exception', flowExecutionException.getCause())"/>
+      <evaluate expression="T(org.slf4j.LoggerFactory).getLogger('fi.csc.idpextension.oauth2.profile').error('Uncaught runtime exception', flowExecutionException.getCause())"/>
     </on-entry>
     <evaluate expression="'RuntimeException'"/>
     <transition to="HandleError"/>
   </action-state>
-  
+
   <global-transitions>
     <transition on-exception="java.lang.RuntimeException" to="LogRuntimeException"/>
     <transition on="#{!'proceed'.equals(currentEvent.id)}" to="HandleError"/>
   </global-transitions>
   <bean-import resource="../abstract/abstract-beans.xml"/>
-  
+
 </flow>
