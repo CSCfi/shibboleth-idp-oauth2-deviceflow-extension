@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fi.csc</groupId>
   <artifactId>idp-oauth2-deviceflow-extension-parent</artifactId>
-  <version>3.0.0-SNAPSHOT</version>
+  <version>3.0.0-RC1</version>
   <packaging>pom</packaging>
   
   <properties>
