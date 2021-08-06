@@ -8,14 +8,15 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fi.csc</groupId>
   <artifactId>idp-oauth2-deviceflow-extension-parent</artifactId>
-  <version>2.0.4</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <properties>
-    <oidcextension.version>2.0.0</oidcextension.version>
-    <shib.idp.version>4.0.0</shib.idp.version>
-    <opensaml.version>4.0.0</opensaml.version>
-    <nimbus.version>8.0</nimbus.version>
+    <nimbus-jose-jwt.version>9.5</nimbus-jose-jwt.version>
+    <oauth2-oidc-sdk.version>9.1</oauth2-oidc-sdk.version>
+    <oidcextension.version>3.0.1</oidcextension.version>
+    <shib.idp.version>4.1.0</shib.idp.version>
+    <opensaml.version>4.1.0</opensaml.version>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -53,34 +54,39 @@
         <artifactId>idp-oauth2-deviceflow-extension-api</artifactId>
       </dependency>
       <dependency>
-        <groupId>org.geant</groupId>
+        <groupId>net.shibboleth.idp.plugin.oidc</groupId>
         <version>${oidcextension.version}</version>
-        <artifactId>idp-oidc-extension-api</artifactId>
+        <artifactId>idp-plugin-oidc-op-api</artifactId>
       </dependency>
       <dependency>
-        <groupId>org.geant</groupId>
+        <groupId>net.shibboleth.idp.plugin.oidc</groupId>
         <version>${oidcextension.version}</version>
-        <artifactId>idp-oidc-extension-impl</artifactId>
+        <artifactId>idp-plugin-oidc-op-impl</artifactId>
       </dependency>
       <dependency>
-        <groupId>org.geant</groupId>
-        <version>${oidcextension.version}</version>
-        <artifactId>idp-oidc-extension-impl</artifactId>
+        <groupId>net.shibboleth.idp</groupId>
+        <version>${shib.idp.version}</version>
+        <artifactId>idp-profile-api</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>net.shibboleth.idp</groupId>
+        <version>${shib.idp.version}</version>
+        <artifactId>idp-authn-api</artifactId>
       </dependency>
       <dependency>
         <groupId>org.opensaml</groupId>
         <version>${opensaml.version}</version>
-        <artifactId>opensaml-saml-api</artifactId>
+        <artifactId>opensaml-storage-impl</artifactId>
       </dependency>
       <dependency>
         <groupId>com.nimbusds</groupId>
-        <version>${nimbus.version}</version>
+        <version>${nimbus-jose-jwt.version}</version>
         <artifactId>oauth2-oidc-sdk</artifactId>
       </dependency>
       <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
-        <version>4.0.1</version>
+        <version>3.1.0</version>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
@@ -91,11 +97,6 @@
         <groupId>org.testng</groupId>
         <artifactId>testng</artifactId>
         <version>7.3.0</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opensaml</groupId>
-        <version>${opensaml.version}</version>
-        <artifactId>opensaml-storage-impl</artifactId>
       </dependency>
       <dependency>
         <groupId>net.shibboleth.idp</groupId>

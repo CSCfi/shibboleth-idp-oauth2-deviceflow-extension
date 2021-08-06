@@ -16,5 +16,7 @@
 		p:accessTokenLifetime="%{idp.oauth2.deviceflow.accessToken.defaultLifetime:PT10M}"
 		p:deviceCodeLifetime="%{idp.oauth2.deviceflow.deviceCode.defaultLifetime:PT10M}"
 		p:pollingInterval="%{idp.oauth2.deviceflow.pollingInterval:PT5S}"
-		p:tokenEndpointAuthMethods="%{idp.oauth2.deviceflow.tokenEndpointAuthMethods:client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt}" />
+		p:tokenEndpointAuthMethods="%{idp.oauth2.deviceflow.tokenEndpointAuthMethods:client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt}"
+		p:encodeConsentInTokens="%{idp.oidc.encodeConsentInTokens:false}"
+        p:encodedAttributes="%{idp.oidc.encodedAttributes:}" />
 </beans>

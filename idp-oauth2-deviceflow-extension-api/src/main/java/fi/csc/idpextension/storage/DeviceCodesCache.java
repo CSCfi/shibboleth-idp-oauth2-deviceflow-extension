@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * Cache for storing {@link DeviceCodeObject} per User Code and state of the request {@link DeviceStateObject} per
  * Device Code.
  * <p>
- * This class is thread-safe and uses a synchronized method to prevent race conditions within the underlying store
+ * This class is thread-safe and uses a synchronised method to prevent race conditions within the underlying store
  * (lacking an atomic "check and insert" operation).
  * </p>
  */

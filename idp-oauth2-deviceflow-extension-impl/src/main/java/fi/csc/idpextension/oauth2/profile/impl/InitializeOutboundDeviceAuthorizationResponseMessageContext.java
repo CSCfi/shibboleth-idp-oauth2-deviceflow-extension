@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 
 package fi.csc.idpextension.oauth2.profile.impl;
 
-import org.geant.idpextension.oidc.profile.impl.AbstractInitializeOutboundResponseMessageContext;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.profile.context.ProfileRequestContext;
+
+import net.shibboleth.idp.plugin.oidc.op.profile.impl.AbstractInitializeOutboundResponseMessageContext;
 
 /**
  * Action that adds an outbound {@link MessageContext} and related OIDC contexts to the {@link ProfileRequestContext}

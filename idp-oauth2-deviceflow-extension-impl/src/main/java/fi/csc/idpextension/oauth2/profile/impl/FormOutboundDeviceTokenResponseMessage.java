@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020 CSC- IT Center for Science, www.csc.fi
+ * Copyright (c) 2019-2021 CSC- IT Center for Science, www.csc.fi
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import javax.annotation.Nonnull;
 
-import org.geant.idpextension.oidc.profile.impl.AbstractOIDCResponseAction;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.profile.action.ActionSupport;
 import org.opensaml.profile.action.EventIds;
@@ -38,6 +37,7 @@ import fi.csc.idpextension.storage.DeviceCodesCache;
 import fi.csc.idpextension.storage.DeviceStateObject;
 import fi.csc.idpextension.storage.DeviceStateObject.State;
 import net.minidev.json.parser.ParseException;
+import net.shibboleth.idp.plugin.oidc.op.profile.impl.AbstractOIDCResponseAction;
 import net.shibboleth.utilities.java.support.annotation.constraint.NonnullAfterInit;
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException;
 import net.shibboleth.utilities.java.support.component.ComponentSupport;

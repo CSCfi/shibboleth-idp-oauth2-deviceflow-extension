@@ -4,43 +4,25 @@
 OAuth2 Device Flow extension for shibboleth-idp-oidc-extension. See https://tools.ietf.org/html/rfc8628.
 
 ## Prerequisite for installation
-- Shibboleth IdP 4.0.0+ 
-- [shibboleth-idp-oidc-extension](https://github.com/CSCfi/shibboleth-idp-oidc-extension/wiki) v2.0.0+
+- Shibboleth IdP 4.1+
+- [shibboleth-idp-oidc-extension](https://github.com/CSCfi/shibboleth-idp-oidc-extension/wiki) v3+
 
 ## Installation
-First you need extract the archive and rebuild the package. Please not that you most likely *need* to change the owner and group information of the extracted files to suite your installation.
+First you need extract the archive and rebuild the Shibboleth WAR file. Please not that you most likely *need* to change the owner and group information of the extracted files to suite your installation.
 
     cd /opt/shibboleth-idp
-    tar -xf path/to/idp-oauth2-deviceflow-extension-distribution-2.X.X-bin.tar.gz --strip-components=1
+    tar -xf path/to/idp-oauth2-deviceflow-extension-distribution-3.X.X-bin.tar.gz --strip-components=1
     bin/build.sh
 
-Next you need to import oauth2-deviceflow-relying-party.xml to oidc-relying-party.xml.
+Next you need to import oauth2-deviceflow-relying-party.xml to relying-party.xml.
 
-    edit /opt/shibboleth-idp/conf/oidc-relying-party.xml
+    edit /opt/shibboleth-idp/conf/relying-party.xml
 
 Add following line:
 
     <import resource="oauth2-deviceflow-relying-party.xml"/>
     
-While editing the file add the new profile also to profileResponders map.
-
-    <!-- Configure profiles that need to use issuer instead of entity id as responder id. -->
-    <util:map id="profileResponders">
-        <entry key-ref="OIDC.SSO" value="#{getObject('issuer')}" />
-        <entry key-ref="OIDC.Registration" value="#{getObject('issuer')}" />
-        <entry key-ref="OIDC.Configuration" value="#{getObject('issuer')}" />
-        <entry key-ref="OAUTH2.Device" value="#{getObject('issuer')}" />
-    </util:map>
-
-Then you need to list the new [idp-oauth2-deviceflow.properties](https://github.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/blob/master/idp-oauth2-deviceflow-extension-distribution/src/main/resources/conf/idp-oauth2-deviceflow.properties) properties file in the main properties file.
-
-    edit /opt/shibboleth-idp/conf/idp.properties
-
-    idp.additionalProperties=/conf/ldap.properties, /conf/saml-nameid.properties, /conf/services.properties,/conf/authn/duo.properties, /conf/oidc-subject.properties, /conf/idp-oidc.properties, /conf/idp-oauth2-deviceflow.properties
-    
 Now we need to activate still the profile configuration by adding [OAUTH2.Device](https://github.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/wiki/ProfileConfiguration) to relying-party.xml
-
-    edit /opt/shibboleth-idp/conf/relying-party.xml
     
     <bean id="shibboleth.DefaultRelyingParty" p:responderIdLookupStrategy-ref="profileResponderIdLookupFunction"   parent="RelyingParty">
     <property name="profileConfigurations">
@@ -82,6 +64,3 @@ Make sure your attribute filter is such that sub claim is resolved also for the 
 * Authorization Endpoint: idp/profile/oauth2/device/authorize
 * Token Endpoint: idp/profile/oauth2/device/token
 * UserInfo Endpoint: Standard endpoint of your installation
-
-
-    

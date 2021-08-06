@@ -9,18 +9,18 @@
                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd" 
        default-init-method="initialize" default-destroy-method="destroy">
-       
+
   <bean id="DecodeMessage" class="org.opensaml.profile.action.impl.DecodeMessage" scope="prototype">
     <constructor-arg>
-      <bean class="fi.csc.idpextension.oauth2.decoding.impl.OAuth2DeviceAuthorizationRequestDecoder" 
+      <bean class="fi.csc.idpextension.oauth2.decoding.impl.OAuth2DeviceAuthorizationRequestDecoder"
         scope="prototype" p:httpServletRequest-ref="shibboleth.HttpServletRequest"/>
     </constructor-arg>
   </bean>
-  
-  <bean id="FormOutboundMessage" class="fi.csc.idpextension.oauth2.profile.impl.FormOutboundDeviceAuthorizationResponseMessage" 
+
+  <bean id="FormOutboundMessage" class="fi.csc.idpextension.oauth2.profile.impl.FormOutboundDeviceAuthorizationResponseMessage"
     p:httpServletRequest-ref="shibboleth.HttpServletRequest" scope="prototype" p:deviceCodesCache-ref="shibboleth.DeviceCodesCache"/>
-    
-  <bean id="BuildErrorResponseFromEvent" class="org.geant.idpextension.oidc.profile.impl.BuildJSONErrorResponseFromEvent" 
+
+  <bean id="BuildErrorResponseFromEvent" class="net.shibboleth.idp.plugin.oidc.op.profile.impl.BuildJSONErrorResponseFromEvent"
     scope="prototype" p:defaultStatusCode="400" p:defaultCode="invalid_request" p:httpServletResponse-ref="shibboleth.HttpServletResponse">
     <property name="eventContextLookupStrategy">
       <bean class="net.shibboleth.idp.profile.context.navigate.WebFlowCurrentEventLookupFunction"/>
@@ -31,5 +31,5 @@
       </map>
     </property>
   </bean>
-  
+
 </beans>
