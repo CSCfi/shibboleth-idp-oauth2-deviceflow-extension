@@ -24,7 +24,7 @@ Add following line:
     
 Now we need to activate still the profile configuration by adding [OAUTH2.Device](https://github.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/wiki/ProfileConfiguration) to relying-party.xml
     
-    <bean id="shibboleth.DefaultRelyingParty" p:responderIdLookupStrategy-ref="profileResponderIdLookupFunction"   parent="RelyingParty">
+    <bean id="shibboleth.DefaultRelyingParty" parent="RelyingParty">
     <property name="profileConfigurations">
         <list>
             <bean parent="Shibboleth.SSO" p:postAuthenticationFlows="attribute-release" />
