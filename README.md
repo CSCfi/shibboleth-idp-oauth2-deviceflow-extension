@@ -5,7 +5,7 @@ OAuth2 Device Flow extension for shibboleth-idp-oidc-extension. See https://tool
 
 ## Prerequisite for installation
 - Shibboleth IdP 4.1+
-- [shibboleth-idp-oidc-extension](https://github.com/CSCfi/shibboleth-idp-oidc-extension/wiki) v3+
+- [shibboleth-idp-oidc-extension](https://github.com/CSCfi/shibboleth-idp-oidc-extension/wiki) v3.0.1
 
 ## Installation
 First you need extract the archive and rebuild the Shibboleth WAR file. Please not that you most likely *need* to change the owner and group information of the extracted files to suite your installation.
