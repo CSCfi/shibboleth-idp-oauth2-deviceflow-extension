@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- See LICENSE.txt file in the root directory of this repository for the 
+    copyright/license information. -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+       default-init-method="initialize"
+       default-destroy-method="destroy">
+
+       <bean id="shibboleth.PropertySourcesPlaceholderConfigurer" class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"
+           p:placeholderPrefix="%{" p:placeholderSuffix="}" />
+
+       <bean id="OAUTH2.DeviceGrant"
+        class="fi.csc.idpextension.oauth2.config.OAuth2DeviceFlowConfiguration"
+        p:securityConfiguration-ref="%{idp.security.oauth2.deviceflow.config:shibboleth.oidc.DefaultSecurityConfiguration}"
+        p:deviceCodeLength="%{devicegrant.deviceCode.defaultLength:16}"
+        p:userCodeLength="%{devicegrant.userCode.defaultLength:6}"
+        p:accessTokenLifetime="%{devicegrant.accessToken.defaultLifetime:PT10M}"
+        p:deviceCodeLifetime="%{devicegrant.deviceCode.defaultLifetime:PT10M}"
+        p:pollingInterval="%{devicegrant.pollingInterval:PT5S}"
+        p:tokenEndpointAuthMethods="%{devicegrant.tokenEndpointAuthMethods:client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt}"
+        p:encodeConsentInTokens="%{idp.oidc.encodeConsentInTokens:false}"
+        p:encodedAttributes="%{idp.oidc.encodedAttributes:}" />
+
+</beans>

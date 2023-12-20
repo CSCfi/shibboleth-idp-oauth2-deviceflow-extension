@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- See LICENSE.txt file in the root directory of this repository for the 
+    copyright/license information. -->
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>assembly-zip</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>../oauth2-devicegrant-api/target</directory>
+            <outputDirectory>webapp/WEB-INF/lib</outputDirectory>
+            <includes>
+                <include>oauth2-devicegrant-api-*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*test*.jar</exclude>
+                <exclude>*javadoc.jar</exclude>
+                <exclude>*sources.jar</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>../oauth2-devicegrant-impl/target</directory>
+            <outputDirectory>webapp/WEB-INF/lib</outputDirectory>
+            <includes>
+                <include>oauth2-devicegrant-impl-*.jar</include>
+            </includes>
+            <excludes>
+                <exclude>*test*.jar</exclude>
+                <exclude>*javadoc.jar</exclude>
+                <exclude>*sources.jar</exclude>
+            </excludes>
+        </fileSet>
+        <fileSet>
+            <directory>src/main/resources/webapp</directory>
+            <outputDirectory>webapp</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>../oauth2-devicegrant-impl/src/main/resources/fi/csc/shibboleth/plugin/oauth2/devicegrant</directory>
+            <outputDirectory>bootstrap</outputDirectory>
+            <includes>
+                <include>plugin.properties</include>
+            </includes>
+            <lineEnding>windows</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>${dist.assemblyDirectory}</directory>
+            <outputDirectory></outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>
