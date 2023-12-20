@@ -17,8 +17,8 @@
            p:placeholderPrefix="%{" p:placeholderSuffix="}" />
 
        <bean id="OAUTH2.DeviceGrant"
-        class="fi.csc.idpextension.oauth2.config.OAuth2DeviceFlowConfiguration"
-        p:securityConfiguration-ref="%{idp.security.oauth2.deviceflow.config:shibboleth.oidc.DefaultSecurityConfiguration}"
+        class="fi.csc.shibboleth.plugin.oauth2.OAuth2DeviceGrantConfiguration"
+        p:securityConfiguration-ref="%{devicegrant.SecurityConfiguration:shibboleth.oidc.DefaultSecurityConfiguration}"
         p:deviceCodeLength="%{devicegrant.deviceCode.defaultLength:16}"
         p:userCodeLength="%{devicegrant.userCode.defaultLength:6}"
         p:accessTokenLifetime="%{devicegrant.accessToken.defaultLifetime:PT10M}"
