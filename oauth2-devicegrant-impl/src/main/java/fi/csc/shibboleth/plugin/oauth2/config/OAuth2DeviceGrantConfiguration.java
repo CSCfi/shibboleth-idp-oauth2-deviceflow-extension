@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fi.csc.shibboleth.plugin.oauth2;
+package fi.csc.shibboleth.plugin.oauth2.config;
 
 import java.time.Duration;
 

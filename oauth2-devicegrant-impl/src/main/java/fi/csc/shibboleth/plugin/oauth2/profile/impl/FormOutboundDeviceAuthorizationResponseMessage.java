@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
-import fi.csc.shibboleth.plugin.oauth2.OAuth2DeviceGrantConfiguration;
+import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodesCache;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;

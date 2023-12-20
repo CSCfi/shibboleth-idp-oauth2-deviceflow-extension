@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSet;
 
-import fi.csc.shibboleth.plugin.oauth2.OAuth2DeviceGrantConfiguration;
+import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceUserApprovalLookupFunction;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceUserCodeLookupFunction;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;

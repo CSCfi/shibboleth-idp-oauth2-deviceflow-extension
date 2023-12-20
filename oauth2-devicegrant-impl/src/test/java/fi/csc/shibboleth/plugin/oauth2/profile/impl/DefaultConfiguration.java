@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.opensaml.security.config.SecurityConfiguration;
 
-import fi.csc.shibboleth.plugin.oauth2.OAuth2DeviceGrantConfiguration;
+import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
 
 class DefaultConfiguration implements OAuth2DeviceGrantConfiguration {
 
