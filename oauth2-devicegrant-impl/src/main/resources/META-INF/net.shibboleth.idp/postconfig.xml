@@ -16,16 +16,9 @@
        <bean id="shibboleth.PropertySourcesPlaceholderConfigurer" class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"
            p:placeholderPrefix="%{" p:placeholderSuffix="}" />
 
-       <bean id="OAUTH2.DeviceGrant"
-        class="fi.csc.shibboleth.plugin.oauth2.OAuth2DeviceGrantConfiguration"
-        p:securityConfiguration-ref="%{devicegrant.SecurityConfiguration:shibboleth.oidc.DefaultSecurityConfiguration}"
-        p:deviceCodeLength="%{devicegrant.deviceCode.defaultLength:16}"
-        p:userCodeLength="%{devicegrant.userCode.defaultLength:6}"
-        p:accessTokenLifetime="%{devicegrant.accessToken.defaultLifetime:PT10M}"
-        p:deviceCodeLifetime="%{devicegrant.deviceCode.defaultLifetime:PT10M}"
-        p:pollingInterval="%{devicegrant.pollingInterval:PT5S}"
-        p:tokenEndpointAuthMethods="%{devicegrant.tokenEndpointAuthMethods:client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt}"
-        p:encodeConsentInTokens="%{idp.oidc.encodeConsentInTokens:false}"
-        p:encodedAttributes="%{idp.oidc.encodedAttributes:}" />
+       <bean id="OAUTH2.DeviceGrant" lazy-init="true"
+        class="fi.csc.shibboleth.plugin.oauth2.config.impl.DefaultOAuth2DeviceGrantConfiguration" />
+        
+       <import resource="classpath*:/META-INF/net/shibboleth/idp/service/relying-party/oidc/**/postconfig.xml" />
 
 </beans>
