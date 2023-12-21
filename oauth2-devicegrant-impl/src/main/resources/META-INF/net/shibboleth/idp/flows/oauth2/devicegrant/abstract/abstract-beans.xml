@@ -10,13 +10,13 @@
   <import resource="classpath*:/META-INF/net/shibboleth/idp/flows/oidc/abstract/oidc-abstract-beans.xml"/>
 
   <bean id="InitializeProfileRequestContext" class="net.shibboleth.idp.profile.impl.InitializeProfileRequestContext"
-    scope="prototype" p:profileId="http://csc.fi/ns/profiles/oauth2/device" p:loggingId="%{idp.service.logging.saml2sso:SSO}"
+    scope="prototype" p:profileId="http://csc.fi/ns/profiles/oauth.net/2/device-flow" p:loggingId="%{idp.service.logging.saml2sso:SSO}"
     p:browserProfile-ref="shibboleth.oidc.browserProfile"/>
 
-  <bean id="shibboleth.DeviceCodesCache" class="fi.csc.idpextension.storage.DeviceCodesCache"
-    depends-on="shibboleth.LoggingService" p:storage-ref="#{'%{idp.oauth2.deviceCodeCache.StorageService:shibboleth.StorageService}'.trim()}"/>
-
+  <bean id="shibboleth.DeviceCodesCache" class="fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodesCache"
+    depends-on="shibboleth.LoggingService" p:storage-ref="#{'%{devicegrant.deviceCodeCache.StorageService:shibboleth.StorageService}'.trim()}"/>
+<!--  
   <bean id="tokenSealer" lazy-init="true" class="net.shibboleth.utilities.java.support.security.DataSealer"
         p:keyStrategy-ref="shibboleth.DataSealerKeyStrategy" p:encoder-ref="base64Codec" p:decoder-ref="base64Codec" />
-
+-->
 </beans>

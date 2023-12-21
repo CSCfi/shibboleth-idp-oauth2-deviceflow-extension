@@ -1,8 +1,6 @@
 package fi.csc.shibboleth.plugin.oauth2.profile.impl;
 
 import java.time.Duration;
-import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import org.opensaml.profile.context.ProfileRequestContext;
@@ -10,24 +8,8 @@ import org.opensaml.security.config.SecurityConfiguration;
 
 import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
 
+//TODO REMOVE!
 class DefaultConfiguration implements OAuth2DeviceGrantConfiguration {
-
-    @Override
-    public String getAccessTokenType(ProfileRequestContext profileRequestContext) {
-        return "JWT";
-    }
-
-    @Override
-    public Duration getAccessTokenLifetime(ProfileRequestContext profileRequestContext) {
-        return Duration.ofMinutes(10);
-    }
-
-    @Override
-    public BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>> getAccessTokenClaimsSetManipulationStrategy(
-            ProfileRequestContext profileRequestContext) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     @Override
     public Predicate<ProfileRequestContext> getActivationCondition() {

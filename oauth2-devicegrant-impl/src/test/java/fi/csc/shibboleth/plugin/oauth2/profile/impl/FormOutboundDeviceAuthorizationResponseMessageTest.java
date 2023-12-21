@@ -17,15 +17,10 @@
 package fi.csc.shibboleth.plugin.oauth2.profile.impl;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
 
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.profile.action.EventIds;
 import org.opensaml.profile.context.ProfileRequestContext;
-import org.opensaml.security.config.SecurityConfiguration;
 import org.opensaml.storage.impl.MemoryStorageService;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.webflow.execution.RequestContext;
@@ -36,7 +31,6 @@ import org.testng.annotations.Test;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
-import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodesCache;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
@@ -112,9 +106,9 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
         ActionTestingSupport.assertProceedEvent(action.execute(requestCtx));
         OAuth2DeviceAuthorizationSuccessResponse resp = (OAuth2DeviceAuthorizationSuccessResponse) profileRequestCtx
                 .getOutboundMessageContext().getMessage();
-        Assert.assertEquals("https://localhost/idp/profile/oauth2/device/authenticate",
+        Assert.assertEquals("https://localhost/idp/profile/oauth2/devicegrant/authenticate",
                 resp.getVerificationURI().toString());
-        Assert.assertEquals("https://localhost/idp/profile/oauth2/device/authenticate?user_code=" + resp.getUserCode(),
+        Assert.assertEquals("https://localhost/idp/profile/oauth2/devicegrant/authenticate?user_code=" + resp.getUserCode(),
                 resp.getVerificationURIComplete().toString());
         Assert.assertNotNull(resp.getExpiresIn());
         Assert.assertNotNull(resp.getInterval());

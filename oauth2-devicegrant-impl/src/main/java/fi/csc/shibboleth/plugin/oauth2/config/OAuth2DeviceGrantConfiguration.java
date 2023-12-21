@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 
 import org.opensaml.profile.context.ProfileRequestContext;
 
-import net.shibboleth.oidc.profile.oauth2.config.OAuth2AccessTokenProducingProfileConfiguration;
+import net.shibboleth.profile.config.ConditionalProfileConfiguration;
 import net.shibboleth.shared.annotation.ConfigurationSetting;
 import net.shibboleth.shared.annotation.constraint.NotEmpty;
 import net.shibboleth.shared.annotation.constraint.Positive;
@@ -31,7 +31,7 @@ import net.shibboleth.shared.annotation.constraint.Positive;
 /**
  * Profile configuration for the OAuth2 Device Grant.
  */
-public interface OAuth2DeviceGrantConfiguration extends OAuth2AccessTokenProducingProfileConfiguration {
+public interface OAuth2DeviceGrantConfiguration extends ConditionalProfileConfiguration {
 
     /** OAuth2 Device Grant URI. */
     @Nonnull
@@ -41,7 +41,7 @@ public interface OAuth2DeviceGrantConfiguration extends OAuth2AccessTokenProduci
     /** ID for this profile configuration. */
     @Nonnull
     @NotEmpty
-    public static final String PROFILE_ID = "http://csc.fi/ns/profiles/oauth2/device";
+    public static final String PROFILE_ID = "http://csc.fi/ns/profiles/oauth.net/2/device-flow";
 
     /**
      * Get device code length.

@@ -2,20 +2,39 @@
 <flow xmlns="http://www.springframework.org/schema/webflow" 
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
       xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd" 
-      parent="oauth2/device/abstract" 
+      parent="oauth2/devicegrant/abstract, oidc/metadata-lookup" 
       abstract="true">
 
   <action-state id="DecodeMessage">
     <evaluate expression="DecodeMessage"/>
     <evaluate expression="PostDecodePopulateAuditContext"/>
-    <evaluate expression="OIDCMetadataLookup"/>
+    <evaluate expression="'proceed'" />
+    <!-- DoMetadataLookup is expected to proceed to SelectConfiguration -->
+    <transition on="proceed" to="DoMetadataLookup" />
+  </action-state>      
+        
+  <action-state id="SelectConfiguration">
     <evaluate expression="InitializeRelyingPartyContext"/>
     <evaluate expression="SelectRelyingPartyConfiguration"/>
     <evaluate expression="SelectProfileConfiguration"/>
     <evaluate expression="PostLookupPopulateAuditContext"/>
     <evaluate expression="'proceed'"/>
-    <transition on="proceed" to="OutboundContextsAndSecurityParameters"/>
+    <transition on="proceed" to="AuthenticationSetup"/>
   </action-state>
+  
+  <action-state id="AuthenticationSetup">
+    <evaluate expression="InitializeAuthenticationContext" />
+    <evaluate expression="'proceed'" />
+    <transition on="proceed" to="DoAuthenticationSubflow" />
+  </action-state>
+
+  <subflow-state id="DoAuthenticationSubflow" subflow="authn">
+    <input name="calledAsSubflow" value="true" />
+    <input name="bypassSessionActions" value="true" />
+    <input name="potentialFlows" value="getActiveFlow().getApplicationContext().getBean('devicegrant.PotentialFlows')" />
+    <transition on="proceed" to="BuildResponse" />
+    <transition on="RestartAuthentication" to="AuthenticationSetup" />
+  </subflow-state>
 
   <action-state id="BuildResponse">
     <evaluate expression="FormOutboundMessage"/>

@@ -2,7 +2,7 @@
 <flow xmlns="http://www.springframework.org/schema/webflow" 
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
       xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd" 
-      parent="oauth2/device/abstract-api">
+      parent="oauth2/devicegrant/abstract-api">
 
   <action-state id="InitializeMandatoryContexts">
     <evaluate expression="InitializeProfileRequestContext"/>
@@ -10,13 +10,7 @@
     <evaluate expression="'proceed'"/>
     <transition on="proceed" to="DecodeMessage"/>
   </action-state>
-
-  <action-state id="OutboundContextsAndSecurityParameters">
-    <evaluate expression="ValidateEndpointAuthentication"/>
-    <evaluate expression="'proceed'"/>
-    <transition on="proceed" to="BuildResponse"/>
-  </action-state>
-
+  
   <bean-import resource="authorize-beans.xml"/>
 
 </flow>

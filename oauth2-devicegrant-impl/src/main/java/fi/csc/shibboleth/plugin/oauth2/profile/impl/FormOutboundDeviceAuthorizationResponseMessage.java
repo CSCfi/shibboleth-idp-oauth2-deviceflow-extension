@@ -49,8 +49,9 @@ import net.shibboleth.shared.security.IdentifierGenerationStrategy;
 import net.shibboleth.shared.security.impl.SecureRandomIdentifierGenerationStrategy;
 
 /**
- * Action forming device authorisation response success message. Action generates user and device codes, forms a
- * {@link DeviceCodeObject} storing it to {@link DeviceCodesCache} keyed with user code. Finally the action forms
+ * Action forming device authorization response success message. Action
+ * generates user and device codes, forms a {@link DeviceCodeObject} storing it
+ * to {@link DeviceCodesCache} keyed with user code. Finally the action forms
  * {@link OAuth2DeviceAuthorizationSuccessResponse}
  */
 public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDCResponseAction {
@@ -67,7 +68,8 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     private Function<ProfileRequestContext, IdentifierGenerationStrategy> idGeneratorLookupStrategy;
 
     /**
-     * Strategy used to locate the {@link RelyingPartyContext} associated with a given {@link ProfileRequestContext}.
+     * Strategy used to locate the {@link RelyingPartyContext} associated with a
+     * given {@link ProfileRequestContext}.
      */
     @Nonnull
     private Function<ProfileRequestContext, RelyingPartyContext> relyingPartyContextLookupStrategy;
@@ -85,7 +87,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     private RelyingPartyContext rpCtx;
 
     /** Authentication endpoint not including server name and protocol. */
-    private String authenticationEndpoint = "/idp/profile/oauth2/device/authenticate";
+    private String authenticationEndpoint = "/idp/profile/oauth2/devicegrant/authenticate";
 
     /** Interval between polling requests. */
     private Duration interval;
@@ -108,14 +110,16 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     /**
      * Set authentication endpoint not including server name and protocol.
      * 
-     * @param endpoint authentication endpoint not including server name and protocol
+     * @param endpoint authentication endpoint not including server name and
+     *                 protocol
      */
     public void setAuthenticationEndpoint(String endpoint) {
         authenticationEndpoint = endpoint;
     }
 
     /**
-     * Set the strategy used to locate the {@link IdentifierGenerationStrategy} to use.
+     * Set the strategy used to locate the {@link IdentifierGenerationStrategy} to
+     * use.
      * 
      * @param strategy lookup strategy
      */
@@ -123,23 +127,23 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
             @Nonnull final Function<ProfileRequestContext, IdentifierGenerationStrategy> strategy) {
         checkSetterPreconditions();
 
-        idGeneratorLookupStrategy =
-                Constraint.isNotNull(strategy, "IdentifierGenerationStrategy lookup strategy cannot be null");
+        idGeneratorLookupStrategy = Constraint.isNotNull(strategy,
+                "IdentifierGenerationStrategy lookup strategy cannot be null");
     }
 
     /**
-     * Set the strategy used to locate the {@link RelyingPartyContext} associated with a given
-     * {@link ProfileRequestContext}.
+     * Set the strategy used to locate the {@link RelyingPartyContext} associated
+     * with a given {@link ProfileRequestContext}.
      * 
-     * @param strategy strategy used to locate the {@link RelyingPartyContext} associated with a given
-     *            {@link ProfileRequestContext}
+     * @param strategy strategy used to locate the {@link RelyingPartyContext}
+     *                 associated with a given {@link ProfileRequestContext}
      */
     public void setRelyingPartyContextLookupStrategy(
             @Nonnull final Function<ProfileRequestContext, RelyingPartyContext> strategy) {
         checkSetterPreconditions();
 
-        relyingPartyContextLookupStrategy =
-                Constraint.isNotNull(strategy, "RelyingPartyContext lookup strategy cannot be null");
+        relyingPartyContextLookupStrategy = Constraint.isNotNull(strategy,
+                "RelyingPartyContext lookup strategy cannot be null");
     }
 
     /**
@@ -163,7 +167,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     @Override
     protected boolean doPreExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
         if (getHttpServletRequest() == null) {
-            log.debug("{} Profile action does not contain an HttpServletRequest", getLogPrefix());
+            log.error("{} Profile action does not contain an HttpServletRequest", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_PROFILE_CTX);
             return false;
         }
@@ -221,8 +225,8 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
         }
         userCode = userCode.substring(1, (int) userCodeLength + 1);
         String rpId = rpCtx.getRelyingPartyId();
-        DeviceCodeObject deviceCodeObject =
-                new DeviceCodeObject(deviceCode, new ClientID(rpId), new Scope(request.getScope()));
+        DeviceCodeObject deviceCodeObject = new DeviceCodeObject(deviceCode, new ClientID(rpId),
+                new Scope(request.getScope()));
         try {
             log.debug("Storing device flow device code object {} per user code {}",
                     deviceCodeObject.toJSONObject().toString(), userCode);

@@ -325,7 +325,9 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         }
         final ProfileConfiguration pc = rpCtx.getProfileConfig();
         if (pc != null && pc instanceof OAuth2DeviceGrantConfiguration) {
-            accessTokenLifetime = ((OAuth2DeviceGrantConfiguration) pc).getAccessTokenLifetime(profileRequestContext);
+            // TODO FIX ACTION for ACCESS TOKEN CONF
+            // accessTokenLifetime = ((OAuth2DeviceGrantConfiguration)
+            // pc).getAccessTokenLifetime(profileRequestContext);
             expiration = ((OAuth2DeviceGrantConfiguration) pc).getDeviceCodeLifetime(profileRequestContext);
         } else {
             log.error("{} No oidc profile configuration associated with this profile request", getLogPrefix());
@@ -372,20 +374,14 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
                 consented = consentCtx.getConsentedAttributes();
             }
             try {
-                claimsSet = new AccessTokenClaimsSet.Builder()
-                        .setJWTID(idGenerator)
-                        .setACR(getOidcResponseContext().getAcr())
-                        .setClientID(new ClientID(rpCtx.getRelyingPartyId()))
+                claimsSet = new AccessTokenClaimsSet.Builder().setJWTID(idGenerator)
+                        .setACR(getOidcResponseContext().getAcr()).setClientID(new ClientID(rpCtx.getRelyingPartyId()))
                         .setIssuer(issuerLookupStrategy.apply(profileRequestContext))
-                        .setPrincipal(subjectCtx.getPrincipalName())
-                        .setSubject(getOidcResponseContext().getSubject())
-                        .setIssuedAt(Instant.now()).setExpiresAt(dateExp)
-                        .setACR(getOidcResponseContext().getAcr())
+                        .setPrincipal(subjectCtx.getPrincipalName()).setSubject(getOidcResponseContext().getSubject())
+                        .setIssuedAt(Instant.now()).setExpiresAt(dateExp).setACR(getOidcResponseContext().getAcr())
                         .setAuthenticationTime(getOidcResponseContext().getAuthTime())
-                        .setScope(getOidcResponseContext().getScope())
-                        .setConsentedClaims(consented).setDlClaims(claims)
-                        .setDlClaimsUI(claimsUI)
-                        .setConsentEnabled(consentEnabledPredicate.test(profileRequestContext))
+                        .setScope(getOidcResponseContext().getScope()).setConsentedClaims(consented).setDlClaims(claims)
+                        .setDlClaimsUI(claimsUI).setConsentEnabled(consentEnabledPredicate.test(profileRequestContext))
                         .build();
                 deviceStateObject = new DeviceStateObject(DeviceStateObject.State.APPROVED,
                         claimsSet.serialize(dataSealer), System.currentTimeMillis() + accessTokenLifetime.toMillis());
