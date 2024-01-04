@@ -68,7 +68,7 @@ public class ExtractUserCodeFromFormRequest extends AbstractProfileAction {
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
         final HttpServletRequest request = getHttpServletRequest();
         if (request == null) {
-            log.debug("{} Profile action does not contain an HttpServletRequest", getLogPrefix());
+            log.error("{} Profile action does not contain an HttpServletRequest", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.NO_USER_CODE);
             return;
         }
