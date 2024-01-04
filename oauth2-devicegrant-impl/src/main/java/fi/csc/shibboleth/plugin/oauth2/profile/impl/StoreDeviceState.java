@@ -30,6 +30,7 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSet;
 
@@ -357,6 +358,9 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         if (!userApprovalLookupStrategy.apply(profileRequestContext.getInboundMessageContext())) {
             deviceStateObject = new DeviceStateObject(DeviceStateObject.State.DENIED);
         } else {
+            //TODO fix and REMOVE
+            accessTokenLifetime = Duration.ofSeconds(600);
+
             Instant dateExp = Instant.now().plus(accessTokenLifetime);
             ClaimsSet claims = null;
             ClaimsSet claimsUI = null;
