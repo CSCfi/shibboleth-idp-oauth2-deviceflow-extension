@@ -25,6 +25,7 @@ import com.nimbusds.oauth2.sdk.AbstractOptionallyIdentifiedRequest;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
+import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceTokenRequest;
 
 /**
  * A function that returns client id of the authentication request via a lookup
@@ -32,7 +33,7 @@ import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationR
  * authorization request client authentication or from request parameter if
  * available. If information is not available, null is returned.
  */
-public class AuthorizationRequestClientIDLookupFunction implements ContextDataLookupFunction<MessageContext, ClientID> {
+public class APIRequestClientIDLookupFunction implements ContextDataLookupFunction<MessageContext, ClientID> {
 
     /** {@inheritDoc} */
     @Nullable
@@ -41,7 +42,7 @@ public class AuthorizationRequestClientIDLookupFunction implements ContextDataLo
             return null;
         }
         final Object message = input.getMessage();
-        if (!(message instanceof OAuth2DeviceAuthorizationRequest)) {
+        if (!(message instanceof OAuth2DeviceAuthorizationRequest) && !(message instanceof OAuth2DeviceTokenRequest)) {
             return null;
         }
         final AbstractOptionallyAuthenticatedRequest req = (AbstractOptionallyAuthenticatedRequest) message;

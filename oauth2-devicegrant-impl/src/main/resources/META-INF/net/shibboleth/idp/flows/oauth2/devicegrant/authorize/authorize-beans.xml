@@ -34,6 +34,6 @@
  </bean>
  
  <bean id="shibboleth.ClientIDLookupStrategy"
-        class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.AuthorizationRequestClientIDLookupFunction" />
+        class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.APIRequestClientIDLookupFunction" />
         
 </beans>
