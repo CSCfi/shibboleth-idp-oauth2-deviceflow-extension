@@ -49,6 +49,7 @@ import net.shibboleth.idp.plugin.oidc.op.profile.context.navigate.OIDCAuthentica
 import net.shibboleth.idp.plugin.oidc.op.token.support.AccessTokenClaimsSet;
 import net.shibboleth.idp.profile.IdPEventIds;
 import net.shibboleth.oidc.profile.config.logic.AttributeConsentFlowEnabledPredicate;
+import net.shibboleth.oidc.profile.oauth2.config.OAuth2AccessTokenProducingProfileConfiguration;
 import net.shibboleth.profile.config.ProfileConfiguration;
 import net.shibboleth.profile.context.RelyingPartyContext;
 import net.shibboleth.profile.context.navigate.IssuerLookupFunction;
@@ -326,16 +327,14 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         }
         final ProfileConfiguration pc = rpCtx.getProfileConfig();
         if (pc != null && pc instanceof OAuth2DeviceGrantConfiguration) {
-            // TODO FIX ACTION for ACCESS TOKEN CONF
-            // accessTokenLifetime = ((OAuth2DeviceGrantConfiguration)
-            // pc).getAccessTokenLifetime(profileRequestContext);
+            accessTokenLifetime = ((OAuth2AccessTokenProducingProfileConfiguration) pc).getAccessTokenLifetime(profileRequestContext);
             expiration = ((OAuth2DeviceGrantConfiguration) pc).getDeviceCodeLifetime(profileRequestContext);
         } else {
             log.error("{} No oidc profile configuration associated with this profile request", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, IdPEventIds.INVALID_RELYING_PARTY_CTX);
             return false;
         }
-        subjectCtx = profileRequestContext.getSubcontext(SubjectContext.class, false);
+        subjectCtx = profileRequestContext.getSubcontext(SubjectContext.class);
         if (subjectCtx == null) {
             log.error("{} No subject context", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_PROFILE_CTX);
@@ -358,9 +357,6 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         if (!userApprovalLookupStrategy.apply(profileRequestContext.getInboundMessageContext())) {
             deviceStateObject = new DeviceStateObject(DeviceStateObject.State.DENIED);
         } else {
-            //TODO fix and REMOVE
-            accessTokenLifetime = Duration.ofSeconds(600);
-
             Instant dateExp = Instant.now().plus(accessTokenLifetime);
             ClaimsSet claims = null;
             ClaimsSet claimsUI = null;
