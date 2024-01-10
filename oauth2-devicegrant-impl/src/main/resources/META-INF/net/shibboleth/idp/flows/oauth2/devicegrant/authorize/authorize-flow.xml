@@ -6,6 +6,8 @@
 
   <action-state id="InitializeMandatoryContexts">
     <evaluate expression="InitializeProfileRequestContext"/>
+    <evaluate expression="PopulateMetricContext"/>
+    <evaluate expression="FlowStartPopulateAuditContext"/>
     <evaluate expression="InitializeOutboundMessageContext"/>
     <evaluate expression="'proceed'"/>
     <transition on="proceed" to="DecodeMessage"/>
