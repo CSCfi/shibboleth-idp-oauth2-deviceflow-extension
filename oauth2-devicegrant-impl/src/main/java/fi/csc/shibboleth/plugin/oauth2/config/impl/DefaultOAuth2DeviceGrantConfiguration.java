@@ -17,42 +17,285 @@
 package fi.csc.shibboleth.plugin.oauth2.config.impl;
 
 import java.time.Duration;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.opensaml.profile.context.ProfileRequestContext;
 
 import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
+import net.shibboleth.oidc.profile.oauth2.config.OAuth2AccessTokenProducingProfileConfiguration;
+import net.shibboleth.shared.annotation.constraint.NotEmpty;
+import net.shibboleth.shared.annotation.constraint.Positive;
+import net.shibboleth.shared.logic.Constraint;
+import net.shibboleth.shared.logic.FunctionSupport;
+import net.shibboleth.shared.primitive.StringSupport;
 
-//TODO Implementation
 public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientAuthenticableProfileConfiguration
-        implements OAuth2DeviceGrantConfiguration {
+        implements OAuth2DeviceGrantConfiguration, OAuth2AccessTokenProducingProfileConfiguration {
 
-    protected DefaultOAuth2DeviceGrantConfiguration() {
+    /** Lookup function to supply access token lifetime. */
+    @Nonnull
+    private Function<ProfileRequestContext, Duration> accessTokenLifetimeLookupStrategy;
+
+    /** Lookup function to supply access token type. */
+    @Nonnull
+    private Function<ProfileRequestContext, String> accessTokenTypeLookupStrategy;
+
+    /**
+     * Lookup function to supply strategy bi-function for manipulating access token
+     * claims set.
+     */
+    @Nonnull
+    private Function<ProfileRequestContext, BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>>> accessTokenClaimsSetManipulationStrategyLookupStrategy;
+
+    /** Lookup function to supply device code lifetime. */
+    @Nonnull
+    private Function<ProfileRequestContext, Duration> deviceCodeLifetimeLookupStrategy;
+
+    /** Lookup function to supply device code length. */
+    @Nonnull
+    private Function<ProfileRequestContext, Integer> deviceCodeLengthLookupStrategy;
+
+    /** Lookup function to supply user code length. */
+    @Nonnull
+    private Function<ProfileRequestContext, Integer> userCodeLengthLookupStrategy;
+
+    /** Lookup function to supply polling interval. */
+    @Nonnull
+    private Function<ProfileRequestContext, Duration> pollingIntervalLookupStrategy;
+
+    /**
+     * Constructor.
+     */
+    public DefaultOAuth2DeviceGrantConfiguration() {
         super(OAuth2DeviceGrantConfiguration.PROFILE_ID);
-        // TODO Auto-generated constructor stub
+        accessTokenLifetimeLookupStrategy = FunctionSupport.constant(Duration.ofMinutes(10));
+        accessTokenTypeLookupStrategy = FunctionSupport.constant(null);
+        accessTokenClaimsSetManipulationStrategyLookupStrategy = FunctionSupport.constant(null);
+        deviceCodeLifetimeLookupStrategy = FunctionSupport.constant(Duration.ofMinutes(10));
+        deviceCodeLengthLookupStrategy = FunctionSupport.constant(Integer.valueOf(16));
+        userCodeLengthLookupStrategy = FunctionSupport.constant(Integer.valueOf(8));
+        pollingIntervalLookupStrategy = FunctionSupport.constant(Duration.ofSeconds(5));
     }
 
     @Override
-    public Integer getDeviceCodeLength(ProfileRequestContext profileRequestContext) {
-        // TODO Auto-generated method stub
-        return 8;
+    @Positive
+    @Nonnull
+    public Duration getAccessTokenLifetime(@Nullable final ProfileRequestContext profileRequestContext) {
+        final Duration lifetime = accessTokenLifetimeLookupStrategy.apply(profileRequestContext);
+
+        Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
+                "Access token lifetime must be greater than 0");
+        return lifetime;
+    }
+
+    /**
+     * Set the lifetime of an access token.
+     * 
+     * @param lifetime lifetime of an access token
+     */
+    public void setAccessTokenLifetime(@Positive @Nonnull final Duration lifetime) {
+        Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
+                "Access token lifetime must be greater than 0");
+
+        accessTokenLifetimeLookupStrategy = FunctionSupport.constant(lifetime);
+    }
+
+    /**
+     * Set a lookup strategy for the access token lifetime.
+     *
+     * @param strategy lookup strategy
+     */
+    public void setAccessTokenLifetimeLookupStrategy(
+            @Nullable final Function<ProfileRequestContext, Duration> strategy) {
+        accessTokenLifetimeLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
     }
 
     @Override
-    public Integer getUserCodeLength(ProfileRequestContext profileRequestContext) {
-        // TODO Auto-generated method stub
-        return 8;
+    @Nullable
+    @NotEmpty
+    public String getAccessTokenType(@Nullable final ProfileRequestContext profileRequestContext) {
+        return accessTokenTypeLookupStrategy.apply(profileRequestContext);
+    }
+
+    /**
+     * Set access token type.
+     * 
+     * @param type token type, or null for unspecified/opaque
+     * 
+     */
+    public void setAccessTokenType(@Nullable @NotEmpty final String type) {
+        accessTokenTypeLookupStrategy = FunctionSupport.constant(StringSupport.trimOrNull(type));
+    }
+
+    /**
+     * Set lookup strategy for access token type.
+     * 
+     * @param strategy lookup strategy
+     * 
+     */
+    public void setAccessTokenTypeLookupStrategy(@Nonnull final Function<ProfileRequestContext, String> strategy) {
+        accessTokenTypeLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
     }
 
     @Override
-    public Duration getPollingInterval(ProfileRequestContext profileRequestContext) {
-        // TODO Auto-generated method stub
-        return Duration.ofSeconds(5);
+    @Nonnull
+    public BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>> getAccessTokenClaimsSetManipulationStrategy(
+            @Nullable final ProfileRequestContext profileRequestContext) {
+        return accessTokenClaimsSetManipulationStrategyLookupStrategy.apply(profileRequestContext);
+    }
+
+    /**
+     * Set the bi-function for manipulating access token claims set.
+     * 
+     * @param strategy bi-function for manipulating access token claims set
+     * 
+     */
+    public void setAccessTokenClaimsSetManipulationStrategy(
+            @Nullable final BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>> strategy) {
+        accessTokenClaimsSetManipulationStrategyLookupStrategy = FunctionSupport.constant(strategy);
+    }
+
+    /**
+     * Set a lookup strategy for the bi-function for manipulating access token
+     * claims set.
+     *
+     * @param strategy lookup strategy
+     * 
+     */
+    public void setAccessTokenClaimsSetManipulationStrategyLookupStrategy(
+            @Nonnull final Function<ProfileRequestContext, BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>>> strategy) {
+        accessTokenClaimsSetManipulationStrategyLookupStrategy = Constraint.isNotNull(strategy,
+                "Lookup strategy cannot be null");
     }
 
     @Override
-    public Duration getDeviceCodeLifetime(ProfileRequestContext profileRequestContext) {
-        // TODO Auto-generated method stub
-        return Duration.ofMinutes(10);
+    @Positive
+    @Nonnull
+    public Duration getDeviceCodeLifetime(@Nullable final ProfileRequestContext profileRequestContext) {
+        final Duration lifetime = deviceCodeLifetimeLookupStrategy.apply(profileRequestContext);
+
+        Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
+                "Access token lifetime must be greater than 0");
+        return lifetime;
+    }
+
+    /**
+     * Set the lifetime of an device code.
+     * 
+     * @param lifetime lifetime of an device code
+     */
+    public void setDeviceCodeLifetime(@Positive @Nonnull final Duration lifetime) {
+        Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
+                "Device code lifetime must be greater than 0");
+
+        accessTokenLifetimeLookupStrategy = FunctionSupport.constant(lifetime);
+    }
+
+    /**
+     * Set a lookup strategy for the device code lifetime.
+     *
+     * @param strategy lookup strategy
+     */
+    public void setDeviceCodeLifetimeLookupStrategy(
+            @Nullable final Function<ProfileRequestContext, Duration> strategy) {
+        accessTokenLifetimeLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
+    }
+
+    @Override
+    @Positive
+    @Nonnull
+    public Integer getDeviceCodeLength(@Nullable final ProfileRequestContext profileRequestContext) {
+        final Integer codeLength = deviceCodeLengthLookupStrategy.apply(profileRequestContext);
+
+        Constraint.isTrue(codeLength != null && codeLength > 9, "Device code length must be at least 10");
+        return codeLength;
+    }
+
+    /**
+     * Set the device code length.
+     * 
+     * @param codeLength length of the device code.
+     */
+    public void setDeviceCodeLength(@Positive @Nonnull final Integer codeLength) {
+        Constraint.isTrue(codeLength != null && codeLength > 9, "Device code length must be at least 10");
+
+        deviceCodeLengthLookupStrategy = FunctionSupport.constant(codeLength);
+    }
+
+    /**
+     * Set a lookup strategy for the device code length.
+     *
+     * @param strategy lookup strategy
+     */
+    public void setDeviceCodeLengthLookupStrategy(@Nullable final Function<ProfileRequestContext, Integer> strategy) {
+        deviceCodeLengthLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
+    }
+
+    @Override
+    @Positive
+    @Nonnull
+    public Integer getUserCodeLength(@Nullable final ProfileRequestContext profileRequestContext) {
+        final Integer codeLength = userCodeLengthLookupStrategy.apply(profileRequestContext);
+
+        Constraint.isTrue(codeLength != null && codeLength > 5, "Device code length must be at least 6");
+        return codeLength;
+    }
+
+    /**
+     * Set the user code length.
+     * 
+     * @param codeLength length of the user code.
+     */
+    public void setUserCodeLength(@Positive @Nonnull final Integer codeLength) {
+        Constraint.isTrue(codeLength != null && codeLength > 5, "User code length must be at least 6");
+
+        userCodeLengthLookupStrategy = FunctionSupport.constant(codeLength);
+    }
+
+    /**
+     * Set a lookup strategy for the user code length.
+     *
+     * @param strategy lookup strategy
+     */
+    public void setUserCodeLengthLookupStrategy(@Nullable final Function<ProfileRequestContext, Integer> strategy) {
+        deviceCodeLengthLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
+    }
+
+    @Override
+    @Positive
+    @Nonnull
+    public Duration getPollingInterval(@Nullable final ProfileRequestContext profileRequestContext) {
+        final Duration interval = pollingIntervalLookupStrategy.apply(profileRequestContext);
+
+        Constraint.isTrue(interval != null && !interval.isZero() && !interval.isNegative(),
+                "Polling interval must be greater than 0");
+        return interval;
+    }
+
+    /**
+     * Set the polling interval.
+     * 
+     * @param interval polling interval
+     */
+    public void setPollingInterval(@Positive @Nonnull final Duration interval) {
+        Constraint.isTrue(interval != null && !interval.isZero() && !interval.isNegative(),
+                "Polling interval must be greater than 0");
+
+        pollingIntervalLookupStrategy = FunctionSupport.constant(interval);
+    }
+
+    /**
+     * Set a lookup strategy for polling interval.
+     *
+     * @param strategy lookup strategy
+     */
+    public void setPollingIntervalLookupStrategy(@Nullable final Function<ProfileRequestContext, Duration> strategy) {
+        pollingIntervalLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
     }
 
 }
