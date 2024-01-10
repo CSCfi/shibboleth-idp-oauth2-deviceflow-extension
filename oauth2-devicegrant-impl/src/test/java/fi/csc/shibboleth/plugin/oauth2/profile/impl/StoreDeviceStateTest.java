@@ -35,6 +35,7 @@ import org.testng.annotations.Test;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
+import fi.csc.shibboleth.plugin.oauth2.config.impl.DefaultOAuth2DeviceGrantConfiguration;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.messaging.context.DeviceUserAuthenticationContext;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodesCache;
@@ -89,7 +90,7 @@ public class StoreDeviceStateTest {
         respCtx.setAuthTime(Instant.ofEpochMilli(0));
         respCtx.setAcr("password");
         RelyingPartyContext rpCtx = ((RelyingPartyContext) profileRequestCtx.addSubcontext(new RelyingPartyContext(),
-                true)).setProfileConfig((new DefaultConfiguration()));
+                true)).setProfileConfig(new DefaultOAuth2DeviceGrantConfiguration());
         rpCtx.setRelyingPartyId("client_id");
         BasicRelyingPartyConfiguration rpConf = new BasicRelyingPartyConfiguration();
         rpConf.setId("mock");
@@ -133,8 +134,7 @@ public class StoreDeviceStateTest {
         return dataSealer;
     }
 
-    // @Test
-    // TODO FIX ACTION for ACCESS TOKEN CONF
+    @Test
     public void testApproved() throws IOException, ParseException {
         ActionTestingSupport.assertProceedEvent(action.execute(requestCtx));
         DeviceStateObject state = deviceCodesCache.getDeviceState("DC123456");

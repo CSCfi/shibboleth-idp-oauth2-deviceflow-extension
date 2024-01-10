@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
+import fi.csc.shibboleth.plugin.oauth2.config.impl.DefaultOAuth2DeviceGrantConfiguration;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodesCache;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
@@ -73,7 +74,7 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
         profileRequestCtx.setOutboundMessageContext(new MessageContext());
         profileRequestCtx.getOutboundMessageContext().addSubcontext(new OIDCAuthenticationResponseContext());
         ((RelyingPartyContext) profileRequestCtx.addSubcontext(new RelyingPartyContext(), true))
-                .setProfileConfig((new DefaultConfiguration()));
+                .setProfileConfig((new DefaultOAuth2DeviceGrantConfiguration()));
         ((RelyingPartyContext) profileRequestCtx.getSubcontext(RelyingPartyContext.class))
                 .setRelyingPartyId("clientID");
         storageService = new MemoryStorageService();
