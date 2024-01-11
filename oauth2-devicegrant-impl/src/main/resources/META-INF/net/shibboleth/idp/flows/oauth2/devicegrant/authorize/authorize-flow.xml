@@ -13,6 +13,14 @@
     <transition on="proceed" to="DecodeMessage"/>
   </action-state>
   
+  <!-- Authentication subflow happens here. -->
+
+  <action-state id="ResumeAfterAuthentication">
+    <!-- Flow has no post authentication tasks other than building response. -->
+    <evaluate expression="'proceed'"/>
+    <transition on="proceed" to="BuildResponse"/>
+  </action-state>
+
   <bean-import resource="authorize-beans.xml"/>
 
 </flow>
