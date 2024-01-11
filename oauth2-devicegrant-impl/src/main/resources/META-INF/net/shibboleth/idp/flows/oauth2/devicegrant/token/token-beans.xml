@@ -7,9 +7,7 @@
     </constructor-arg>
   </bean>
 
-  <!--  TODO ADD ValidateGrantType
-  <bean id="ValidateGrantType" class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ValidateGrantType" scope="prototype"/>
-  -->
+  <bean id="ValidateExpectedGrantType" class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ValidateExpectedGrantType" scope="prototype"/>
 
   <bean id="InitializeAuthenticationContext" class="fi.csc.shibboleth.plugin.oauth2.profile.impl.InitializeAuthenticationContext" scope="prototype" />
 
