@@ -32,7 +32,7 @@
     <input name="calledAsSubflow" value="true" />
     <input name="bypassSessionActions" value="true" />
     <input name="potentialFlows" value="getActiveFlow().getApplicationContext().getBean('devicegrant.PotentialFlows')" />
-    <transition on="proceed" to="BuildResponse" />
+    <transition on="proceed" to="ResumeAfterAuthentication" />
     <transition on="RestartAuthentication" to="AuthenticationSetup" />
   </subflow-state>
 
