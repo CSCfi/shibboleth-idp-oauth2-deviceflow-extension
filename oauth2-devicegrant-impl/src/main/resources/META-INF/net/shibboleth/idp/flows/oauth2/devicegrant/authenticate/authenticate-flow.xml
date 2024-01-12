@@ -14,9 +14,11 @@
 
 	<action-state id="DecodeMessage">
 		<evaluate expression="DecodeMessage" />
+		<evaluate expression="PostDecodePopulateAuditContext" />
 		<evaluate expression="ExtractUserCodeFromMessage" />
 		<evaluate expression="'proceed'" />
-		<transition on="proceed" to="PostDecodeMessage" />
+		<!-- DoMetadataLookup is expected to proceed to SelectConfiguration -->
+		<transition on="proceed" to="DoMetadataLookup" />
 		<transition on="NoUserCode" to="DisplayUserCodePage" />
 	</action-state>
 
@@ -47,18 +49,11 @@
 	<action-state id="ExtractUserCodeFromFormRequest">
 		<evaluate expression="ExtractUserCodeFromFormRequest" />
 		<evaluate expression="'proceed'" />
-		<transition on="proceed" to="PostDecodeMessage" />
-	</action-state>
-
-	<action-state id="PostDecodeMessage">
-		<evaluate expression="PostDecodePopulateAuditContext" />
-		<evaluate expression="'proceed'" />
 		<!-- DoMetadataLookup is expected to proceed to SelectConfiguration -->
 		<transition on="proceed" to="DoMetadataLookup" />
 	</action-state>
 
 	<action-state id="SelectConfiguration">
-		<evaluate expression="InitializeRelyingPartyContext" />
 		<evaluate expression="SelectRelyingPartyConfiguration" />
 		<evaluate expression="SelectProfileConfiguration" />
 		<evaluate expression="PostLookupPopulateAuditContext" />
@@ -121,22 +116,8 @@
 		<evaluate expression="PopulatePostAuthnInterceptContext" />
 		<evaluate expression="'proceed'" />
 		<transition on="proceed"
-			to="CheckPostAuthnInterceptContext" />
+			to="SubjectResolution" />
 	</action-state>
-
-	<decision-state id="CheckPostAuthnInterceptContext">
-		<if
-			test="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.profile.context.ProfileInterceptorContext)).getAvailableFlows().isEmpty()"
-			then="SubjectResolution" else="DoPostAuthnInterceptSubflow" />
-	</decision-state>
-
-	<subflow-state id="DoPostAuthnInterceptSubflow"
-		subflow="intercept">
-		<input name="calledAsSubflow" value="true" />
-		<transition on="proceed" to="SubjectResolution" />
-		<transition on="RestartAuthentication"
-			to="PostInitialSetup" />
-	</subflow-state>
 
 	<action-state id="SubjectResolution">
 		<evaluate expression="SetSubjectToResponseContext" />
