@@ -18,7 +18,12 @@
 
     <bean id="OAUTH2.DeviceGrant" lazy-init="true"
         class="fi.csc.shibboleth.plugin.oauth2.config.impl.DefaultOAuth2DeviceGrantConfiguration"
-        p:securityConfiguration-ref="%{idp.security.oidc.config:shibboleth.oidc.DefaultSecurityConfiguration}" />
+        p:securityConfiguration-ref="%{idp.security.oidc.config:shibboleth.oidc.DefaultSecurityConfiguration}"
+        p:deviceCodeLength="%{devicegrant.deviceCode.defaultLength:16}"
+        p:userCodeLength="%{devicegrant.userCode.defaultLength:6}"
+        p:accessTokenLifetime="%{devicegrant.accessToken.defaultLifetime:PT10M}"
+        p:deviceCodeLifetime="%{devicegrant.deviceCode.defaultLifetime:PT10M}"
+        p:pollingInterval="%{devicegrant.pollingInterval:PT5S}"/>
 
     <!-- Property-based definition of login flows for OAuth endpoints. -->
     <bean id="devicegrant.PotentialFlows"
