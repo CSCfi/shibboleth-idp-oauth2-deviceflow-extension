@@ -20,11 +20,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.opensaml.messaging.context.BaseContext;
 
+import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;
 import net.shibboleth.shared.logic.Constraint;
 
 /**
- * Subcontext carrying user code and user approval status. This context appears as a subcontext of the inbound
- * {@link MessageContext}.
+ * Subcontext carrying user code and user approval status. This context appears
+ * as a subcontext of the inbound {@link MessageContext}.
  */
 public class DeviceUserAuthenticationContext extends BaseContext {
 
@@ -39,6 +40,9 @@ public class DeviceUserAuthenticationContext extends BaseContext {
      * https://tools.ietf.org/html/rfc8628#section-3.3.
      */
     private boolean userApproved;
+
+    /** Device code object matching user code. */
+    private DeviceCodeObject deviceCodeObject;
 
     /**
      * Get whether user has approved or denied request.
@@ -76,5 +80,24 @@ public class DeviceUserAuthenticationContext extends BaseContext {
     public void setUserCode(@Nonnull String code) {
         Constraint.isNotNull(code, "User code must not be null");
         userCode = code;
+    }
+
+    /**
+     * Get device code object matching user code.
+     * 
+     * @return device code object matching user code
+     */
+    public DeviceCodeObject getDeviceCodeObject() {
+        return deviceCodeObject;
+    }
+
+    /**
+     * Set device code object matching user code.
+     * 
+     * @param deviceCodeObject device code object matching user code.
+     */
+    public void setDeviceCodeObject(@Nonnull DeviceCodeObject object) {
+        Constraint.isNotNull(object, "Device code must not be null");
+        deviceCodeObject = object;
     }
 }
