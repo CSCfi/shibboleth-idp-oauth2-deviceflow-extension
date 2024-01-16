@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:c="http://www.springframework.org/schema/c" xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p" xmlns:util="http://www.springframework.org/schema/util" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd" default-init-method="initialize" default-destroy-method="destroy">
+
+  <bean id="DecodeMessage" class="org.opensaml.profile.action.impl.DecodeMessage" scope="prototype">
+    <constructor-arg>
+      <bean class="fi.csc.shibboleth.plugin.oauth2.decoding.impl.OAuth2DeviceTokenRequestDecoder" scope="prototype" p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier" />
+    </constructor-arg>
+  </bean>
+
+  <bean id="ValidateExpectedGrantType" class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ValidateExpectedGrantType" scope="prototype"/>
+
+  <bean id="InitializeAuthenticationContext" class="fi.csc.shibboleth.plugin.oauth2.profile.impl.InitializeAuthenticationContext" scope="prototype" />
+
+  <bean id="FormOutboundMessage" class="fi.csc.shibboleth.plugin.oauth2.profile.impl.FormOutboundDeviceTokenResponseMessage" scope="prototype" p:deviceCodesCache-ref="shibboleth.DeviceCodesCache" />
+
+  <bean id="BuildErrorResponseFromEvent" class="net.shibboleth.idp.plugin.oidc.op.profile.impl.BuildJSONErrorResponseFromEvent" scope="prototype" p:defaultStatusCode="400" p:defaultCode="invalid_request" p:httpServletResponseSupplier-ref="shibboleth.HttpServletResponseSupplier">
+    <property name="eventContextLookupStrategy">
+      <bean class="net.shibboleth.idp.profile.context.navigate.WebFlowCurrentEventLookupFunction" />
+    </property>
+    <property name="mappedErrors">
+      <map value-type="com.nimbusds.oauth2.sdk.ErrorObject">
+        <entry key="#{T(org.opensaml.profile.action.EventIds).ACCESS_DENIED}" value="#{T(com.nimbusds.oauth2.sdk.OAuth2Error).INVALID_CLIENT}" />
+        <entry key="#{T(fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.DeviceEventIds).AUTHORIZATION_PENDING}" value="#{T(fi.csc.shibboleth.plugin.oauth2.devicegrant.messaging.error.OAuth2DeviceError).AUTHORIZATION_PENDING}" />
+        <entry key="#{T(fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.DeviceEventIds).EXPIRED_TOKEN}" value="#{T(fi.csc.shibboleth.plugin.oauth2.devicegrant.messaging.error.OAuth2DeviceError).EXPIRED_TOKEN}" />
+        <entry key="#{T(fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.DeviceEventIds).USER_DENIED}" value="#{T(com.nimbusds.oauth2.sdk.OAuth2Error).ACCESS_DENIED}" />
+      </map>
+    </property>
+  </bean>
+
+  <bean id="shibboleth.ClientIDLookupStrategy" class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.APIRequestClientIDLookupFunction" />
+</beans>

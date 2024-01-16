@@ -1,28 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- See LICENSE.txt file in the root directory of this repository for the 
-	copyright/license information. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-         
+    copyright/license information. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>fi.csc</groupId>
-  <artifactId>idp-oauth2-deviceflow-extension-parent</artifactId>
-  <version>3.0.0-RC1</version>
+  <name>Shibboleth IdP :: Plugins :: OAuth 2.0 Device Authorization Grant</name>
+  <description>An IdP plugin implementing OAuth 2.0 Device Authorization Grant.</description>
+  <groupId>fi.csc.shibboleth.plugin.oauth2.devicegrant</groupId>
+  <artifactId>idp-plugin-oauth2-devicegrant</artifactId>
+  <version>0.9.0-alpha.1</version>
   <packaging>pom</packaging>
-  
   <properties>
-    <nimbus-jose-jwt.version>9.5</nimbus-jose-jwt.version>
-    <oauth2-oidc-sdk.version>9.1</oauth2-oidc-sdk.version>
-    <oidcextension.version>3.0.1</oidcextension.version>
-    <shib.idp.version>4.1.0</shib.idp.version>
-    <opensaml.version>4.1.0</opensaml.version>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <slf4j.groupId>org.slf4j</slf4j.groupId>
+    <slf4j.version>2.0.7</slf4j.version>
+    <idp.groupId>net.shibboleth.idp</idp.groupId>
+    <idp.version>5.0.0</idp.version>
+    <opensaml.groupId>org.opensaml</opensaml.groupId>
+    <opensaml.version>5.0.0</opensaml.version>
+    <oidc.common.version>3.0.0</oidc.common.version>
+    <oidc.op.version>4.0.0</oidc.op.version>
+    <oauth2-oidc-sdk.version>10.5.1</oauth2-oidc-sdk.version>
+    <java-shib-shared.version>9.0.0</java-shib-shared.version>
+    <jackson.version>2.15.2</jackson.version>
+    <testng.version>7.7.1</testng.version>
+    <shib-shared.groupId>net.shibboleth</shib-shared.groupId>
+    <spring.groupId>org.springframework</spring.groupId>
+    <checkstyle.configLocation>${project.basedir}/checkstyle.xml</checkstyle.configLocation>
   </properties>
-  
   <repositories>
     <repository>
       <id>shib-release</id>
@@ -39,118 +44,176 @@
       </releases>
     </repository>
   </repositories>
-
-  <modules>
-    <module>idp-oauth2-deviceflow-extension-api</module>
-    <module>idp-oauth2-deviceflow-extension-impl</module>
-    <module>idp-oauth2-deviceflow-extension-distribution</module>
-  </modules>
-  
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>fi.csc</groupId>
+        <groupId>org.geant.shibboleth.plugin.userprofile</groupId>
+        <artifactId>idp-plugin-userprofile-api</artifactId>
         <version>${project.version}</version>
-        <artifactId>idp-oauth2-deviceflow-extension-api</artifactId>
+        <scope>provided</scope>
+      </dependency>
+      <!-- provided dependencies -->
+      <dependency>
+        <groupId>${slf4j.groupId}</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>net.shibboleth.idp.plugin.oidc</groupId>
-        <version>${oidcextension.version}</version>
-        <artifactId>idp-plugin-oidc-op-api</artifactId>
+        <groupId>${idp.groupId}</groupId>
+        <artifactId>idp-ui</artifactId>
+        <version>${idp.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>net.shibboleth.idp.plugin.oidc</groupId>
-        <version>${oidcextension.version}</version>
-        <artifactId>idp-plugin-oidc-op-impl</artifactId>
+        <groupId>${idp.groupId}</groupId>
+        <artifactId>idp-admin-api</artifactId>
+        <version>${idp.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>net.shibboleth.idp</groupId>
-        <version>${shib.idp.version}</version>
-        <artifactId>idp-profile-api</artifactId>
+        <groupId>${shib-shared.groupId}.oidc</groupId>
+        <artifactId>oidc-common-metadata-api</artifactId>
+        <version>${oidc.common.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>net.shibboleth.idp</groupId>
-        <version>${shib.idp.version}</version>
-        <artifactId>idp-authn-api</artifactId>
+        <groupId>${shib-shared.groupId}</groupId>
+        <artifactId>shib-attribute-resolver-api</artifactId>
+        <version>${idp.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>org.opensaml</groupId>
+        <groupId>${opensaml.groupId}</groupId>
+        <artifactId>opensaml-storage-api</artifactId>
         <version>${opensaml.version}</version>
-        <artifactId>opensaml-storage-impl</artifactId>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>net.shibboleth.idp.plugin.oidc</groupId>
+        <artifactId>idp-plugin-oidc-op-api</artifactId>
+        <version>${oidc.op.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.shibboleth.oidc</groupId>
+        <artifactId>oidc-common-profile-api</artifactId>
+        <version>${oidc.common.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>com.nimbusds</groupId>
-        <version>${nimbus-jose-jwt.version}</version>
         <artifactId>oauth2-oidc-sdk</artifactId>
+        <version>${oauth2-oidc-sdk.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>3.1.0</version>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-test</artifactId>
-        <version>5.2.9.RELEASE</version>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
+        <version>6.0.0</version>
+        <scope>provided</scope>
       </dependency>
+      <!-- test dependencies -->
       <dependency>
         <groupId>org.testng</groupId>
         <artifactId>testng</artifactId>
-        <version>7.3.0</version>
+        <version>${testng.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>net.shibboleth.idp</groupId>
-        <version>${shib.idp.version}</version>
-        <artifactId>idp-profile-api</artifactId>
-        <type>test-jar</type>
+        <groupId>${idp.groupId}</groupId>
+        <artifactId>idp-testing</artifactId>
+        <version>${idp.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>${opensaml.groupId}</groupId>
+        <artifactId>opensaml-storage-impl</artifactId>
+        <version>${opensaml.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+  <modules>
+    <module>oauth2-devicegrant-api</module>
+    <module>oauth2-devicegrant-impl</module>
+    <module>oauth2-devicegrant-dist</module>
+  </modules>
   <build>
-  
     <pluginManagement>
+      <!-- lock down plugins versions to avoid using Maven defaults -->
       <plugins>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>3.3.0</version>
+          <version>3.6.0</version>
         </plugin>
+        <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.2.0</version>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.3.1</version>
         </plugin>
+        <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.3.1</version>
         </plugin>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.1</version>
+          <version>3.11.0</version>
         </plugin>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.22.2</version>
+          <version>3.1.2</version>
         </plugin>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-assembly-plugin</artifactId>
+          <artifactId>maven-jar-plugin</artifactId>
           <version>3.3.0</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>3.1.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>3.1.1</version>
+        </plugin>
+        <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
+        <plugin>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.12.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>3.4.5</version>
         </plugin>
       </plugins>
     </pluginManagement>
-    
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <index>true</index>
+            <manifestEntries>
+              <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
+              <Sealed>true</Sealed>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.6</version>
+        <version>0.8.10</version>
         <executions>
           <execution>
+            <id>prepare-agent</id>
             <goals>
               <goal>prepare-agent</goal>
             </goals>
@@ -164,32 +227,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.eluder.coveralls</groupId>
-        <artifactId>coveralls-maven-plugin</artifactId>
-        <version>4.3.0</version>
-      </plugin>
-      <plugin>
-        <groupId>com.versioneye</groupId>
-        <artifactId>versioneye-maven-plugin</artifactId>
-        <version>3.11.4</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.2.0</version>
-        <configuration/>
-        <executions>
-          <execution>
-            <id>aggregate</id>
-            <goals>
-              <goal>aggregate</goal>
-            </goals>
-            <phase>site</phase>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
-    
   </build>
 </project>

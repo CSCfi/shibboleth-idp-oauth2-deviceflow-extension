@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<flow xmlns="http://www.springframework.org/schema/webflow" 
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd" 
+      parent="oauth2/devicegrant/abstract, oidc/metadata-lookup" 
+      abstract="true">
+
+  <action-state id="DecodeMessage">
+    <evaluate expression="DecodeMessage"/>
+    <evaluate expression="PostDecodePopulateAuditContext"/>
+    <evaluate expression="'proceed'" />
+    <!-- DoMetadataLookup is expected to proceed to SelectConfiguration -->
+    <transition on="proceed" to="DoMetadataLookup" />
+  </action-state>      
+        
+  <action-state id="SelectConfiguration">
+    <evaluate expression="SelectRelyingPartyConfiguration"/>
+    <evaluate expression="SelectProfileConfiguration"/>
+    <evaluate expression="PostLookupPopulateAuditContext"/>
+    <evaluate expression="'proceed'"/>
+    <transition on="proceed" to="AuthenticationSetup"/>
+  </action-state>
+  
+  <action-state id="AuthenticationSetup">
+    <evaluate expression="InitializeAuthenticationContext" />
+    <evaluate expression="'proceed'" />
+    <transition on="proceed" to="DoAuthenticationSubflow" />
+  </action-state>
+
+  <subflow-state id="DoAuthenticationSubflow" subflow="authn">
+    <input name="calledAsSubflow" value="true" />
+    <input name="bypassSessionActions" value="true" />
+    <input name="potentialFlows" value="getActiveFlow().getApplicationContext().getBean('devicegrant.PotentialFlows')" />
+    <transition on="proceed" to="ResumeAfterAuthentication" />
+    <transition on="RestartAuthentication" to="AuthenticationSetup" />
+  </subflow-state>
+
+  <action-state id="BuildResponse">
+    <evaluate expression="FormOutboundMessage"/>
+    <evaluate expression="'proceed'"/>
+    <transition on="proceed" to="CommitResponse"/>
+  </action-state>
+
+  <action-state id="HandleError">
+    <on-entry>
+      <evaluate expression="opensamlProfileRequestContext.getSubcontext(T(net.shibboleth.idp.profile.context.SpringRequestContext), true).setRequestContext(flowRequestContext)"/>
+      <evaluate expression="LogEvent"/>
+    </on-entry>
+    <evaluate expression="BuildErrorResponseFromEvent"/>
+    <evaluate expression="'proceed'"/>
+    <transition on="proceed" to="CommitResponse"/>
+  </action-state>
+
+  <end-state id="CommitResponse">
+    <on-entry>
+      <evaluate expression="EncodeMessage"/>
+      <evaluate expression="PostResponsePopulateAuditContext"/>
+      <evaluate expression="WriteAuditLog"/>
+      <evaluate expression="RecordResponseComplete"/>
+    </on-entry>
+  </end-state>
+
+  <bean-import resource="../abstract-api/abstract-api-beans.xml"/>
+</flow>
