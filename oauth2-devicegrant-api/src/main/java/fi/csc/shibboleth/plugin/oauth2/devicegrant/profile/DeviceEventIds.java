@@ -33,6 +33,13 @@ public final class DeviceEventIds {
     @Nonnull
     @NotEmpty
     public static final String NO_USER_CODE = "NoUserCode";
+    
+    /**
+     * ID of event returned if user code is invalid.
+     */
+    @Nonnull
+    @NotEmpty
+    public static final String INVALID_USER_CODE = "InvalidUserCode";
 
     /**
      * ID of event returned if user has not responded yet.
