@@ -16,10 +16,12 @@
 		<evaluate expression="DecodeMessage" />
 		<evaluate expression="PostDecodePopulateAuditContext" />
 		<evaluate expression="ExtractUserCodeFromMessage" />
+		<evaluate expression="AttachDeviceCodeObject" />
 		<evaluate expression="'proceed'" />
 		<!-- DoMetadataLookup is expected to proceed to SelectConfiguration -->
 		<transition on="proceed" to="DoMetadataLookup" />
 		<transition on="NoUserCode" to="DisplayUserCodePage" />
+		<transition on="InvalidUserCode" to="DisplayUserCodePage" />
 	</action-state>
 
 	<view-state id="DisplayUserCodePage"
@@ -48,6 +50,7 @@
 
 	<action-state id="ExtractUserCodeFromFormRequest">
 		<evaluate expression="ExtractUserCodeFromFormRequest" />
+		<evaluate expression="AttachDeviceCodeObject" />
 		<evaluate expression="'proceed'" />
 		<!-- DoMetadataLookup is expected to proceed to SelectConfiguration -->
 		<transition on="proceed" to="DoMetadataLookup" />

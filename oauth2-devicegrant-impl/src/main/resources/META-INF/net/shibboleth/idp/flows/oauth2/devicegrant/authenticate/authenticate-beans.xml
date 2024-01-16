@@ -28,6 +28,11 @@
 	<bean id="ExtractUserCodeFromMessage"
 		class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ExtractUserCodeFromMessage"
 		scope="prototype" />
+	
+	<bean id="AttachDeviceCodeObject"
+        class="fi.csc.shibboleth.plugin.oauth2.profile.impl.AttachDeviceCodeObject"
+        scope="prototype"
+        p:deviceCodesCache-ref="shibboleth.DeviceCodesCache" />
 
 	<bean id="ExtractUserCodeFromFormRequest"
 		class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ExtractUserCodeFromFormRequest"
@@ -124,6 +129,6 @@
 
 	<bean id="shibboleth.ClientIDLookupStrategy"
 		class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceClientIDLookupFunction"
-		scope="prototype" p:deviceCodesCache-ref="shibboleth.DeviceCodesCache" />
+		scope="prototype" />
 
 </beans>
