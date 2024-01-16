@@ -16,9 +16,6 @@
 
 package fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate;
 
-import java.io.IOException;
-import java.util.function.Function;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -29,18 +26,14 @@ import org.slf4j.LoggerFactory;
 
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
-import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodesCache;
+import fi.csc.shibboleth.plugin.oauth2.devicegrant.messaging.context.DeviceUserAuthenticationContext;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;
-import net.minidev.json.parser.ParseException;
-import net.shibboleth.shared.annotation.constraint.NonnullAfterInit;
 import net.shibboleth.shared.component.AbstractInitializableComponent;
-import net.shibboleth.shared.component.ComponentInitializationException;
-import net.shibboleth.shared.logic.Constraint;
-
 
 /**
- * ClientID lookup function for Authentication end point. The lookup locates a {@link DeviceCodeObject} from
- * {@DeviceCodesCache} by user code and returns {@link DeviceCodeObject#getClientID()}
+ * ClientID lookup function for Authentication end point. The lookup locates a
+ * {@link DeviceCodeObject} from {DeviceUserAuthenticationContext} by user code
+ * and returns {@link DeviceCodeObject#getClientID()}
  */
 public class DeviceClientIDLookupFunction extends AbstractInitializableComponent
         implements ContextDataLookupFunction<MessageContext, ClientID> {
@@ -49,69 +42,16 @@ public class DeviceClientIDLookupFunction extends AbstractInitializableComponent
     @Nonnull
     private Logger log = LoggerFactory.getLogger(DeviceClientIDLookupFunction.class);
 
-    /** Strategy to locate user code. */
-    @Nonnull
-    private Function<MessageContext, String> userCodeLookupStrategy;
-
-    /** Cache for device codes. */
-    @NonnullAfterInit
-    private DeviceCodesCache deviceCodesCache;
-
-    /**
-     * Constructor.
-     */
-    public DeviceClientIDLookupFunction() {
-        userCodeLookupStrategy = new DeviceUserCodeLookupFunction();
-    }
-
-    /**
-     * Set strategy to locate user code.
-     * 
-     * @param strategy Strategy to locate user code
-     */
-    public void setDeviceUserCodeLookupStrategy(@Nonnull final Function<MessageContext, String> strategy) {
-        checkSetterPreconditions();
-        userCodeLookupStrategy =
-                Constraint.isNotNull(strategy, "DeviceUserCodeLookupStrategy lookup strategy cannot be null");
-    }
-
-    /**
-     * Set cache for device codes.
-     * 
-     * @param cache Cache for device codes
-     */
-    public void setDeviceCodesCache(@Nonnull final DeviceCodesCache cache) {
-        checkSetterPreconditions();
-        deviceCodesCache = Constraint.isNotNull(cache, "DeviceCodesCache cannot be null");
-    }
-
-    /** {@inheritDoc} */
-    protected void doInitialize() throws ComponentInitializationException {
-        super.doInitialize();
-        Constraint.isNotNull(deviceCodesCache, "DeviceCodesCache cannot be null");
-    }
-
     /** {@inheritDoc} */
     @Override
     public ClientID apply(@Nullable MessageContext input) {
         if (input == null) {
             return null;
         }
-        String userCode = userCodeLookupStrategy.apply(input);
-        if (userCode == null) {
+        DeviceUserAuthenticationContext ctx = input.getSubcontext(DeviceUserAuthenticationContext.class);
+        if (ctx == null) {
             return null;
         }
-        DeviceCodeObject obj = null;
-        try {
-            obj = deviceCodesCache.getDeviceCode(userCode);
-        } catch (IOException | ParseException e) {
-            log.error("Exception occurred while accessing Device Code Cache {}", e);
-        }
-        if (obj == null) {
-            log.warn("No device code matching user code {}", userCode);
-            return null;
-        }
-        return obj.getClientID();
+        return ctx.getDeviceCodeObject().getClientID();
     }
-
 }
