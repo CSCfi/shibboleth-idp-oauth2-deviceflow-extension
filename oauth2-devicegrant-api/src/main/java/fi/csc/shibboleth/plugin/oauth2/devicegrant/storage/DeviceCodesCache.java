@@ -28,7 +28,6 @@ import net.shibboleth.shared.annotation.constraint.NotEmpty;
 import net.shibboleth.shared.annotation.constraint.ThreadSafeAfterInit;
 import net.shibboleth.shared.component.AbstractIdentifiableInitializableComponent;
 import net.shibboleth.shared.component.ComponentInitializationException;
-import net.shibboleth.shared.component.ComponentSupport;
 import net.shibboleth.shared.logic.Constraint;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -85,7 +84,7 @@ public class DeviceCodesCache extends AbstractIdentifiableInitializableComponent
      * @param storageService backing store to use
      */
     public void setStorage(@Nonnull final StorageService storageService) {
-        ComponentSupport.ifInitializedThrowUnmodifiabledComponentException(this);
+        checkSetterPreconditions();
 
         storage = Constraint.isNotNull(storageService, "StorageService cannot be null");
         final StorageCapabilities caps = storage.getCapabilities();
