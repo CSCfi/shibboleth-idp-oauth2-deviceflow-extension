@@ -116,6 +116,7 @@
 		class="fi.csc.shibboleth.plugin.oauth2.profile.impl.StoreDeviceState"
 		scope="prototype"
 		c:sealer-ref="#{'%{idp.oidc.tokenSealer:shibboleth.oidc.TokenSealer}'.trim()}"
+		p:issuerLookupStrategy-ref="shibboleth.ResponderIdLookup.Simple"
 		p:deviceCodesCache-ref="shibboleth.DeviceCodesCache" />
 
 	<bean id="ErrorViewPopulateAuditContext"

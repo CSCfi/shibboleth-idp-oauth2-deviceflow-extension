@@ -18,6 +18,7 @@
 
     <bean id="OAUTH2.DeviceGrant" lazy-init="true"
         class="fi.csc.shibboleth.plugin.oauth2.config.impl.DefaultOAuth2DeviceGrantConfiguration"
+        p:issuer="#{getObject('shibboleth.oidc.issuer')}"
         p:securityConfiguration-ref="%{idp.security.oidc.config:shibboleth.oidc.DefaultSecurityConfiguration}"
         p:deviceCodeLength="%{devicegrant.deviceCode.defaultLength:16}"
         p:userCodeLength="%{devicegrant.userCode.defaultLength:6}"
