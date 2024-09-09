@@ -46,12 +46,6 @@
   </repositories>
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.geant.shibboleth.plugin.userprofile</groupId>
-        <artifactId>idp-plugin-userprofile-api</artifactId>
-        <version>${project.version}</version>
-        <scope>provided</scope>
-      </dependency>
       <!-- provided dependencies -->
       <dependency>
         <groupId>${slf4j.groupId}</groupId>

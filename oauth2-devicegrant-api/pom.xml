@@ -76,11 +76,11 @@
           <archive>
             <manifestSections>
               <manifestSection>
-                <name>org/geant/shibboleth/plugin/userprofile/</name>
+                <name>fi/csc/shibboleth/plugin/oauth2/devicegrant</name>
                 <manifestEntries>
                   <Implementation-Title>${project.artifactId}</Implementation-Title>
                   <Implementation-Version>${project.version}</Implementation-Version>
-                  <Implementation-Vendor>geant.org</Implementation-Vendor>
+                  <Implementation-Vendor>csc.fi</Implementation-Vendor>
                 </manifestEntries>
               </manifestSection>
             </manifestSections>
