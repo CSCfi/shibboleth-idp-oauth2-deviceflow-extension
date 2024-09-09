@@ -28,6 +28,7 @@ import org.opensaml.profile.context.ProfileRequestContext;
 
 import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
 import net.shibboleth.oidc.profile.oauth2.config.OAuth2AccessTokenProducingProfileConfiguration;
+import net.shibboleth.profile.config.OverriddenIssuerProfileConfiguration;
 import net.shibboleth.shared.annotation.constraint.NotEmpty;
 import net.shibboleth.shared.annotation.constraint.Positive;
 import net.shibboleth.shared.logic.Constraint;
@@ -35,7 +36,12 @@ import net.shibboleth.shared.logic.FunctionSupport;
 import net.shibboleth.shared.primitive.StringSupport;
 
 public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientAuthenticableProfileConfiguration
-        implements OAuth2DeviceGrantConfiguration, OAuth2AccessTokenProducingProfileConfiguration {
+        implements OAuth2DeviceGrantConfiguration, OAuth2AccessTokenProducingProfileConfiguration,
+        OverriddenIssuerProfileConfiguration {
+
+    /** Lookup function to override issuer value. */
+    @Nonnull
+    private Function<ProfileRequestContext, String> issuerLookupStrategy;
 
     /** Lookup function to supply access token lifetime. */
     @Nonnull
@@ -73,6 +79,7 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
      */
     public DefaultOAuth2DeviceGrantConfiguration() {
         super(OAuth2DeviceGrantConfiguration.PROFILE_ID);
+        issuerLookupStrategy = FunctionSupport.constant(null);
         accessTokenLifetimeLookupStrategy = FunctionSupport.constant(Duration.ofMinutes(10));
         accessTokenTypeLookupStrategy = FunctionSupport.constant(null);
         accessTokenClaimsSetManipulationStrategyLookupStrategy = FunctionSupport.constant(null);
@@ -296,6 +303,32 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
      */
     public void setPollingIntervalLookupStrategy(@Nullable final Function<ProfileRequestContext, Duration> strategy) {
         pollingIntervalLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @Nullable
+    @NotEmpty
+    public String getIssuer(@Nullable final ProfileRequestContext profileRequestContext) {
+        return issuerLookupStrategy.apply(profileRequestContext);
+    }
+
+    /**
+     * Set overridden issuer value.
+     * 
+     * @param issuer issuer value
+     */
+    public void setIssuer(@Nullable @NotEmpty final String issuer) {
+        issuerLookupStrategy = FunctionSupport.constant(issuer);
+    }
+
+    /**
+     * Sets lookup strategy for overridden issuer value.
+     * 
+     * @param strategy lookup strategy
+     */
+    public void setIssuerLookupStrategy(@Nonnull final Function<ProfileRequestContext, String> strategy) {
+        issuerLookupStrategy = Constraint.isNotNull(strategy, "Issuer lookup strategy cannot be null");
     }
 
 }
