@@ -31,7 +31,6 @@
             <img class="main-logo" src="$request.getContextPath()#springMessageText("idp.logo", "/images/placeholder-logo.png")" alt="#springMessageText("idp.logo.alt-text", "logo")" />
          </header>
          <section>
-            #parse("login-error.vm")
             <form action="$flowExecutionUrl" method="post">
                #parse("csrf/csrf.vm")
                #set ($serviceName = $rpUIContext.serviceName)
