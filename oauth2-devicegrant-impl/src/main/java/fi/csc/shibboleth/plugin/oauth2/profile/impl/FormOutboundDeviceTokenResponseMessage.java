@@ -42,8 +42,9 @@ import net.shibboleth.shared.component.ComponentInitializationException;
 import net.shibboleth.shared.logic.Constraint;
 
 /**
- * Action forms Device Token Response {@link AccessToken} in the case user has approved the action. Cases of expired
- * token, user denied and user action pending are handled with the events.
+ * Action forms Device Token Response {@link AccessToken} in the case user has
+ * approved the action. Cases of expired token, user denied and user action
+ * pending are handled with the events.
  */
 public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponseAction {
 
@@ -80,8 +81,8 @@ public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponse
             ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_MSG_CTX);
             return;
         }
-        OAuth2DeviceTokenRequest request =
-                (OAuth2DeviceTokenRequest) profileRequestContext.getInboundMessageContext().getMessage();
+        OAuth2DeviceTokenRequest request = (OAuth2DeviceTokenRequest) profileRequestContext.getInboundMessageContext()
+                .getMessage();
         String deviceCode = request.getDeviceCode();
         try {
             DeviceStateObject stateObject = deviceCodesCache.getDeviceState(deviceCode);
@@ -103,8 +104,8 @@ public class FormOutboundDeviceTokenResponseMessage extends AbstractOIDCResponse
             }
             // TODO: Set the accepted scope in authn phase to DeviceStateObject and set it
             // here to response.
-            AccessToken accesToken =
-                    new BearerAccessToken(stateObject.getAccessToken(), stateObject.getExpiresAt(), null);
+            AccessToken accesToken = new BearerAccessToken(stateObject.getAccessToken(),
+                    (stateObject.getExpiresAt() - System.currentTimeMillis()) / 1000, null);
             AccessTokenResponse response = new AccessTokenResponse(new Tokens(accesToken, null));
             ((MessageContext) getOidcResponseContext().getParent()).setMessage(response);
 

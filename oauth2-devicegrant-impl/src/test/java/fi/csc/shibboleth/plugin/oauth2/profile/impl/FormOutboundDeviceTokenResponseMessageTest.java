@@ -108,7 +108,8 @@ public class FormOutboundDeviceTokenResponseMessageTest {
         ActionTestingSupport.assertProceedEvent(action.execute(requestCtx));
         AccessTokenResponse resp = (AccessTokenResponse) profileRequestCtx.getOutboundMessageContext().getMessage();
         Assert.assertEquals("AT123456", resp.getTokens().getAccessToken().getValue());
-        Assert.assertEquals(expiresAt, resp.getTokens().getAccessToken().getLifetime());
+        Assert.assertTrue(resp.getTokens().getAccessToken().getLifetime() <= 100
+                && resp.getTokens().getAccessToken().getLifetime() >= 98);
     }
 
     @Test
