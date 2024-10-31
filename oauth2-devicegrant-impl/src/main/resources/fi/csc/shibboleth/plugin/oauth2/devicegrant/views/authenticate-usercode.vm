@@ -26,7 +26,6 @@
       <main class="main">
          <header>
             <img class="main-logo" src="$request.getContextPath()#springMessageText("idp.logo", "/images/placeholder-logo.png")" alt="#springMessageText("idp.logo.alt-text", "logo")" />
-            #parse("login-error.vm")
          </header>
          <section>
             <form action="$flowExecutionUrl" method="post">

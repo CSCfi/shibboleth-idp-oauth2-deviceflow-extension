@@ -13,7 +13,7 @@
 
   <bean id="FormOutboundMessage" class="fi.csc.shibboleth.plugin.oauth2.profile.impl.FormOutboundDeviceTokenResponseMessage" scope="prototype" p:deviceCodesCache-ref="shibboleth.DeviceCodesCache" />
 
-  <bean id="BuildErrorResponseFromEvent" class="net.shibboleth.idp.plugin.oidc.op.profile.impl.BuildJSONErrorResponseFromEvent" scope="prototype" p:defaultStatusCode="400" p:defaultCode="invalid_request" p:httpServletResponseSupplier-ref="shibboleth.HttpServletResponseSupplier">
+  <bean id="BuildErrorResponseFromEvent" class="net.shibboleth.oidc.profile.impl.BuildJSONErrorResponseFromEvent" scope="prototype" p:defaultStatusCode="400" p:defaultCode="invalid_request" p:httpServletResponseSupplier-ref="shibboleth.HttpServletResponseSupplier">
     <property name="eventContextLookupStrategy">
       <bean class="net.shibboleth.idp.profile.context.navigate.WebFlowCurrentEventLookupFunction" />
     </property>

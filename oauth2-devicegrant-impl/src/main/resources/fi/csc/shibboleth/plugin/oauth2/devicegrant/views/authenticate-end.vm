@@ -30,7 +30,6 @@
             <img class="main-logo" src="$request.getContextPath()#springMessageText("idp.logo", "/images/placeholder-logo.png")" alt="#springMessageText("idp.logo.alt-text", "logo")" />
          </header>
          <section>
-            #parse("login-error.vm")
             #set ($serviceName = $rpUIContext.serviceName)
             #if ($serviceName && !$rpContext.getRelyingPartyId().contains($serviceName))
             <legend>
