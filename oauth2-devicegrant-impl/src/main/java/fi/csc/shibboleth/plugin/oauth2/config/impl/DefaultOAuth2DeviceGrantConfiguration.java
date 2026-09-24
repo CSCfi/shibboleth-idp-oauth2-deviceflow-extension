@@ -82,6 +82,9 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
     /** Lookup function to supply additional audiences for ID token. */
     @Nonnull private Function<ProfileRequestContext,Set<String>> assertionAudiencesLookupStrategy;
 
+    /** Lookup function to supply authentication endpoint. */
+    @Nonnull private Function<ProfileRequestContext,String> authenticationEndpointLookupStrategy;
+
     /**
      * Constructor.
      */
@@ -96,6 +99,7 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
         userCodeLengthLookupStrategy = FunctionSupport.constant(Integer.valueOf(8));
         pollingIntervalLookupStrategy = FunctionSupport.constant(Duration.ofSeconds(5));
         assertionAudiencesLookupStrategy = FunctionSupport.constant(null);
+        authenticationEndpointLookupStrategy = FunctionSupport.constant("/idp/profile/oauth2/devicegrant/authenticate");
     }
 
     @Override
@@ -379,4 +383,29 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
        assertionAudiencesLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
    }
 
+    /** {@inheritDoc} */
+    @Override
+    @Nullable
+    @NotEmpty
+    public String getAuthenticationEndpoint(@Nullable final ProfileRequestContext profileRequestContext) {
+        return authenticationEndpointLookupStrategy.apply(profileRequestContext);
+    }
+
+    /**
+     * Set overridden authentication endpoint value.
+     * 
+     * @param issuer authentication endpoint value
+     */
+    public void setAuthenticationEndpoint(@Nullable @NotEmpty final String authenticationEndpoint) {
+        authenticationEndpointLookupStrategy = FunctionSupport.constant(authenticationEndpoint);
+    }
+
+    /**
+     * Sets lookup strategy for overridden authentication endpoint value.
+     * 
+     * @param strategy lookup strategy
+     */
+    public void setAuthenticationEndpointLookupStrategy(@Nonnull final Function<ProfileRequestContext, String> strategy) {
+        authenticationEndpointLookupStrategy = Constraint.isNotNull(strategy, "Authentication endpoint lookup strategy cannot be null");
+    }
 }

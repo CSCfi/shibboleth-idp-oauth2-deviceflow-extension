@@ -109,7 +109,24 @@ public interface OAuth2DeviceGrantConfiguration extends ConditionalProfileConfig
     @Positive
     @Nonnull
     Duration getDeviceCodeLifetime(@Nullable final ProfileRequestContext profileRequestContext);
-    
+
+
+    /**
+     * Set authentication endpoint without host and schema (Protocol).
+     *
+     * <p>
+     * Defaults to /idp/profile/oauth2/devicegrant/authenticate.
+     * </p>
+     *
+     * @param profileRequestContext profile request context
+     *
+     * @return device code lifetime
+     */
+    @ConfigurationSetting(name = "authenticationEndpoint")
+    @Positive
+    @Nonnull
+    String getAuthenticationEndpoint(@Nullable final ProfileRequestContext profileRequestContext);
+
     /**
      * 
      * @param profileRequestContext

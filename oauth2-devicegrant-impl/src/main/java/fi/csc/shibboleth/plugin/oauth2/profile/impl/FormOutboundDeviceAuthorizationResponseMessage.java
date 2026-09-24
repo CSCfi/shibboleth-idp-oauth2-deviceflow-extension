@@ -87,7 +87,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     private RelyingPartyContext rpCtx;
 
     /** Authentication endpoint not including server name and protocol. */
-    private String authenticationEndpoint = "/idp/profile/oauth2/devicegrant/authenticate";
+    private String authenticationEndpoint;
 
     /** Interval between polling requests. */
     private Duration interval;
@@ -188,6 +188,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
             userCodeLength = ((OAuth2DeviceGrantConfiguration) pc).getUserCodeLength(profileRequestContext);
             expiration = ((OAuth2DeviceGrantConfiguration) pc).getDeviceCodeLifetime(profileRequestContext);
             interval = ((OAuth2DeviceGrantConfiguration) pc).getPollingInterval(profileRequestContext);
+            authenticationEndpoint = ((OAuth2DeviceGrantConfiguration) pc).getAuthenticationEndpoint(profileRequestContext);
         } else {
             log.error("{} No oauth2 device flow profile configuration associated with this profile request",
                     getLogPrefix());
@@ -241,11 +242,11 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
             return;
         }
         try {
+            String verificationURI = "https://" + getHttpServletRequest().getServerName() + authenticationEndpoint;
             ((MessageContext) getOidcResponseContext().getParent())
                     .setMessage(new OAuth2DeviceAuthorizationSuccessResponse(deviceCode, userCode,
-                            new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint),
-                            new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint
-                                    + "?user_code=" + userCode),
+                            new URI(verificationURI),
+                            new URI(verificationURI + "?user_code=" + userCode),
                             (int) expiration.toSeconds(), (int) interval.toSeconds()));
         } catch (URISyntaxException e) {
             log.error("{} URI malformed {}", getLogPrefix(), e);
