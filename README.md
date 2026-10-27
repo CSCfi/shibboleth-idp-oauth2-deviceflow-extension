@@ -392,12 +392,6 @@ Full file: [conf/relying-party.xml](docs/example/step-3/conf/relying-party.xml)
 Do this only when the device clients cannot be configured with the token endpoint of the plugin
 while the other clients keep the OP token endpoint.
 
-> **Note**
-> The token endpoint of the plugin is a copy of the token endpoint of OP 4.3.0 with the device code
-> grant added. When all clients use it, fixes to the token endpoint in later OP releases, security
-> fixes included, do not reach any client until a release of this plugin is built on that OP. Until
-> then all clients run the token endpoint of OP 4.3.0, whatever OP version is installed.
-
 The token endpoint of the plugin handles the grants of the OP token endpoint too:
 `authorization_code`, `refresh_token`, `client_credentials` and the device code grant. All of them
 use **OAUTH2.Token**. So one token endpoint can serve all clients. The plugin does not publish
