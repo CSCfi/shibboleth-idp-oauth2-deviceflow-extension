@@ -19,6 +19,7 @@ package fi.csc.shibboleth.plugin.oauth2.profile.impl;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
@@ -44,16 +45,13 @@ public class ExtractUserCodeFromMessage extends AbstractProfileAction {
     @Nonnull
     private Logger log = LoggerFactory.getLogger(ExtractUserCodeFromMessage.class);
 
+    /** User code. */
+    @Nullable
     private String userCode;
 
+    /** Strategy used to locate the user code. */
     @Nonnull
     private Function<MessageContext, String> userCodeLookupStrategy;
-
-    public void setDeviceUserCodeLookupStrategy(@Nonnull final Function<MessageContext, String> strategy) {
-        checkSetterPreconditions();
-        userCodeLookupStrategy =
-                Constraint.isNotNull(strategy, "DeviceUserCodeLookupStrategy lookup strategy cannot be null");
-    }
 
     /**
      * Constructor.
@@ -62,13 +60,25 @@ public class ExtractUserCodeFromMessage extends AbstractProfileAction {
         userCodeLookupStrategy = new DeviceUserCodeLookupFunction();
     }
 
+    /**
+     * Set the strategy used to locate the user code.
+     * 
+     * @param strategy lookup strategy
+     */
+    public void setDeviceUserCodeLookupStrategy(@Nonnull final Function<MessageContext, String> strategy) {
+        checkSetterPreconditions();
+        userCodeLookupStrategy =
+                Constraint.isNotNull(strategy, "DeviceUserCodeLookupStrategy lookup strategy cannot be null");
+    }
+
     /** {@inheritDoc} */
     @Override
     protected boolean doPreExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
         if (!super.doPreExecute(profileRequestContext)) {
             return false;
         }
-        userCode = userCodeLookupStrategy.apply(profileRequestContext.getInboundMessageContext());
+        userCode = UserCodeSupport.normalize(
+                userCodeLookupStrategy.apply(profileRequestContext.getInboundMessageContext()));
         if (userCode == null) {
             log.debug("{} No user code available", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.NO_USER_CODE);
@@ -80,9 +90,9 @@ public class ExtractUserCodeFromMessage extends AbstractProfileAction {
     /** {@inheritDoc} */
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
-        DeviceUserAuthenticationContext ctx = new DeviceUserAuthenticationContext();
+        final DeviceUserAuthenticationContext ctx = new DeviceUserAuthenticationContext();
         ctx.setUserCode(userCode);
-        log.debug("{} Initializing DeviceUserCodeContext for user code {}", getLogPrefix(), userCode);
+        log.debug("{} Initializing DeviceUserCodeContext", getLogPrefix());
         profileRequestContext.getInboundMessageContext().addSubcontext(ctx, true);
 
     }

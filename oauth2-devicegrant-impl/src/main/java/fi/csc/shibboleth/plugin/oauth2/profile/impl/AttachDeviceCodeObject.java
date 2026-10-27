@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
@@ -52,12 +53,15 @@ public class AttachDeviceCodeObject extends AbstractProfileAction {
     @Nonnull
     private Logger log = LoggerFactory.getLogger(AttachDeviceCodeObject.class);
 
+    /** User code. */
+    @Nullable
     private String userCode;
 
     /** Cache for device codes. */
     @NonnullAfterInit
     private DeviceCodesCache deviceCodesCache;
 
+    /** Strategy used to locate the user code. */
     @Nonnull
     private Function<MessageContext, String> userCodeLookupStrategy;
 
@@ -71,6 +75,11 @@ public class AttachDeviceCodeObject extends AbstractProfileAction {
         userCodeLookupStrategy = new DeviceUserCodeLookupFunction();
     }
 
+    /**
+     * Set the strategy used to locate the user code.
+     * 
+     * @param strategy lookup strategy
+     */
     public void setDeviceUserCodeLookupStrategy(@Nonnull final Function<MessageContext, String> strategy) {
         checkSetterPreconditions();
         userCodeLookupStrategy = Constraint.isNotNull(strategy,
@@ -120,13 +129,13 @@ public class AttachDeviceCodeObject extends AbstractProfileAction {
         DeviceCodeObject obj = null;
         try {
             obj = deviceCodesCache.getDeviceCode(userCode);
-        } catch (IOException | ParseException e) {
-            log.error("() Exception occurred while accessing Device Code Cache {}", getLogPrefix(), e);
+        } catch (final IOException | ParseException e) {
+            log.error("{} Exception occurred while accessing Device Code Cache", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
             return;
         }
         if (obj == null) {
-            log.error("() No device code object matching user code {}", getLogPrefix(), userCode);
+            log.warn("{} No device code object matching the user code", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.INVALID_USER_CODE);
             return;
         }

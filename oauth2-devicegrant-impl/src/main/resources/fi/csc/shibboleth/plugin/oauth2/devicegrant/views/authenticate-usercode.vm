@@ -30,6 +30,12 @@
          <section>
             <form action="$flowExecutionUrl" method="post">
                #parse("csrf/csrf.vm")
+               #set ($userCodeError = $flowRequestContext.getFlashScope().get("userCodeError"))
+               #if ($userCodeError == "InvalidUserCode")
+               <p class="output-message output--error">#springMessageText("idp.login.usercode.invalid", "The user code is not valid or has expired.")</p>
+               #elseif ($userCodeError == "NoUserCode")
+               <p class="output-message output--error">#springMessageText("idp.login.usercode.missing", "Enter the user code.")</p>
+               #end
                <div class="form-element-wrapper">
                   <label for="usercode">#springMessageText("idp.login.usercode", "User Code")</label>
                   <input class="form-element form-field" id="usercode" name="j_usercode" type="text"

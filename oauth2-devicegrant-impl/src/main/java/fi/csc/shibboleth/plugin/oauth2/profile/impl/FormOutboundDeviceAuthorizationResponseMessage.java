@@ -19,10 +19,13 @@ package fi.csc.shibboleth.plugin.oauth2.profile.impl;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.opensaml.messaging.context.MessageContext;
 import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
@@ -31,7 +34,6 @@ import org.opensaml.profile.context.ProfileRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
 import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
@@ -39,14 +41,21 @@ import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodesCache;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationSuccessResponse;
+import net.shibboleth.idp.plugin.oidc.op.profile.impl.AbstractOIDCResponseAction;
 import net.shibboleth.idp.profile.IdPEventIds;
 import net.shibboleth.profile.config.ProfileConfiguration;
 import net.shibboleth.profile.context.RelyingPartyContext;
 import net.shibboleth.shared.annotation.constraint.NonnullAfterInit;
 import net.shibboleth.shared.component.ComponentInitializationException;
 import net.shibboleth.shared.logic.Constraint;
+import net.shibboleth.shared.logic.FunctionSupport;
 import net.shibboleth.shared.security.IdentifierGenerationStrategy;
-import net.shibboleth.shared.security.impl.SecureRandomIdentifierGenerationStrategy;
+import net.shibboleth.shared.security.IdentifierGenerationStrategy.ProviderType;
+import net.shibboleth.shared.security.RandomIdentifierParameterSpec;
+import net.shibboleth.shared.servlet.HttpServletSupport;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Action forming device authorization response success message. Action
@@ -56,15 +65,19 @@ import net.shibboleth.shared.security.impl.SecureRandomIdentifierGenerationStrat
  */
 public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDCResponseAction {
 
+    /** Random bytes of the default device code generator. */
+    public static final int DEVICE_CODE_RANDOM_BYTES = 32;
+
     /** Class logger. */
     @Nonnull
     private Logger log = LoggerFactory.getLogger(FormOutboundDeviceAuthorizationResponseMessage.class);
 
+    /** Cache for device codes. */
     @NonnullAfterInit
     private DeviceCodesCache deviceCodesCache;
 
     /** Strategy used to locate the {@link IdentifierGenerationStrategy} to use. */
-    @Nonnull
+    @NonnullAfterInit
     private Function<ProfileRequestContext, IdentifierGenerationStrategy> idGeneratorLookupStrategy;
 
     /**
@@ -87,7 +100,11 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     private RelyingPartyContext rpCtx;
 
     /** Authentication endpoint not including server name and protocol. */
-    private String authenticationEndpoint = "/idp/profile/oauth2/devicegrant/authenticate";
+    private String authenticationEndpoint = "/profile/oauth2/devicegrant/authenticate";
+
+    /** Verification URI. */
+    @Nullable
+    private String verificationURI;
 
     /** Interval between polling requests. */
     private Duration interval;
@@ -98,12 +115,10 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     @NonnullAfterInit
     private OAuth2DeviceAuthorizationRequest request;
 
+    /**
+     * Constructor.
+     */
     public FormOutboundDeviceAuthorizationResponseMessage() {
-        idGeneratorLookupStrategy = new Function<ProfileRequestContext, IdentifierGenerationStrategy>() {
-            public IdentifierGenerationStrategy apply(ProfileRequestContext input) {
-                return new SecureRandomIdentifierGenerationStrategy();
-            }
-        };
         relyingPartyContextLookupStrategy = new ChildContextLookup<>(RelyingPartyContext.class);
     }
 
@@ -113,7 +128,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
      * @param endpoint authentication endpoint not including server name and
      *                 protocol
      */
-    public void setAuthenticationEndpoint(String endpoint) {
+    public void setAuthenticationEndpoint(final String endpoint) {
         authenticationEndpoint = endpoint;
     }
 
@@ -161,6 +176,14 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     protected void doInitialize() throws ComponentInitializationException {
         super.doInitialize();
         Constraint.isNotNull(deviceCodesCache, "DeviceCodesCache cannot be null");
+        if (idGeneratorLookupStrategy == null) {
+            try {
+                idGeneratorLookupStrategy = FunctionSupport.constant(IdentifierGenerationStrategy.getInstance(
+                        ProviderType.SECURE, new RandomIdentifierParameterSpec(null, DEVICE_CODE_RANDOM_BYTES, null)));
+            } catch (final InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
+                throw new ComponentInitializationException(e);
+            }
+        }
     }
 
     /** {@inheritDoc} */
@@ -188,6 +211,7 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
             userCodeLength = ((OAuth2DeviceGrantConfiguration) pc).getUserCodeLength(profileRequestContext);
             expiration = ((OAuth2DeviceGrantConfiguration) pc).getDeviceCodeLifetime(profileRequestContext);
             interval = ((OAuth2DeviceGrantConfiguration) pc).getPollingInterval(profileRequestContext);
+            verificationURI = ((OAuth2DeviceGrantConfiguration) pc).getVerificationURI(profileRequestContext);
         } else {
             log.error("{} No oauth2 device flow profile configuration associated with this profile request",
                     getLogPrefix());
@@ -208,49 +232,63 @@ public class FormOutboundDeviceAuthorizationResponseMessage extends AbstractOIDC
     /** {@inheritDoc} */
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
-        String deviceCode = idGeneratorLookupStrategy.apply(profileRequestContext).generateIdentifier();
-        if (deviceCode.length() <= deviceCodeLength) {
-            log.error("{} Generated device code length is {}, expected length by profile config is {}+1",
+        String deviceCode = idGeneratorLookupStrategy.apply(profileRequestContext).generateIdentifier(false);
+        if (deviceCode.length() < deviceCodeLength) {
+            log.error("{} Generated device code length is {}, profile configuration requires {}",
                     getLogPrefix(), deviceCode.length(), deviceCodeLength);
             ActionSupport.buildEvent(profileRequestContext, IdPEventIds.INVALID_PROFILE_CONFIG);
             return;
         }
-        deviceCode = deviceCode.substring(1, (int) deviceCodeLength + 1);
-        String userCode = idGeneratorLookupStrategy.apply(profileRequestContext).generateIdentifier();
-        if (userCode.length() <= userCodeLength) {
-            log.error("{} Generated user code length is {}, expected length by profile config is {}+1", getLogPrefix(),
-                    userCode.length(), userCodeLength);
-            ActionSupport.buildEvent(profileRequestContext, IdPEventIds.INVALID_PROFILE_CONFIG);
-            return;
-        }
-        userCode = userCode.substring(1, (int) userCodeLength + 1);
-        String rpId = rpCtx.getRelyingPartyId();
-        DeviceCodeObject deviceCodeObject = new DeviceCodeObject(deviceCode, new ClientID(rpId),
-                new Scope(request.getScope()), request.getAcrValues());
+        deviceCode = deviceCode.substring(0, (int) deviceCodeLength);
+        final String userCode = UserCodeSupport.generate((int) userCodeLength);
+        final String rpId = rpCtx.getRelyingPartyId();
+        final DeviceCodeObject deviceCodeObject = new DeviceCodeObject(deviceCode, new ClientID(rpId),
+                getOidcResponseContext().getScope(), request.getAcrValues());
         try {
-            log.debug("Storing device flow device code object {} per user code {}",
-                    deviceCodeObject.toJSONObject().toString(), userCode);
-            if (!deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, expiration.toMillis())) {
+            log.debug("{} Storing device code of client {}, scope {}", getLogPrefix(), rpId,
+                    deviceCodeObject.getScope());
+            if (!deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, expiration.toMillis(),
+                    interval.toSeconds() * 1000)) {
                 log.error("{} Failed to set device code to cache.", getLogPrefix());
                 ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
                 return;
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             log.error("{} Failed to set device code to cache {}", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
             return;
         }
+        final HttpServletResponse response = getHttpServletResponse();
+        if (response == null) {
+            log.error("{} Could not fetch HttpServletResponse", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, IdPEventIds.INVALID_PROFILE_CONFIG);
+            return;
+        }
+        HttpServletSupport.addNoCacheHeaders(response);
+        final String uri = verificationURI != null ? verificationURI : buildVerificationURI();
         try {
             ((MessageContext) getOidcResponseContext().getParent())
                     .setMessage(new OAuth2DeviceAuthorizationSuccessResponse(deviceCode, userCode,
-                            new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint),
-                            new URI("https://" + getHttpServletRequest().getServerName() + authenticationEndpoint
-                                    + "?user_code=" + userCode),
+                            new URI(uri),
+                            new URI(uri + (uri.contains("?") ? "&" : "?") + "user_code=" + userCode),
                             (int) expiration.toSeconds(), (int) interval.toSeconds()));
-        } catch (URISyntaxException e) {
+        } catch (final URISyntaxException e) {
             log.error("{} URI malformed {}", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
             return;
         }
+    }
+
+    /**
+     * Build the verification URI from the request.
+     *
+     * @return verification URI
+     */
+    @Nonnull private String buildVerificationURI() {
+        final HttpServletRequest httpRequest = getHttpServletRequest();
+        assert httpRequest != null;
+        final int port = httpRequest.getServerPort();
+        return "https://" + httpRequest.getServerName() + (port == 80 || port == 443 || port <= 0 ? "" : ":" + port)
+                + httpRequest.getContextPath() + authenticationEndpoint;
     }
 }

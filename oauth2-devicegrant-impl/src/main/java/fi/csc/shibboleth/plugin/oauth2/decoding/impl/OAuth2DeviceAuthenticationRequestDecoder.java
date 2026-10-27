@@ -25,8 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.JakartaServletUtils;
-import fi.csc.shibboleth.plugin.oauth2.messaging.impl.BaseOAuth2RequestDecoder;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthenticationRequest;
+import net.shibboleth.idp.plugin.oidc.op.decoding.impl.RequestUtil;
+import net.shibboleth.idp.plugin.oidc.op.oauth2.decoding.impl.BaseOAuth2RequestDecoder;
 
 /**
  * Message decoder decoding OpenID Connect
@@ -53,7 +54,7 @@ public class OAuth2DeviceAuthenticationRequestDecoder
     }
 
     @Override
-    protected String getMessageToLog(OAuth2DeviceAuthenticationRequest message) {
+    protected String getMessageToLog(final OAuth2DeviceAuthenticationRequest message) {
         // TODO Auto-generated method stub
         return null;
     }

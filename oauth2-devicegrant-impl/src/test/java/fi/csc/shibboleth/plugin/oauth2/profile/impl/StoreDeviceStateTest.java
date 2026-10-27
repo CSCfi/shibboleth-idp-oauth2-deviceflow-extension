@@ -144,6 +144,14 @@ public class StoreDeviceStateTest {
     }
 
     @Test
+    public void testUserCodeUsedOnce() throws IOException, ParseException {
+        ActionTestingSupport.assertProceedEvent(action.execute(requestCtx));
+        Assert.assertNull(deviceCodesCache.getDeviceCode("UC123456"));
+        ActionTestingSupport.assertEvent(action.execute(requestCtx), EventIds.INVALID_MESSAGE);
+        Assert.assertEquals(DeviceStateObject.State.APPROVED, deviceCodesCache.getDeviceState("DC123456").getState());
+    }
+
+    @Test
     public void testDenied() throws IOException, ParseException {
         deviceUserAuthenticationContext.setUserApproved(false);
         ActionTestingSupport.assertProceedEvent(action.execute(requestCtx));

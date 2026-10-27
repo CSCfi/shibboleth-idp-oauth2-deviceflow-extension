@@ -45,15 +45,15 @@ public class DeviceUserCodeLookupFunction extends AbstractInitializableComponent
 
     /** {@inheritDoc} */
     @Override
-    public String apply(@Nullable MessageContext input) {
+    public String apply(@Nullable final MessageContext input) {
         if (input == null) {
             return null;
         }
-        DeviceUserAuthenticationContext ctx = input.getSubcontext(DeviceUserAuthenticationContext.class);
+        final DeviceUserAuthenticationContext ctx = input.getSubcontext(DeviceUserAuthenticationContext.class);
         if (ctx != null) {
             return ctx.getUserCode();
         }
-        Object message = input.getMessage();
+        final Object message = input.getMessage();
         if (!(message instanceof OAuth2DeviceAuthenticationRequest)) {
             return null;
         }

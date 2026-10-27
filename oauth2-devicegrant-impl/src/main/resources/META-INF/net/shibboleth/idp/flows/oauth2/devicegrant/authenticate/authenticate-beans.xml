@@ -1,144 +1,125 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:c="http://www.springframework.org/schema/c"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:util="http://www.springframework.org/schema/util"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd                            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
-	default-init-method="initialize" default-destroy-method="destroy">
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:context="http://www.springframework.org/schema/context" xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:util="http://www.springframework.org/schema/util" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+    default-init-method="initialize" default-destroy-method="destroy">
 
-	<bean id="shibboleth.oidc.browserProfile"
-		class="java.lang.Boolean" c:_0="true" />
+    <bean id="shibboleth.oidc.profileId" class="java.lang.String"
+        c:_0="#{T(fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration).PROFILE_ID}" />
 
-	<bean id="RethrowingFlowExecutionExceptionHandler"
-		class="net.shibboleth.idp.profile.impl.RethrowingFlowExecutionExceptionHandler" />
+    <bean id="shibboleth.oidc.loggingId" class="java.lang.String"
+        c:_0="%{devicegrant.logging.authenticate:OAuth2.DeviceVerification}" />
 
-	<bean id="DecodeMessage"
-		class="org.opensaml.profile.action.impl.DecodeMessage"
-		scope="prototype">
-		<constructor-arg>
-			<bean
-				class="fi.csc.shibboleth.plugin.oauth2.decoding.impl.OAuth2DeviceAuthenticationRequestDecoder"
-				scope="prototype"
-				p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier" />
-		</constructor-arg>
-	</bean>
+    <bean id="shibboleth.oidc.browserProfile" class="java.lang.Boolean" c:_0="true" />
 
-	<bean id="ExtractUserCodeFromMessage"
-		class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ExtractUserCodeFromMessage"
-		scope="prototype" />
-	
-	<bean id="AttachDeviceCodeObject"
-        class="fi.csc.shibboleth.plugin.oauth2.profile.impl.AttachDeviceCodeObject"
-        scope="prototype"
-        p:deviceCodesCache-ref="shibboleth.DeviceCodesCache" />
+    <util:constant id="shibboleth.metrics.ProfileCounter"
+        static-field="fi.csc.shibboleth.plugin.oauth2.config.impl.DefaultOAuth2DeviceGrantConfiguration.PROFILE_COUNTER" />
 
-	<bean id="ExtractUserCodeFromFormRequest"
-		class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ExtractUserCodeFromFormRequest"
-		scope="prototype"
-		p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier" />
+    <bean id="DecodeMessage" class="org.opensaml.profile.action.impl.DecodeMessage" scope="prototype">
+        <constructor-arg>
+            <bean class="fi.csc.shibboleth.plugin.oauth2.decoding.impl.OAuth2DeviceAuthenticationRequestDecoder"
+                scope="prototype" p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier"
+                p:removeIpAddressFromEndpointUri="%{idp.oidc.logging.removeIpAddressFromProtocolMessage:false}"
+                p:customRequestParser="#{getObject('%{devicegrant.requestParser.DeviceAuthenticationRequest:}'.trim())}"/>
+        </constructor-arg>
+    </bean>
 
-	<bean id="InitializeAuthenticationContext"
-		class="fi.csc.shibboleth.plugin.oauth2.profile.impl.InitializeAuthenticationContext"
-		scope="prototype" />
-		
+    <bean id="shibboleth.ClientIDLookupStrategy"
+        class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceClientIDLookupFunction"
+        scope="prototype" />
+
+    <bean id="ExtractUserCodeFromMessage"
+        class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ExtractUserCodeFromMessage" scope="prototype" />
+
+    <bean id="AttachDeviceCodeObject"
+        class="fi.csc.shibboleth.plugin.oauth2.profile.impl.AttachDeviceCodeObject" scope="prototype"
+        p:deviceCodesCache-ref="devicegrant.DeviceCodesCache" />
+
+    <bean id="ExtractUserCodeFromFormRequest"
+        class="fi.csc.shibboleth.plugin.oauth2.profile.impl.ExtractUserCodeFromFormRequest" scope="prototype"
+        p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier" />
+
+    <bean id="PopulateUserAgentContext" class="net.shibboleth.idp.profile.impl.PopulateUserAgentContext"
+        scope="prototype" p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier" />
+
+    <bean id="InitializeOutboundMessageContext"
+        class="net.shibboleth.idp.plugin.oidc.op.profile.impl.InitializeOutboundAuthenticationResponseMessageContext"
+        scope="prototype" />
+
+    <bean id="ValidateScope" class="net.shibboleth.idp.plugin.oidc.op.oauth2.profile.impl.ValidateScope" scope="prototype"
+        p:allowedScopeLookupStrategy="#{getObject('devicegrant.AllowedScopeStrategy') ?: getObject('shibboleth.oidc.DefaultAllowedScopeStrategy')}">
+        <property name="requestedScopeLookupStrategy">
+            <bean class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceScopeLookupFunction"
+                p:deviceCodesCache-ref="devicegrant.DeviceCodesCache" />
+        </property>
+    </bean>
+
+    <bean id="PopulateClientStorageLoadContext"
+        class="org.opensaml.storage.impl.client.PopulateClientStorageLoadContext" scope="prototype"
+        p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
+
+    <bean id="InitializeAuthenticationContext"
+        class="net.shibboleth.idp.saml.profile.impl.InitializeAuthenticationContext" scope="prototype" />
+
     <bean id="ProcessRequestedAuthnContext"
         class="net.shibboleth.idp.plugin.oidc.op.profile.impl.ProcessRequestedAuthnContext" scope="prototype"
         p:acrAlwaysEssentialLookupStrategy-ref="shibboleth.Conditions.TRUE">
         <property name="acrLookupStrategy">
             <bean class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceACRLookupFunction"
-                p:deviceCodesCache-ref="shibboleth.DeviceCodesCache"/>
+                p:deviceCodesCache-ref="devicegrant.DeviceCodesCache" />
         </property>
     </bean>
 
-	<bean id="PopulateUserAgentContext"
-		class="net.shibboleth.idp.profile.impl.PopulateUserAgentContext"
-		scope="prototype"
-		p:httpServletRequestSupplier-ref="shibboleth.HttpServletRequestSupplier" />
+    <bean id="SetAuthenticationContextClassReferenceToResponseContext"
+        class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetAuthenticationContextClassReferenceToResponseContext"
+        scope="prototype" />
 
-	<bean id="SetSectorIdentifierForAttributeResolution"
-		class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetSectorIdentifierForAttributeResolution"
-		scope="prototype" />
+    <bean id="SetAuthenticationTimeToResponseContext"
+        class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetAuthenticationTimeToResponseContext" scope="prototype" />
 
-	<bean id="PopulatePostAuthnInterceptContext"
-		class="net.shibboleth.idp.profile.interceptor.impl.PopulateProfileInterceptorContext"
-		scope="prototype"
-		p:availableFlows="#{@'shibboleth.ProfileInterceptorFlowDescriptorManager'.getComponents()}">
-		<property name="activeFlowsLookupStrategy">
-			<bean
-				class="net.shibboleth.idp.authn.config.navigate.PostAuthenticationFlowsLookupFunction" />
-		</property>
-	</bean>
+    <bean id="SetSectorIdentifierForAttributeResolution"
+        class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetSectorIdentifierForAttributeResolution"
+        scope="prototype" />
 
-	<bean id="ValidateScope"
-		class="net.shibboleth.idp.plugin.oidc.op.oauth2.profile.impl.ValidateScope"
-		scope="prototype"
-		p:requestedScopeLookupStrategy-ref="shibboleth.deviceflow.ScopeLookupStrategy"
-		p:allowedScopeLookupStrategy="#{getObject('shibboleth.oidc.AllowedScopeStrategy') ?: getObject('shibboleth.oidc.DefaultAllowedScopeStrategy')}" />
+    <bean id="PopulatePostAuthnInterceptContext"
+            class="net.shibboleth.idp.profile.interceptor.impl.PopulateProfileInterceptorContext" scope="prototype"
+            p:availableFlows="#{@'shibboleth.ProfileInterceptorFlowDescriptorManager'.getComponents()}"
+            p:loggingLabel="post-authn">
+        <property name="activeFlowsLookupStrategy">
+            <bean class="net.shibboleth.idp.authn.config.navigate.PostAuthenticationFlowsLookupFunction" />
+        </property>
+    </bean>
 
-	<bean id="shibboleth.deviceflow.ScopeLookupStrategy"
-		class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceScopeLookupFunction"
-		scope="prototype" p:deviceCodesCache-ref="shibboleth.DeviceCodesCache" />
+    <bean id="SetSubjectToResponseContext"
+        class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetSubjectToResponseContext" scope="prototype">
+        <property name="subjectLookupStrategy">
+            <bean class="net.shibboleth.idp.plugin.oidc.op.profile.logic.AttributeResolutionSubjectLookupFunction"
+                p:transcoderRegistry-ref="shibboleth.AttributeRegistryService" />
+        </property>
+        <property name="subjectTypeLookupStrategy">
+            <bean class="net.shibboleth.idp.plugin.oidc.op.profile.logic.DefaultSubjectTypeStrategy" />
+        </property>
+    </bean>
 
-	<bean id="PopulateClientStorageLoadContext"
-		class="org.opensaml.storage.impl.client.PopulateClientStorageLoadContext"
-		scope="prototype"
-		p:storageServices="#{ getObject('shibboleth.ClientStorageServices') ?: getObject('shibboleth.DefaultClientStorageServices') }" />
+    <bean id="SetTokenDeliveryAttributesToResponseContext"
+        class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetTokenDeliveryAttributesToResponseContext"
+        scope="prototype" p:transcoderRegistry-ref="shibboleth.AttributeRegistryService" />
 
-	<bean id="SetAuthenticationTimeToResponseContext"
-		class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetAuthenticationTimeToResponseContext"
-		scope="prototype" />
+    <bean id="SetConsentToResponseContext"
+        class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetConsentToResponseContext" scope="prototype" />
 
-	<bean id="SetAuthenticationContextClassReferenceToResponseContext"
-		class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetAuthenticationContextClassReferenceToResponseContext"
-		scope="prototype" />
+    <bean id="StoreDeviceState" class="fi.csc.shibboleth.plugin.oauth2.profile.impl.StoreDeviceState" scope="prototype"
+        c:sealer-ref="#{'%{idp.oidc.tokenSealer:shibboleth.oidc.TokenSealer}'.trim()}"
+        p:issuerLookupStrategy-ref="shibboleth.ResponderIdLookup.Simple"
+        p:deviceCodesCache-ref="devicegrant.DeviceCodesCache" />
 
-	<bean id="SetSubjectToResponseContext"
-		class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetSubjectToResponseContext"
-		scope="prototype">
-		<property name="subjectLookupStrategy">
-			<bean
-				class="net.shibboleth.idp.plugin.oidc.op.profile.logic.AttributeResolutionSubjectLookupFunction"
-				p:transcoderRegistry-ref="shibboleth.AttributeRegistryService" />
-		</property>
-		<property name="subjectTypeLookupStrategy">
-			<bean
-				class="net.shibboleth.idp.plugin.oidc.op.profile.logic.DefaultSubjectTypeStrategy" />
-		</property>
-	</bean>
+    <bean id="ErrorViewPopulateAuditContext" parent="shibboleth.AbstractPopulateAuditContext"
+        p:fieldExtractors="#{getObject('shibboleth.ErrorViewAuditExtractors') ?: getObject('shibboleth.DefaultErrorViewAuditExtractors')}" />
 
-	<bean id="InitializeOutboundMessageContext"
-		class="net.shibboleth.idp.plugin.oidc.op.profile.impl.InitializeOutboundAuthenticationResponseMessageContext"
-		scope="prototype" />
-
-	<bean id="SetTokenDeliveryAttributesToResponseContext"
-		class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetTokenDeliveryAttributesToResponseContext"
-		scope="prototype"
-		p:transcoderRegistry-ref="shibboleth.AttributeRegistryService" />
-
-	<bean id="SetConsentToResponseContext"
-		class="net.shibboleth.idp.plugin.oidc.op.profile.impl.SetConsentToResponseContext"
-		scope="prototype" />
-
-	<bean id="StoreDeviceState"
-		class="fi.csc.shibboleth.plugin.oauth2.profile.impl.StoreDeviceState"
-		scope="prototype"
-		c:sealer-ref="#{'%{idp.oidc.tokenSealer:shibboleth.oidc.TokenSealer}'.trim()}"
-		p:issuerLookupStrategy-ref="shibboleth.ResponderIdLookup.Simple"
-		p:deviceCodesCache-ref="shibboleth.DeviceCodesCache" />
-
-	<bean id="ErrorViewPopulateAuditContext"
-		parent="shibboleth.AbstractPopulateAuditContext"
-		p:fieldExtractors="#{getObject('shibboleth.ErrorViewAuditExtractors') ?: getObject('shibboleth.DefaultErrorViewAuditExtractors')}" />
-
-	<bean id="MapEventToView"
-		class="net.shibboleth.idp.profile.context.navigate.SpringEventToViewLookupFunction"
-		p:defaultView-ref="shibboleth.DefaultErrorView"
-		p:eventMap="#{getObject('shibboleth.EventViewMap')}" />
-
-	<bean id="shibboleth.ClientIDLookupStrategy"
-		class="fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceClientIDLookupFunction"
-		scope="prototype" />
+    <bean id="MapEventToView" class="net.shibboleth.idp.profile.context.navigate.SpringEventToViewLookupFunction"
+        p:defaultView-ref="shibboleth.DefaultErrorView" p:eventMap="#{getObject('shibboleth.EventViewMap')}" />
 
 </beans>

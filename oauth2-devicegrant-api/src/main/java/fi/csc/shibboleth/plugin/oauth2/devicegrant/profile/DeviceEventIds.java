@@ -63,6 +63,13 @@ public final class DeviceEventIds {
     public static final String EXPIRED_TOKEN = "ExpiredToken";
 
     /**
+     * ID of event returned if the device polls faster than the interval.
+     */
+    @Nonnull
+    @NotEmpty
+    public static final String SLOW_DOWN = "SlowDown";
+
+    /**
      * Constructor.
      */
     private DeviceEventIds() {

@@ -72,15 +72,15 @@ public class ExtractUserCodeFromFormRequest extends AbstractProfileAction {
             ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.NO_USER_CODE);
             return;
         }
-        final String userCode = request.getParameter(userCodeFieldName);
-        if (userCode == null || userCode.isEmpty()) {
+        final String userCode = UserCodeSupport.normalize(request.getParameter(userCodeFieldName));
+        if (userCode == null) {
             log.error("{} No user code in request", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.NO_USER_CODE);
             return;
         }
-        DeviceUserAuthenticationContext ctx = new DeviceUserAuthenticationContext();
+        final DeviceUserAuthenticationContext ctx = new DeviceUserAuthenticationContext();
         ctx.setUserCode(userCode);
-        log.debug("{} Initializing DeviceUserCodeContext for user code {}", getLogPrefix(), userCode);
+        log.debug("{} Initializing DeviceUserCodeContext", getLogPrefix());
         profileRequestContext.getInboundMessageContext().addSubcontext(ctx, true);
     }
 }

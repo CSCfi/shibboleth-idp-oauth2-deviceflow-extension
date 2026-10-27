@@ -7,9 +7,10 @@
   <description>An IdP plugin implementing OAuth 2.0 Device Authorization Grant.</description>
   <groupId>fi.csc.shibboleth.plugin.oauth2.devicegrant</groupId>
   <artifactId>idp-plugin-oauth2-devicegrant</artifactId>
-  <version>0.9.3</version>
+  <version>1.0.0</version>
   <packaging>pom</packaging>
   <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <slf4j.groupId>org.slf4j</slf4j.groupId>
@@ -18,9 +19,9 @@
     <idp.version>5.0.0</idp.version>
     <opensaml.groupId>org.opensaml</opensaml.groupId>
     <opensaml.version>5.0.0</opensaml.version>
-    <oidc.common.version>3.0.0</oidc.common.version>
-    <oidc.op.version>4.0.0</oidc.op.version>
-    <oauth2-oidc-sdk.version>10.5.1</oauth2-oidc-sdk.version>
+    <oidc.common.version>3.3.0</oidc.common.version>
+    <oidc.op.version>4.3.0</oidc.op.version>
+    <oauth2-oidc-sdk.version>10.15</oauth2-oidc-sdk.version>
     <java-shib-shared.version>9.0.0</java-shib-shared.version>
     <jackson.version>2.15.2</jackson.version>
     <testng.version>7.7.1</testng.version>
@@ -87,10 +88,23 @@
         <groupId>net.shibboleth.idp.plugin.oidc</groupId>
         <artifactId>idp-plugin-oidc-op-api</artifactId>
         <version>${oidc.op.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>net.shibboleth.idp.plugin.oidc</groupId>
+        <artifactId>idp-plugin-oidc-op-impl</artifactId>
+        <version>${oidc.op.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>net.shibboleth.oidc</groupId>
         <artifactId>oidc-common-profile-api</artifactId>
+        <version>${oidc.common.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>net.shibboleth.oidc</groupId>
+        <artifactId>oidc-common-profile-impl</artifactId>
         <version>${oidc.common.version}</version>
         <scope>provided</scope>
       </dependency>
@@ -190,6 +204,35 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.1.2</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>8.45.1</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <configLocation>${checkstyle.configLocation}</configLocation>
+          <violationSeverity>warning</violationSeverity>
+          <consoleOutput>true</consoleOutput>
+          <failOnViolation>false</failOnViolation>
+          <includeResources>false</includeResources>
+          <includeTestResources>false</includeTestResources>
+        </configuration>
+        <executions>
+          <execution>
+            <id>checkstyle-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <archive>
@@ -204,7 +247,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.10</version>
+        <version>0.8.14</version>
         <executions>
           <execution>
             <id>prepare-agent</id>

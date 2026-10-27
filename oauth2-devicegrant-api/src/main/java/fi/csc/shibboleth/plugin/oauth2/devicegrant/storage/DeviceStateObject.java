@@ -29,7 +29,12 @@ public class DeviceStateObject {
      * request.
      */
     public enum State {
-        PENDING, APPROVED, DENIED
+        /** User has not yet taken action. */
+        PENDING,
+        /** User approved the request. */
+        APPROVED,
+        /** User denied the request. */
+        DENIED
     }
 
     /** State of the Device flow request. */
@@ -44,6 +49,18 @@ public class DeviceStateObject {
     @Nullable
     private Long expiresAt;
 
+    /** Client ID the device code was issued to. */
+    @Nullable
+    private String clientId;
+
+    /** Polling interval in milliseconds. */
+    @Nullable
+    private Long interval;
+
+    /** Time of the last token request, from EPOCH in milliseconds. */
+    @Nullable
+    private Long lastPoll;
+
     /**
      * Constructor.
      * 
@@ -51,8 +68,26 @@ public class DeviceStateObject {
      * @param accessToken Access Token for APPROVED requests.
      * @param expiresAt Expires At of the Access Token for APPROVED requests. EPOCH in milliseconds.
      */
-    public DeviceStateObject(@Nonnull State state, @Nullable String accessToken, @Nullable Long expiresAt) {
-        if (state == null || (accessToken != null && expiresAt == null)) {
+    public DeviceStateObject(@Nonnull final State state, @Nullable final String accessToken,
+            @Nullable final Long expiresAt) {
+        this(state, accessToken, expiresAt, null, null, null);
+    }
+
+    // Checkstyle: ParameterNumber OFF
+    /**
+     * Constructor.
+     * 
+     * @param state State of the request, PENDING, APPROVED or DENIED.
+     * @param accessToken Access Token for APPROVED requests.
+     * @param expiresAt Expires At of the Access Token for APPROVED requests. EPOCH in milliseconds.
+     * @param clientId Client ID the device code was issued to.
+     * @param interval Polling interval in milliseconds.
+     * @param lastPoll Time of the last token request. EPOCH in milliseconds.
+     */
+    public DeviceStateObject(@Nonnull final State state, @Nullable final String accessToken,
+            @Nullable final Long expiresAt, @Nullable final String clientId, @Nullable final Long interval,
+            @Nullable final Long lastPoll) {
+        if (state == null || accessToken != null && expiresAt == null) {
             throw new IllegalArgumentException(
                     "state must not be null. If access token is not null expires at cannot be null either");
         }
@@ -62,14 +97,18 @@ public class DeviceStateObject {
         this.state = state;
         this.accessToken = accessToken;
         this.expiresAt = expiresAt;
+        this.clientId = clientId;
+        this.interval = interval;
+        this.lastPoll = lastPoll;
     }
+    // Checkstyle: ParameterNumber ON
 
     /**
      * Constructor.
      * 
      * @param state State of the request, PENDING or DENIED.
      */
-    public DeviceStateObject(State state) {
+    public DeviceStateObject(final State state) {
         this(state, null, null);
     }
 
@@ -111,17 +150,82 @@ public class DeviceStateObject {
     }
 
     /**
+     * Get Client ID the device code was issued to.
+     * 
+     * @return Client ID the device code was issued to.
+     */
+    @Nullable
+    public String getClientId() {
+        return clientId;
+    }
+
+    /**
+     * Get polling interval in milliseconds.
+     * 
+     * @return polling interval in milliseconds.
+     */
+    @Nullable
+    public Long getInterval() {
+        return interval;
+    }
+
+    /**
+     * Get time of the last token request, from EPOCH in milliseconds.
+     * 
+     * @return time of the last token request.
+     */
+    @Nullable
+    public Long getLastPoll() {
+        return lastPoll;
+    }
+
+    /**
+     * Get a copy with a new state, keeping client ID, interval and last poll.
+     * 
+     * @param newState State of the request.
+     * @param newAccessToken Access Token for APPROVED requests.
+     * @param newExpiresAt Expires At of the Access Token for APPROVED requests. EPOCH in milliseconds.
+     * @return copy with the new state.
+     */
+    @Nonnull
+    public DeviceStateObject withState(@Nonnull final State newState, @Nullable final String newAccessToken,
+            @Nullable final Long newExpiresAt) {
+        return new DeviceStateObject(newState, newAccessToken, newExpiresAt, clientId, interval, lastPoll);
+    }
+
+    /**
+     * Get a copy with a new last poll time and interval.
+     * 
+     * @param newLastPoll Time of the token request. EPOCH in milliseconds.
+     * @param newInterval Polling interval in milliseconds.
+     * @return copy with the new last poll time and interval.
+     */
+    @Nonnull
+    public DeviceStateObject withPoll(final long newLastPoll, @Nullable final Long newInterval) {
+        return new DeviceStateObject(state, accessToken, expiresAt, clientId, newInterval, newLastPoll);
+    }
+
+    /**
      * Wraps State, Access Token and Expires At to a JSON Object.
      * 
      * @return JSON Object representing the class information.
      */
     public JSONObject toJSONObject() {
-        JSONObject object = new JSONObject();
+        final JSONObject object = new JSONObject();
         object.put("state", state.name());
         if (accessToken != null) {
             object.put("access_token", accessToken);
             object.put("expires_in", expiresAt);
 
+        }
+        if (clientId != null) {
+            object.put("client_id", clientId);
+        }
+        if (interval != null) {
+            object.put("interval", interval);
+        }
+        if (lastPoll != null) {
+            object.put("last_poll", lastPoll);
         }
         return object;
     }
@@ -132,13 +236,27 @@ public class DeviceStateObject {
      * @param deviceStateObject JSON Object representing the class information.
      * @return DeviceStateObject constructed from JSON Object
      */
-    public static DeviceStateObject fromJSONObject(JSONObject deviceStateObject) {
+    public static DeviceStateObject fromJSONObject(final JSONObject deviceStateObject) {
         if (deviceStateObject == null) {
             throw new IllegalArgumentException("device state object must not be null");
         }
         return new DeviceStateObject(State.valueOf(deviceStateObject.getAsString("state")),
-                deviceStateObject.getAsString("access_token"), deviceStateObject.getAsNumber("expires_in") == null
-                        ? null : deviceStateObject.getAsNumber("expires_in").longValue());
+                deviceStateObject.getAsString("access_token"), getAsLong(deviceStateObject, "expires_in"),
+                deviceStateObject.getAsString("client_id"), getAsLong(deviceStateObject, "interval"),
+                getAsLong(deviceStateObject, "last_poll"));
+    }
+
+    /**
+     * Get a number member of a JSON Object as Long.
+     * 
+     * @param object JSON Object
+     * @param name member name
+     * @return member value, null if not present
+     */
+    @Nullable
+    private static Long getAsLong(@Nonnull final JSONObject object, @Nonnull final String name) {
+        final Number value = object.getAsNumber(name);
+        return value == null ? null : value.longValue();
     }
 
 }

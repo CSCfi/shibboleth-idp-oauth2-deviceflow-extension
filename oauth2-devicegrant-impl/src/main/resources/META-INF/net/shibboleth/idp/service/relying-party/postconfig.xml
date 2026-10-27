@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- See LICENSE.txt file in the root directory of this repository for the
+    copyright/license information. -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+    default-init-method="initialize" default-destroy-method="destroy">
+
+    <!-- OAuth2 Device Grant Profile Configurations. -->
+
+    <bean id="OAUTH2.DeviceGrant" parent="AbstractOIDCSSOProfile" lazy-init="true"
+        class="fi.csc.shibboleth.plugin.oauth2.config.impl.DefaultOAuth2DeviceGrantConfiguration"
+        p:deviceCodeLength="%{devicegrant.deviceCode.defaultLength:40}"
+        p:userCodeLength="%{devicegrant.userCode.defaultLength:8}"
+        p:deviceCodeLifetime="%{devicegrant.deviceCode.defaultLifetime:PT10M}"
+        p:pollingInterval="%{devicegrant.pollingInterval:PT5S}"
+        p:verificationURI="%{devicegrant.verificationURI:#{null}}" />
+
+    <!-- Metadata-driven variants. -->
+
+    <bean id="OAUTH2.DeviceGrant.MDDriven" parent="AbstractMDDrivenOIDCSSOProfile" lazy-init="true"
+            class="fi.csc.shibboleth.plugin.oauth2.config.impl.DefaultOAuth2DeviceGrantConfiguration">
+        <property name="deviceCodeLengthLookupStrategy">
+            <bean parent="shibboleth.MDDrivenIntProperty" p:propertyName="deviceCodeLength"
+                p:defaultValue="%{devicegrant.deviceCode.defaultLength:40}" />
+        </property>
+        <property name="userCodeLengthLookupStrategy">
+            <bean parent="shibboleth.MDDrivenIntProperty" p:propertyName="userCodeLength"
+                p:defaultValue="%{devicegrant.userCode.defaultLength:8}" />
+        </property>
+        <property name="deviceCodeLifetimeLookupStrategy">
+            <bean parent="shibboleth.MDDrivenDurationProperty" p:propertyName="deviceCodeLifetime"
+                p:defaultValue="%{devicegrant.deviceCode.defaultLifetime:PT10M}" />
+        </property>
+        <property name="pollingIntervalLookupStrategy">
+            <bean parent="shibboleth.MDDrivenDurationProperty" p:propertyName="pollingInterval"
+                p:defaultValue="%{devicegrant.pollingInterval:PT5S}" />
+        </property>
+        <property name="verificationURILookupStrategy">
+            <bean parent="shibboleth.MDDrivenStringProperty" p:propertyName="verificationURI"
+                p:defaultValue="%{devicegrant.verificationURI:#{null}}" />
+        </property>
+    </bean>
+
+    <!-- DPoP proof claims validator for OAUTH2.Token, htu also the OP token endpoint URL. -->
+    <bean id="devicegrant.DPoPProofClaimsValidator" lazy-init="true"
+        class="net.shibboleth.oidc.security.jwt.claims.impl.ChainingJWTClaimsValidator">
+        <property name="claimValidators">
+            <list>
+                <ref bean="ExpiryClaimsValidator" />
+                <ref bean="NotBeforeClaimsValidator" />
+                <bean class="net.shibboleth.oidc.security.jwt.claims.impl.IssuedAtClaimsValidator"
+                    p:clockSkew="%{idp.policy.clockSkew:PT1M}"
+                    p:messageLifetime="%{idp.policy.messageLifetime:PT1M}"
+                    p:requiredRule="true" />
+                <bean class="net.shibboleth.oidc.security.jwt.claims.impl.JWTIdentifierClaimsValidator"
+                    p:clockSkew="%{idp.policy.clockSkew:PT1M}"
+                    p:replayCache-ref="shibboleth.ReplayCache"
+                    p:replayCacheRecordLifetime="%{idp.oauth2.dpop.replayCacheLifetime:PT5M}"
+                    p:maxReplayCacheRecordLifetime="%{idp.oauth2.dpop.maxReplayCacheLifetime:PT5M}">
+                    <property name="replayCacheKeyCalculationStrategy">
+                        <bean class="net.shibboleth.oidc.security.jwt.claims.impl.CalculateSha256DigestForLongKeyFunction"/>
+                    </property>
+                </bean>
+                <bean class="net.shibboleth.oidc.security.jwt.claims.impl.ExactMatchClaimsValidator" p:claimName="htm">
+                    <property name="valueToMatchLookupStrategy">
+                        <bean parent="shibboleth.BiFunctions.Expression" c:expression="#custom.get().getMethod()"
+                            p:customObject-ref="shibboleth.HttpServletRequestSupplier"/>
+                    </property>
+                </bean>
+                <bean class="net.shibboleth.oidc.security.jwt.claims.impl.ExactMatchClaimsValidator" p:claimName="htu">
+                    <property name="valueToMatchLookupStrategy">
+                        <bean parent="shibboleth.BiFunctions.Expression"
+                            c:expression="#input2.getClaim('htu') == #custom.get().getRequestURL().toString().replace('/profile/oauth2/devicegrant/token', '%{devicegrant.token.endpointReplacement:/profile/oidc/token}') ? #input2.getClaim('htu') : #custom.get().getRequestURL().toString()"
+                            p:customObject-ref="shibboleth.HttpServletRequestSupplier"/>
+                    </property>
+                </bean>
+                <bean class="net.shibboleth.idp.plugin.oidc.op.security.jwt.claims.impl.DPoPProofNonceClaimsValidator"
+                    p:objectMapper-ref="shibboleth.oidc.JSONObjectMapper"
+                    c:sealer-ref="DefaultDPoPNonceSealer" />
+            </list>
+        </property>
+    </bean>
+
+</beans>

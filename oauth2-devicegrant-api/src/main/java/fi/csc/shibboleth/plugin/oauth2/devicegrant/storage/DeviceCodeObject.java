@@ -53,10 +53,11 @@ public class DeviceCodeObject {
      * 
      * @param deviceCode Device Code
      * @param clientID   Client ID of the relying party
-     * @param scope      Scope of the request @
+     * @param scope      Scope of the request
+     * @param acrValues  ACR values of the request
      */
-    public DeviceCodeObject(@Nonnull String deviceCode, @Nonnull ClientID clientID, @Nullable Scope scope,
-            @Nullable List<ACR> acrValues) {
+    public DeviceCodeObject(@Nonnull final String deviceCode, @Nonnull final ClientID clientID,
+            @Nullable final Scope scope, @Nullable final List<ACR> acrValues) {
         if (deviceCode == null || clientID == null) {
             throw new IllegalArgumentException("device code and client id must not be null");
         }
@@ -112,7 +113,7 @@ public class DeviceCodeObject {
      */
     @Nonnull
     public JSONObject toJSONObject() {
-        JSONObject object = new JSONObject();
+        final JSONObject object = new JSONObject();
         object.put("device_code", deviceCode);
         object.put("client_id", clientID.getValue());
         if (scope != null) {
@@ -130,12 +131,12 @@ public class DeviceCodeObject {
      * @param deviceCodeObject JSON Object representing the class information.
      * @return DeviceCodeObject constructed from JSON Object
      */
-    public static DeviceCodeObject fromJSONObject(JSONObject deviceCodeObject) {
+    public static DeviceCodeObject fromJSONObject(final JSONObject deviceCodeObject) {
         if (deviceCodeObject == null) {
             throw new IllegalArgumentException("device code object must not be null");
         }
         final List<ACR> acrValues = new ArrayList<ACR>();
-        String acrValuesRaw = deviceCodeObject.getAsString("acr_values");
+        final String acrValuesRaw = deviceCodeObject.getAsString("acr_values");
         if (acrValuesRaw != null && !acrValuesRaw.isBlank()) {
             Arrays.asList(acrValuesRaw.split(" ")).forEach(acr -> {
                 acrValues.add(new ACR(acr));

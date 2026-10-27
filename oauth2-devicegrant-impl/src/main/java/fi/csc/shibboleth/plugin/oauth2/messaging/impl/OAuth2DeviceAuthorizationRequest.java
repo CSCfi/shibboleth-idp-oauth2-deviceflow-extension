@@ -46,8 +46,6 @@ import com.nimbusds.oauth2.sdk.util.URLUtils;
 
 import com.nimbusds.openid.connect.sdk.claims.ACR;
 
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
-
 /**
  * Class implementing Authorization Request message as described in
  * https://tools.ietf.org/html/rfc8628#section-3.1.
@@ -71,9 +69,10 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
      *                   used).
      * @param clientAuth The client authentication, {@code null} if none.
      * @param scope      The scope of the access request, {@code null} if none.
+     * @param acrValues  The acr values of the access request, {@code null} if none.
      */
-    public OAuth2DeviceAuthorizationRequest(final URI uri, ClientAuthentication clientAuth, Scope scope,
-            List<ACR> acrValues) {
+    public OAuth2DeviceAuthorizationRequest(final URI uri, final ClientAuthentication clientAuth, final Scope scope,
+            final List<ACR> acrValues) {
         super(uri, clientAuth);
         this.scope = scope;
         this.acrValues = acrValues;
@@ -87,8 +86,10 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
      *                 the {@link #toHTTPRequest()} method will not be used).
      * @param clientID The client identifier, {@code null} if not specified.
      * @param scope    The scope of the access request, {@code null} if none.
+     * @param acrValues The acr values of the access request, {@code null} if none.
      */
-    public OAuth2DeviceAuthorizationRequest(final URI uri, ClientID clientID, Scope scope, List<ACR> acrValues) {
+    public OAuth2DeviceAuthorizationRequest(final URI uri, final ClientID clientID, final Scope scope,
+            final List<ACR> acrValues) {
         super(uri, clientID);
         this.scope = scope;
         this.acrValues = acrValues;
@@ -120,26 +121,28 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
     @Override
     @Nonnull
     public HTTPRequest toHTTPRequest() {
-        if (getEndpointURI() == null)
+        if (getEndpointURI() == null) {
             throw new SerializeException("The endpoint URI is not specified");
-        URL url;
+        }
+        final URL url;
         try {
             url = getEndpointURI().toURL();
-        } catch (MalformedURLException e) {
+        } catch (final MalformedURLException e) {
             throw new SerializeException(e.getMessage(), e);
         }
-        HTTPRequest httpRequest = new HTTPRequest(HTTPRequest.Method.POST, url);
+        final HTTPRequest httpRequest = new HTTPRequest(HTTPRequest.Method.POST, url);
         httpRequest.setEntityContentType(ContentType.APPLICATION_URLENCODED);
-        Map<String, List<String>> params = new HashMap<>();
+        final Map<String, List<String>> params = new HashMap<>();
         if (getClientID() != null) {
             // public client
             params.put("client_id", Collections.singletonList(getClientID().getValue()));
         }
         if (acrValues != null) {
-            StringBuilder sb = new StringBuilder();
-            for (ACR acr: acrValues) {
-                if (sb.length() > 0)
+            final StringBuilder sb = new StringBuilder();
+            for (final ACR acr: acrValues) {
+                if (sb.length() > 0) {
                     sb.append(' ');
+                }
                 sb.append(acr.toString());
             }
             params.put("acr_values", Collections.singletonList(sb.toString()));
@@ -154,6 +157,7 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
         return httpRequest;
     }
 
+    // Checkstyle: CyclomaticComplexity OFF
     /**
      * Parses request from http request.
      * 
@@ -164,41 +168,41 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
     public static OAuth2DeviceAuthorizationRequest parse(final HTTPRequest httpRequest) throws ParseException {
         httpRequest.ensureMethod(HTTPRequest.Method.POST);
         httpRequest.ensureEntityContentType(ContentType.APPLICATION_URLENCODED);
-        ClientAuthentication clientAuth;
+        final ClientAuthentication clientAuth;
         try {
             clientAuth = ClientAuthentication.parse(httpRequest);
-        } catch (ParseException e) {
+        } catch (final ParseException e) {
             throw new ParseException(e.getMessage(),
                     OAuth2Error.INVALID_REQUEST.appendDescription(": " + e.getMessage()));
         }
-        Map<String, List<String>> params = httpRequest.getQueryParameters();
+        final Map<String, List<String>> params = httpRequest.getQueryParameters();
         if (clientAuth instanceof ClientSecretBasic) {
             if (StringUtils.isNotBlank(MultivaluedMapUtils.getFirstValue(params, "client_assertion"))
                     || StringUtils.isNotBlank(MultivaluedMapUtils.getFirstValue(params, "client_assertion_type"))) {
-                String msg = "Multiple conflicting client authentication methods found: Basic and JWT assertion";
+                final String msg = "Multiple conflicting client authentication methods found: Basic and JWT assertion";
                 throw new ParseException(msg, OAuth2Error.INVALID_REQUEST.appendDescription(": " + msg));
             }
         }
-        String acrParameterValue = MultivaluedMapUtils.getFirstValue(params, "acr_values");
+        final String acrParameterValue = MultivaluedMapUtils.getFirstValue(params, "acr_values");
 
         List<ACR> acrValues = null;
         if (StringUtils.isNotBlank(acrParameterValue)) {
             acrValues = new LinkedList<>();
-            StringTokenizer st = new StringTokenizer(acrParameterValue, " ");
+            final StringTokenizer st = new StringTokenizer(acrParameterValue, " ");
             while (st.hasMoreTokens()) {
                 acrValues.add(new ACR(st.nextToken()));
             }
         }
 
-        String scopeValue = MultivaluedMapUtils.getFirstValue(params, "scope");
+        final String scopeValue = MultivaluedMapUtils.getFirstValue(params, "scope");
         Scope scope = null;
         if (scopeValue != null) {
             scope = Scope.parse(scopeValue);
         }
-        URI uri;
+        final URI uri;
         try {
             uri = httpRequest.getURL().toURI();
-        } catch (URISyntaxException e) {
+        } catch (final URISyntaxException e) {
             throw new ParseException(e.getMessage(), e);
         }
         if (clientAuth != null) {
@@ -211,5 +215,6 @@ public class OAuth2DeviceAuthorizationRequest extends AbstractOptionallyIdentifi
         }
         return new OAuth2DeviceAuthorizationRequest(uri, new ClientID(clientIDString), scope, acrValues);
     }
+    // Checkstyle: CyclomaticComplexity ON
 
 }

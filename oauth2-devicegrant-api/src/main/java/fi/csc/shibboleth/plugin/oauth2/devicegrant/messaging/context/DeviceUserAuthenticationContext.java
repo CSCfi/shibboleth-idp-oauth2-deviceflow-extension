@@ -58,7 +58,7 @@ public class DeviceUserAuthenticationContext extends BaseContext {
      * 
      * @param userApproved true if user has approved the request, otherwise false.
      */
-    public void setUserApproved(boolean userApproved) {
+    public void setUserApproved(final boolean userApproved) {
         this.userApproved = userApproved;
     }
 
@@ -77,7 +77,7 @@ public class DeviceUserAuthenticationContext extends BaseContext {
      * 
      * @param code The end-user verification code
      */
-    public void setUserCode(@Nonnull String code) {
+    public void setUserCode(@Nonnull final String code) {
         Constraint.isNotNull(code, "User code must not be null");
         userCode = code;
     }
@@ -94,9 +94,9 @@ public class DeviceUserAuthenticationContext extends BaseContext {
     /**
      * Set device code object matching user code.
      * 
-     * @param deviceCodeObject device code object matching user code.
+     * @param object device code object matching user code.
      */
-    public void setDeviceCodeObject(@Nonnull DeviceCodeObject object) {
+    public void setDeviceCodeObject(@Nonnull final DeviceCodeObject object) {
         Constraint.isNotNull(object, "Device code must not be null");
         deviceCodeObject = object;
     }

@@ -93,19 +93,19 @@ public class DeviceScopeLookupFunction extends AbstractInitializableComponent
 
     /** {@inheritDoc} */
     @Override
-    public Scope apply(@Nullable ProfileRequestContext input) {
+    public Scope apply(@Nullable final ProfileRequestContext input) {
         if (input == null) {
             return null;
         }
-        String userCode = userCodeLookupStrategy.apply(input.getInboundMessageContext());
+        final String userCode = userCodeLookupStrategy.apply(input.getInboundMessageContext());
         DeviceCodeObject obj = null;
         try {
             obj = deviceCodesCache.getDeviceCode(userCode);
-        } catch (IOException | ParseException e) {
+        } catch (final IOException | ParseException e) {
             log.error("Exception occurred while accessing Device Code Cache {}", e);
         }
         if (obj == null) {
-            log.warn("No device code matching user code {}", userCode);
+            log.warn("No device code matching the user code");
             return null;
         }
         return obj.getScope() == null ? new Scope() : obj.getScope();

@@ -17,24 +17,21 @@
 package fi.csc.shibboleth.plugin.oauth2.config;
 
 import java.time.Duration;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.opensaml.profile.context.ProfileRequestContext;
 
-import net.shibboleth.profile.config.ConditionalProfileConfiguration;
+import net.shibboleth.oidc.profile.config.OIDCSSOProviderConfiguration;
 import net.shibboleth.shared.annotation.ConfigurationSetting;
-import net.shibboleth.shared.annotation.constraint.NonnullElements;
 import net.shibboleth.shared.annotation.constraint.NotEmpty;
-import net.shibboleth.shared.annotation.constraint.NotLive;
 import net.shibboleth.shared.annotation.constraint.Positive;
 
 /**
  * Profile configuration for the OAuth2 Device Grant.
  */
-public interface OAuth2DeviceGrantConfiguration extends ConditionalProfileConfiguration {
+public interface OAuth2DeviceGrantConfiguration extends OIDCSSOProviderConfiguration {
 
     /** OAuth2 Device Grant URI. */
     @Nonnull
@@ -71,7 +68,7 @@ public interface OAuth2DeviceGrantConfiguration extends ConditionalProfileConfig
      *
      * @param profileRequestContext profile request context
      *
-     * @return device code length
+     * @return user code length
      */
     @ConfigurationSetting(name = "userCodeLength")
     @Positive
@@ -98,7 +95,7 @@ public interface OAuth2DeviceGrantConfiguration extends ConditionalProfileConfig
      * Get device code lifetime.
      *
      * <p>
-     * Defaults to 5 minutes.
+     * Defaults to 10 minutes.
      * </p>
      *
      * @param profileRequestContext profile request context
@@ -109,12 +106,15 @@ public interface OAuth2DeviceGrantConfiguration extends ConditionalProfileConfig
     @Positive
     @Nonnull
     Duration getDeviceCodeLifetime(@Nullable final ProfileRequestContext profileRequestContext);
-    
+
     /**
-     * 
-     * @param profileRequestContext
-     * @return
+     * Get the verification URI shown to the user.
+     *
+     * @param profileRequestContext profile request context
+     *
+     * @return verification URI, or null to build it from the request
      */
-    @Nonnull @NonnullElements @NotLive public Set<String> getAdditionalAudiencesForAccessToken(
-            @Nullable final ProfileRequestContext profileRequestContext);
+    @ConfigurationSetting(name = "verificationURI")
+    @Nullable @NotEmpty String getVerificationURI(@Nullable final ProfileRequestContext profileRequestContext);
+
 }

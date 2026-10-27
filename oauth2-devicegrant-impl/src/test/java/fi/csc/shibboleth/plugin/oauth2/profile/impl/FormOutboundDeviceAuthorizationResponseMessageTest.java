@@ -23,6 +23,7 @@ import org.opensaml.profile.action.EventIds;
 import org.opensaml.profile.context.ProfileRequestContext;
 import org.opensaml.storage.impl.MemoryStorageService;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.webflow.execution.RequestContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -37,6 +38,7 @@ import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodesCache;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationSuccessResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import net.minidev.json.parser.ParseException;
 import net.shibboleth.idp.profile.testing.ActionTestingSupport;
 import net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCAuthenticationResponseContext;
@@ -63,16 +65,19 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
 
     private DeviceCodesCache deviceCodesCache;
 
+    private MockHttpServletResponse httpResponse;
+
     @BeforeMethod
     protected void setUp() throws Exception {
         requestCtx = new RequestContextBuilder().buildRequestContext();
         profileRequestCtx = new WebflowRequestContextProfileRequestContextLookup().apply(requestCtx);
         profileRequestCtx.setInboundMessageContext(new MessageContext());
         profileRequestCtx.getInboundMessageContext()
-                .setMessage(new OAuth2DeviceAuthorizationRequest(null, new ClientID("clientID"), new Scope("device"), null));
+                .setMessage(new OAuth2DeviceAuthorizationRequest(null, new ClientID("clientID"), new Scope("device", "unregistered"), null));
         profileRequestCtx.getInboundMessageContext().addSubcontext(new OIDCMetadataContext());
         profileRequestCtx.setOutboundMessageContext(new MessageContext());
-        profileRequestCtx.getOutboundMessageContext().addSubcontext(new OIDCAuthenticationResponseContext());
+        ((OIDCAuthenticationResponseContext) profileRequestCtx.getOutboundMessageContext()
+                .addSubcontext(new OIDCAuthenticationResponseContext())).setScope(new Scope("device"));
         ((RelyingPartyContext) profileRequestCtx.addSubcontext(new RelyingPartyContext(), true))
                 .setProfileConfig((new DefaultOAuth2DeviceGrantConfiguration()));
         ((RelyingPartyContext) profileRequestCtx.getSubcontext(RelyingPartyContext.class))
@@ -85,9 +90,16 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
         deviceCodesCache.initialize();
         action = new FormOutboundDeviceAuthorizationResponseMessage();
         MockHttpServletRequest httpRequest = new MockHttpServletRequest();
+        httpRequest.setContextPath("/idp");
         action.setHttpServletRequestSupplier(new NonnullSupplier<>() {
             public HttpServletRequest get() {
                 return httpRequest;
+            }
+        });
+        httpResponse = new MockHttpServletResponse();
+        action.setHttpServletResponseSupplier(new NonnullSupplier<>() {
+            public HttpServletResponse get() {
+                return httpResponse;
             }
         });
         action.setDeviceCodesCache(deviceCodesCache);
@@ -117,6 +129,33 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
         Assert.assertEquals(resp.getDeviceCode(), object.getDeviceCode());
         Assert.assertEquals("clientID", object.getClientID().getValue());
         Assert.assertEquals("device", object.getScope().toString());
+        Assert.assertEquals(httpResponse.getHeaders("Cache-Control").size(), 1);
+        Assert.assertEquals(httpResponse.getHeader("Cache-Control"), "no-cache, no-store");
+        Assert.assertEquals(httpResponse.getHeaders("Pragma").size(), 1);
+        Assert.assertEquals(httpResponse.getHeader("Pragma"), "no-cache");
+    }
+
+    @Test
+    public void testUserCode() throws IOException, ParseException {
+        ActionTestingSupport.assertProceedEvent(action.execute(requestCtx));
+        OAuth2DeviceAuthorizationSuccessResponse resp = (OAuth2DeviceAuthorizationSuccessResponse) profileRequestCtx
+                .getOutboundMessageContext().getMessage();
+        Assert.assertEquals(resp.getUserCode().length(), 8);
+        Assert.assertTrue(resp.getDeviceCode().matches("[0-9a-f]{40}"));
+        Assert.assertTrue(resp.getUserCode().chars().allMatch(c -> UserCodeSupport.CHARACTER_SET.indexOf(c) >= 0));
+    }
+
+    @Test
+    public void testConfiguredVerificationURI() throws IOException, ParseException {
+        DefaultOAuth2DeviceGrantConfiguration config = new DefaultOAuth2DeviceGrantConfiguration();
+        config.setVerificationURI("https://idp.example.org/device");
+        ((RelyingPartyContext) profileRequestCtx.getSubcontext(RelyingPartyContext.class)).setProfileConfig(config);
+        ActionTestingSupport.assertProceedEvent(action.execute(requestCtx));
+        OAuth2DeviceAuthorizationSuccessResponse resp = (OAuth2DeviceAuthorizationSuccessResponse) profileRequestCtx
+                .getOutboundMessageContext().getMessage();
+        Assert.assertEquals("https://idp.example.org/device", resp.getVerificationURI().toString());
+        Assert.assertEquals("https://idp.example.org/device?user_code=" + resp.getUserCode(),
+                resp.getVerificationURIComplete().toString());
     }
 
     @Test
@@ -126,6 +165,11 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
         action.setHttpServletRequestSupplier(new NonnullSupplier<>() {
             public HttpServletRequest get() {
                 return httpRequest;
+            }
+        });
+        action.setHttpServletResponseSupplier(new NonnullSupplier<>() {
+            public HttpServletResponse get() {
+                return httpResponse;
             }
         });
         action.setAuthenticationEndpoint("/endpoint");
@@ -145,6 +189,20 @@ public class FormOutboundDeviceAuthorizationResponseMessageTest {
         action.setDeviceCodesCache(deviceCodesCache);
         action.initialize();
         ActionTestingSupport.assertEvent(action.execute(requestCtx), EventIds.INVALID_PROFILE_CTX);
+    }
+
+    @Test
+    public void testNoHttpServletResponse() throws ComponentInitializationException {
+        action = new FormOutboundDeviceAuthorizationResponseMessage();
+        MockHttpServletRequest httpRequest = new MockHttpServletRequest();
+        action.setHttpServletRequestSupplier(new NonnullSupplier<>() {
+            public HttpServletRequest get() {
+                return httpRequest;
+            }
+        });
+        action.setDeviceCodesCache(deviceCodesCache);
+        action.initialize();
+        ActionTestingSupport.assertEvent(action.execute(requestCtx), IdPEventIds.INVALID_PROFILE_CONFIG);
     }
 
     @Test

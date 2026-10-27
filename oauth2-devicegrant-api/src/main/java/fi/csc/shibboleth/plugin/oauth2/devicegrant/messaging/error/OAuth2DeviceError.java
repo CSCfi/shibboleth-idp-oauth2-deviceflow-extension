@@ -19,13 +19,17 @@ package fi.csc.shibboleth.plugin.oauth2.devicegrant.messaging.error;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 
+/**
+ * Device grant error objects.
+ */
 public final class OAuth2DeviceError {
 
     /**
      * The authorization request is still pending as the end user hasn't yet completed the user interaction steps.
      */
     public static final ErrorObject AUTHORIZATION_PENDING = new ErrorObject("authorization_pending",
-            "The authorization request is still pending as the end user hasn't yet completed the user interaction steps",
+            "The authorization request is still pending as the end user hasn't yet completed the user "
+                    + "interaction steps",
             HTTPResponse.SC_BAD_REQUEST);
 
     /**
@@ -34,5 +38,23 @@ public final class OAuth2DeviceError {
     public static final ErrorObject EXPIRED_TOKEN = new ErrorObject("expired_token",
             "The device code has expired and the device authorization sessio has concluded",
             HTTPResponse.SC_BAD_REQUEST);
+
+    /**
+     * The authorization request is still pending and polling should continue, but the interval must be increased by
+     * 5 seconds for this and all subsequent requests.
+     */
+    public static final ErrorObject SLOW_DOWN = new ErrorObject("slow_down",
+            "The authorization request is still pending, increase the polling interval by 5 seconds",
+            HTTPResponse.SC_BAD_REQUEST);
+
+    /**
+     * The authorization request was denied.
+     */
+    public static final ErrorObject ACCESS_DENIED = new ErrorObject("access_denied",
+            "Access denied by resource owner or authorization server", HTTPResponse.SC_BAD_REQUEST);
+
+    /** Constructor. */
+    private OAuth2DeviceError() {
+    }
 
 }

@@ -17,6 +17,7 @@
 package fi.csc.shibboleth.plugin.oauth2.devicegrant.storage;
 
 import java.io.IOException;
+import org.opensaml.storage.VersionMismatchException;
 import org.opensaml.storage.impl.client.ClientStorageService;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
@@ -25,6 +26,7 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 
 import net.minidev.json.parser.ParseException;
+import net.shibboleth.shared.collection.Pair;
 import net.shibboleth.shared.component.ComponentInitializationException;
 
 import org.testng.annotations.BeforeMethod;
@@ -112,16 +114,57 @@ public class DeviceCodesCacheTest {
 
     @Test
     public void testUpdate() throws ComponentInitializationException, IOException, ParseException {
-        Assert.assertTrue(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200));
-        Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getState(),
-                DeviceStateObject.State.PENDING);
-        DeviceStateObject deviceStateObject =
-                new DeviceStateObject(DeviceStateObject.State.APPROVED, "accessToken", 171717171L);
-        Assert.assertTrue(deviceCodesCache.updateDeviceState(deviceCodeObject.getDeviceCode(), deviceStateObject, 200));
-        Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getState(),
-                DeviceStateObject.State.APPROVED);
-        Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getAccessToken(),
-                "accessToken");
+        Assert.assertTrue(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200000, 5000L));
+        final DeviceStateObject pending = deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode());
+        Assert.assertEquals(pending.getState(), DeviceStateObject.State.PENDING);
+        Assert.assertEquals(pending.getClientId(), deviceCodeObject.getClientID().getValue());
+        Assert.assertEquals(pending.getInterval(), Long.valueOf(5000));
+        final Long expiration = storageService.read(DeviceCodesCache.CONTEXT_STATE,
+                deviceCodeObject.getDeviceCode()).getExpiration();
+        DeviceStateObject deviceStateObject = pending.withState(DeviceStateObject.State.APPROVED, "accessToken",
+                171717171L);
+        Assert.assertTrue(deviceCodesCache.updateDeviceState(deviceCodeObject.getDeviceCode(), deviceStateObject));
+        final DeviceStateObject approved = deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode());
+        Assert.assertEquals(approved.getState(), DeviceStateObject.State.APPROVED);
+        Assert.assertEquals(approved.getAccessToken(), "accessToken");
+        Assert.assertEquals(approved.getClientId(), deviceCodeObject.getClientID().getValue());
+        Assert.assertEquals(storageService.read(DeviceCodesCache.CONTEXT_STATE,
+                deviceCodeObject.getDeviceCode()).getExpiration(), expiration);
+    }
+
+    @Test
+    public void testUpdateMissing() throws ComponentInitializationException, IOException, ParseException {
+        Assert.assertFalse(deviceCodesCache.updateDeviceState("unknown",
+                new DeviceStateObject(DeviceStateObject.State.DENIED)));
+    }
+
+    @Test
+    public void testVersionedUpdate() throws IOException, ParseException, VersionMismatchException {
+        Assert.assertTrue(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200000, 5000L));
+        final Pair<Long, DeviceStateObject> pending =
+                deviceCodesCache.getVersionedDeviceState(deviceCodeObject.getDeviceCode());
+        Assert.assertEquals(pending.getSecond().getState(), DeviceStateObject.State.PENDING);
+        Assert.assertTrue(deviceCodesCache.updateDeviceState(deviceCodeObject.getDeviceCode(),
+                pending.getSecond().withPoll(1000L, 5000L), pending.getFirst()));
+        Assert.assertEquals(deviceCodesCache.getDeviceState(deviceCodeObject.getDeviceCode()).getLastPoll(),
+                Long.valueOf(1000));
+    }
+
+    @Test(expectedExceptions = VersionMismatchException.class)
+    public void testVersionedUpdateAfterApproval() throws IOException, ParseException, VersionMismatchException {
+        Assert.assertTrue(deviceCodesCache.storeDeviceCode(deviceCodeObject, userCode, 200000, 5000L));
+        final Pair<Long, DeviceStateObject> pending =
+                deviceCodesCache.getVersionedDeviceState(deviceCodeObject.getDeviceCode());
+        Assert.assertTrue(deviceCodesCache.updateDeviceState(deviceCodeObject.getDeviceCode(),
+                pending.getSecond().withState(DeviceStateObject.State.APPROVED, "accessToken", 171717171L)));
+        deviceCodesCache.updateDeviceState(deviceCodeObject.getDeviceCode(),
+                pending.getSecond().withPoll(1000L, 5000L), pending.getFirst());
+    }
+
+    @Test
+    public void testVersionedUpdateMissing() throws IOException, VersionMismatchException {
+        Assert.assertFalse(deviceCodesCache.updateDeviceState("unknown",
+                new DeviceStateObject(DeviceStateObject.State.PENDING), 1L));
     }
 
 }

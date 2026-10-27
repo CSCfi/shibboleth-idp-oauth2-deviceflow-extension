@@ -17,10 +17,6 @@
 package fi.csc.shibboleth.plugin.oauth2.config.impl;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
@@ -29,39 +25,21 @@ import javax.annotation.Nullable;
 import org.opensaml.profile.context.ProfileRequestContext;
 
 import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
-import net.shibboleth.oidc.profile.oauth2.config.OAuth2AccessTokenProducingProfileConfiguration;
-import net.shibboleth.profile.config.OverriddenIssuerProfileConfiguration;
-import net.shibboleth.shared.annotation.constraint.NonnullElements;
+import net.shibboleth.oidc.profile.config.impl.AbstractOIDCSSOConfiguration;
 import net.shibboleth.shared.annotation.constraint.NotEmpty;
-import net.shibboleth.shared.annotation.constraint.NotLive;
 import net.shibboleth.shared.annotation.constraint.Positive;
-import net.shibboleth.shared.collection.CollectionSupport;
 import net.shibboleth.shared.logic.Constraint;
 import net.shibboleth.shared.logic.FunctionSupport;
 import net.shibboleth.shared.primitive.StringSupport;
 
-public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientAuthenticableProfileConfiguration
-        implements OAuth2DeviceGrantConfiguration, OAuth2AccessTokenProducingProfileConfiguration,
-        OverriddenIssuerProfileConfiguration {
+/**
+ * Default profile configuration for the OAuth2 Device Grant.
+ */
+public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOIDCSSOConfiguration
+        implements OAuth2DeviceGrantConfiguration {
 
-    /** Lookup function to override issuer value. */
-    @Nonnull
-    private Function<ProfileRequestContext, String> issuerLookupStrategy;
-
-    /** Lookup function to supply access token lifetime. */
-    @Nonnull
-    private Function<ProfileRequestContext, Duration> accessTokenLifetimeLookupStrategy;
-
-    /** Lookup function to supply access token type. */
-    @Nonnull
-    private Function<ProfileRequestContext, String> accessTokenTypeLookupStrategy;
-
-    /**
-     * Lookup function to supply strategy bi-function for manipulating access token
-     * claims set.
-     */
-    @Nonnull
-    private Function<ProfileRequestContext, BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>>> accessTokenClaimsSetManipulationStrategyLookupStrategy;
+    /** OAuth2 Device Grant profile counter name. */
+    @Nonnull @NotEmpty public static final String PROFILE_COUNTER = "net.shibboleth.idp.profiles.oauth2.devicegrant";
 
     /** Lookup function to supply device code lifetime. */
     @Nonnull
@@ -79,114 +57,28 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
     @Nonnull
     private Function<ProfileRequestContext, Duration> pollingIntervalLookupStrategy;
     
-    /** Lookup function to supply additional audiences for ID token. */
-    @Nonnull private Function<ProfileRequestContext,Set<String>> assertionAudiencesLookupStrategy;
+    /** Lookup function to supply verification URI. */
+    @Nonnull private Function<ProfileRequestContext, String> verificationURILookupStrategy;
 
     /**
      * Constructor.
      */
     public DefaultOAuth2DeviceGrantConfiguration() {
-        super(OAuth2DeviceGrantConfiguration.PROFILE_ID);
-        issuerLookupStrategy = FunctionSupport.constant(null);
-        accessTokenLifetimeLookupStrategy = FunctionSupport.constant(Duration.ofMinutes(10));
-        accessTokenTypeLookupStrategy = FunctionSupport.constant(null);
-        accessTokenClaimsSetManipulationStrategyLookupStrategy = FunctionSupport.constant(null);
+        this(OAuth2DeviceGrantConfiguration.PROFILE_ID);
+    }
+
+    /**
+     * Creates a new configuration instance.
+     *
+     * @param profileId unique profile identifier
+     */
+    public DefaultOAuth2DeviceGrantConfiguration(@Nonnull @NotEmpty final String profileId) {
+        super(profileId);
         deviceCodeLifetimeLookupStrategy = FunctionSupport.constant(Duration.ofMinutes(10));
-        deviceCodeLengthLookupStrategy = FunctionSupport.constant(Integer.valueOf(16));
+        deviceCodeLengthLookupStrategy = FunctionSupport.constant(Integer.valueOf(40));
         userCodeLengthLookupStrategy = FunctionSupport.constant(Integer.valueOf(8));
         pollingIntervalLookupStrategy = FunctionSupport.constant(Duration.ofSeconds(5));
-        assertionAudiencesLookupStrategy = FunctionSupport.constant(null);
-    }
-
-    @Override
-    @Positive
-    @Nonnull
-    public Duration getAccessTokenLifetime(@Nullable final ProfileRequestContext profileRequestContext) {
-        final Duration lifetime = accessTokenLifetimeLookupStrategy.apply(profileRequestContext);
-
-        Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
-                "Access token lifetime must be greater than 0");
-        return lifetime;
-    }
-
-    /**
-     * Set the lifetime of an access token.
-     * 
-     * @param lifetime lifetime of an access token
-     */
-    public void setAccessTokenLifetime(@Positive @Nonnull final Duration lifetime) {
-        Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
-                "Access token lifetime must be greater than 0");
-
-        accessTokenLifetimeLookupStrategy = FunctionSupport.constant(lifetime);
-    }
-
-    /**
-     * Set a lookup strategy for the access token lifetime.
-     *
-     * @param strategy lookup strategy
-     */
-    public void setAccessTokenLifetimeLookupStrategy(
-            @Nullable final Function<ProfileRequestContext, Duration> strategy) {
-        accessTokenLifetimeLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
-    }
-
-    @Override
-    @Nullable
-    @NotEmpty
-    public String getAccessTokenType(@Nullable final ProfileRequestContext profileRequestContext) {
-        return accessTokenTypeLookupStrategy.apply(profileRequestContext);
-    }
-
-    /**
-     * Set access token type.
-     * 
-     * @param type token type, or null for unspecified/opaque
-     * 
-     */
-    public void setAccessTokenType(@Nullable @NotEmpty final String type) {
-        accessTokenTypeLookupStrategy = FunctionSupport.constant(StringSupport.trimOrNull(type));
-    }
-
-    /**
-     * Set lookup strategy for access token type.
-     * 
-     * @param strategy lookup strategy
-     * 
-     */
-    public void setAccessTokenTypeLookupStrategy(@Nonnull final Function<ProfileRequestContext, String> strategy) {
-        accessTokenTypeLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
-    }
-
-    @Override
-    @Nonnull
-    public BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>> getAccessTokenClaimsSetManipulationStrategy(
-            @Nullable final ProfileRequestContext profileRequestContext) {
-        return accessTokenClaimsSetManipulationStrategyLookupStrategy.apply(profileRequestContext);
-    }
-
-    /**
-     * Set the bi-function for manipulating access token claims set.
-     * 
-     * @param strategy bi-function for manipulating access token claims set
-     * 
-     */
-    public void setAccessTokenClaimsSetManipulationStrategy(
-            @Nullable final BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>> strategy) {
-        accessTokenClaimsSetManipulationStrategyLookupStrategy = FunctionSupport.constant(strategy);
-    }
-
-    /**
-     * Set a lookup strategy for the bi-function for manipulating access token
-     * claims set.
-     *
-     * @param strategy lookup strategy
-     * 
-     */
-    public void setAccessTokenClaimsSetManipulationStrategyLookupStrategy(
-            @Nonnull final Function<ProfileRequestContext, BiFunction<ProfileRequestContext, Map<String, Object>, Map<String, Object>>> strategy) {
-        accessTokenClaimsSetManipulationStrategyLookupStrategy = Constraint.isNotNull(strategy,
-                "Lookup strategy cannot be null");
+        verificationURILookupStrategy = FunctionSupport.constant(null);
     }
 
     @Override
@@ -196,7 +88,7 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
         final Duration lifetime = deviceCodeLifetimeLookupStrategy.apply(profileRequestContext);
 
         Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
-                "Access token lifetime must be greater than 0");
+                "Device code lifetime must be greater than 0");
         return lifetime;
     }
 
@@ -209,7 +101,7 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
         Constraint.isTrue(lifetime != null && !lifetime.isZero() && !lifetime.isNegative(),
                 "Device code lifetime must be greater than 0");
 
-        accessTokenLifetimeLookupStrategy = FunctionSupport.constant(lifetime);
+        deviceCodeLifetimeLookupStrategy = FunctionSupport.constant(lifetime);
     }
 
     /**
@@ -219,7 +111,7 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
      */
     public void setDeviceCodeLifetimeLookupStrategy(
             @Nullable final Function<ProfileRequestContext, Duration> strategy) {
-        accessTokenLifetimeLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
+        deviceCodeLifetimeLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
     }
 
     @Override
@@ -228,7 +120,8 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
     public Integer getDeviceCodeLength(@Nullable final ProfileRequestContext profileRequestContext) {
         final Integer codeLength = deviceCodeLengthLookupStrategy.apply(profileRequestContext);
 
-        Constraint.isTrue(codeLength != null && codeLength > 9, "Device code length must be at least 10");
+        Constraint.isTrue(codeLength != null && codeLength >= 32 && codeLength <= 64,
+                "Device code length must be from 32 to 64");
         return codeLength;
     }
 
@@ -238,7 +131,8 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
      * @param codeLength length of the device code.
      */
     public void setDeviceCodeLength(@Positive @Nonnull final Integer codeLength) {
-        Constraint.isTrue(codeLength != null && codeLength > 9, "Device code length must be at least 10");
+        Constraint.isTrue(codeLength != null && codeLength >= 32 && codeLength <= 64,
+                "Device code length must be from 32 to 64");
 
         deviceCodeLengthLookupStrategy = FunctionSupport.constant(codeLength);
     }
@@ -258,7 +152,7 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
     public Integer getUserCodeLength(@Nullable final ProfileRequestContext profileRequestContext) {
         final Integer codeLength = userCodeLengthLookupStrategy.apply(profileRequestContext);
 
-        Constraint.isTrue(codeLength != null && codeLength > 5, "Device code length must be at least 6");
+        Constraint.isTrue(codeLength != null && codeLength > 5, "User code length must be at least 6");
         return codeLength;
     }
 
@@ -279,7 +173,7 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
      * @param strategy lookup strategy
      */
     public void setUserCodeLengthLookupStrategy(@Nullable final Function<ProfileRequestContext, Integer> strategy) {
-        deviceCodeLengthLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
+        userCodeLengthLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
     }
 
     @Override
@@ -316,67 +210,26 @@ public class DefaultOAuth2DeviceGrantConfiguration extends AbstractOAuth2ClientA
 
     /** {@inheritDoc} */
     @Override
-    @Nullable
-    @NotEmpty
-    public String getIssuer(@Nullable final ProfileRequestContext profileRequestContext) {
-        return issuerLookupStrategy.apply(profileRequestContext);
+    @Nullable @NotEmpty public String getVerificationURI(@Nullable final ProfileRequestContext profileRequestContext) {
+        return verificationURILookupStrategy.apply(profileRequestContext);
     }
 
     /**
-     * Set overridden issuer value.
-     * 
-     * @param issuer issuer value
+     * Set the verification URI.
+     *
+     * @param uri verification URI
      */
-    public void setIssuer(@Nullable @NotEmpty final String issuer) {
-        issuerLookupStrategy = FunctionSupport.constant(issuer);
+    public void setVerificationURI(@Nullable @NotEmpty final String uri) {
+        verificationURILookupStrategy = FunctionSupport.constant(StringSupport.trimOrNull(uri));
     }
 
     /**
-     * Sets lookup strategy for overridden issuer value.
-     * 
+     * Set a lookup strategy for the verification URI.
+     *
      * @param strategy lookup strategy
      */
-    public void setIssuerLookupStrategy(@Nonnull final Function<ProfileRequestContext, String> strategy) {
-        issuerLookupStrategy = Constraint.isNotNull(strategy, "Issuer lookup strategy cannot be null");
+    public void setVerificationURILookupStrategy(@Nonnull final Function<ProfileRequestContext, String> strategy) {
+        verificationURILookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
     }
-
-    /** {@inheritDoc} */
-   @Override
-   @Nonnull @NonnullElements @NotLive public Set<String> getAdditionalAudiencesForAccessToken(
-           @Nullable final ProfileRequestContext profileRequestContext) {
-       
-       final Set<String> audiences = assertionAudiencesLookupStrategy.apply(profileRequestContext);
-       if (audiences != null) {
-           return CollectionSupport.copyToSet(audiences);
-       }
-       return CollectionSupport.emptySet();
-   }
-
-   /**
-    * Set the set of audiences, in addition to the relying party(ies) to which the IdP is issuing the ID Token, with
-    * which the token may be shared.
-    * 
-    * @param audiences the additional audiences
-    */
-   public void setAdditionalAudiencesForAccessToken(@Nullable @NonnullElements final Collection<String> audiences) {
-
-       if (audiences == null || audiences.isEmpty()) {
-           assertionAudiencesLookupStrategy = FunctionSupport.constant(null);
-       } else {
-           assertionAudiencesLookupStrategy = FunctionSupport.constant(
-                   Set.copyOf(StringSupport.normalizeStringCollection(audiences)));
-       }
-   }
-
-   /**
-    * Set a lookup strategy for the set of audiences, in addition to the relying party(ies) to which the IdP
-    * is issuing the ID Token, with which the token may be shared.
-    *
-    * @param strategy  lookup strategy
-    */
-   public void setAdditionalAudiencesForIdTokenLookupStrategy(
-           @Nonnull final Function<ProfileRequestContext,Set<String>> strategy) {
-       assertionAudiencesLookupStrategy = Constraint.isNotNull(strategy, "Lookup strategy cannot be null");
-   }
 
 }

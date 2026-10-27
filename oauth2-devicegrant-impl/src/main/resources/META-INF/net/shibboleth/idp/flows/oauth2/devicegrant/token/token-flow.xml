@@ -1,24 +1,267 @@
-<?xml version="1.0"?>
-<flow xmlns="http://www.springframework.org/schema/webflow" 
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-      xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd" 
-      parent="oauth2/devicegrant/abstract-api">
+<!--
+    Copy of the OpenID Connect Provider plugin 4.3.0 oidc/token flow with the device code grant added.
 
-  <action-state id="InitializeMandatoryContexts">
-    <evaluate expression="InitializeProfileRequestContext"/>
-    <evaluate expression="PopulateMetricContext"/>
-    <evaluate expression="FlowStartPopulateAuditContext"/>
-    <evaluate expression="InitializeOutboundMessageContext"/>
-    <evaluate expression="'proceed'"/>
-    <transition on="proceed" to="DecodeMessage"/>
-  </action-state>
+    ADDED
+      DeviceCodeGrantProcessing state   the device code grant
+      the device code grant branch of BranchOnGrantType
 
-  <action-state id="ResumeAfterAuthentication">
-    <evaluate expression="ValidateExpectedGrantType"/>
-    <evaluate expression="'proceed'"/>
-    <transition on="proceed" to="BuildResponse"/>
-  </action-state>
+    REPLACED
+      IssueIDTokenCondition             also for DeviceCodeGrantCondition
+      BuildErrorResponseFromEvent       default errors devicegrant.DefaultTokenMappedErrors
+-->
+<flow xmlns="http://www.springframework.org/schema/webflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/webflow http://www.springframework.org/schema/webflow/spring-webflow.xsd"
+    parent="oidc/abstract-api, oidc/metadata-lookup, oidc/consent-lookup">
 
-  <bean-import resource="token-beans.xml"/>
+    <action-state id="InitializeMandatoryContexts">
+        <evaluate expression="InitializeProfileRequestContext" />
+        <evaluate expression="PopulateMetricContext" />
+        <evaluate expression="FlowStartPopulateAuditContext" />
+        <evaluate expression="InitializeOutboundMessageContext" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="DecodeMessage"/>
+    </action-state>
+
+    <action-state id="SelectConfiguration">
+        <evaluate expression="SelectRelyingPartyConfiguration" />
+        <evaluate expression="SelectProfileConfiguration" />
+        <evaluate expression="PostLookupPopulateAuditContext" />
+        <evaluate expression="PopulateInboundInterceptContext" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="CheckInboundInterceptContext" />
+    </action-state>
+
+    <!-- Authentication subflow happens here. -->
+
+    <action-state id="ResumeAfterAuthentication">
+        <evaluate expression="ValidateClientIDAgainstPolicy" />
+        <evaluate expression="ValidateGrantType" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="BranchOnGrantType" />
+    </action-state>
+
+    <!-- REPLACED. ADDED the device code grant branch. -->
+    <decision-state id="BranchOnGrantType">
+        <if test="DeviceCodeGrantCondition.test(opensamlProfileRequestContext)"
+            then="DeviceCodeGrantProcessing" />
+        <if test="NotClientCredentialsGrantCondition.test(opensamlProfileRequestContext)"
+            then="TraditionalGrantProcessing"
+            else="ClientCredentialsGrantProcessing" />
+    </decision-state>
+
+    <!-- ADDED. The device code grant, the steps of TraditionalGrantProcessing without PKCE and redirect URI. -->
+    <action-state id="DeviceCodeGrantProcessing">
+        <evaluate expression="ValidateDeviceCodeGrant" />
+        <evaluate expression="SetRequestedClaimsToResponseContext" />
+        <evaluate expression="SetAuthenticationContextClassReferenceFromAuthzCodeToResponseContext" />
+        <evaluate expression="SetAuthenticationTimeFromAuthzCodeToResponseContext" />
+        <evaluate expression="SetTokenDeliveryAttributesFromTokenToResponseContext" />
+        <evaluate expression="SetConsentToResponseContext" />
+        <evaluate expression="InitializeSubjectContext" />
+        <evaluate expression="SetSubjectFromAuthzCodeToResponseContext" />
+        <evaluate expression="SetSectorIdentifierForAttributeResolution" />
+        <evaluate expression="ValidateScope" />
+        <evaluate expression="ValidateAudience" />
+        <evaluate expression="SetSessionIdFromAuthzCodeToResponseContext" />
+        <evaluate expression="'proceed'" />
+
+        <transition on="proceed" to="CheckTraditionalGrantForAudience" />
+    </action-state>
+
+    <!-- These steps apply to grants that rely on the authorization endpoint to "prime" the token request. -->
+    <action-state id="TraditionalGrantProcessing">
+        <evaluate expression="ValidateGrant" />
+        <evaluate expression="ValidatePKCE" />
+        <evaluate expression="ValidateRedirectURI" />
+        <evaluate expression="SetRequestedClaimsToResponseContext" />
+        <evaluate expression="SetAuthenticationContextClassReferenceFromAuthzCodeToResponseContext" />
+        <evaluate expression="SetAuthenticationTimeFromAuthzCodeToResponseContext" />
+        <evaluate expression="SetTokenDeliveryAttributesFromTokenToResponseContext" />
+        <evaluate expression="SetConsentToResponseContext" />
+        <evaluate expression="InitializeSubjectContext" />
+        <evaluate expression="SetSubjectFromAuthzCodeToResponseContext" />
+        <evaluate expression="SetSectorIdentifierForAttributeResolution" />
+        <evaluate expression="ValidateScope" />
+        <evaluate expression="ValidateAudience" />
+        <evaluate expression="SetSessionIdFromAuthzCodeToResponseContext" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="CheckTraditionalGrantForAudience" />
+    </action-state>
+
+    <!-- For standard grants, audience may or may not be a factor. -->
+    <decision-state id="CheckTraditionalGrantForAudience">
+        <if test="opensamlProfileRequestContext.ensureOutboundMessageContext().ensureSubcontext(T(net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCAuthenticationResponseContext)).getAudience().isEmpty()"
+            then="CheckAttributeResolutionForClient"
+            else="LookupAudienceMetadata" />
+    </decision-state>
+
+    <!-- These steps apply to grants that are self-contained on this endpoint. -->
+    <action-state id="ClientCredentialsGrantProcessing">
+        <evaluate expression="ValidateGrant" />
+        <evaluate expression="SetAuthenticationContextClassReferenceToResponseContext" />
+        <evaluate expression="SetAuthenticationTimeToResponseContext" />
+        <evaluate expression="SetSubjectFromSubjectContextToResponseContext" />
+        <evaluate expression="SetSectorIdentifierForAttributeResolution" />
+        <evaluate expression="ValidateScope" />
+        <evaluate expression="ValidateAudience" />
+        <evaluate expression="SetSessionIdToResponseContext" />
+        
+        <evaluate expression="'proceed'" />
+        <transition on="proceed" to="LookupAudienceMetadata" />
+    </action-state>
+
+    <!-- May need to add a second Relying Party for the primary resource/audience. -->
+
+    <action-state id="LookupAudienceMetadata">
+        <evaluate expression="AudienceOIDCMetadataLookup" />
+        <evaluate expression="InitializeAudienceRelyingPartyContext" />
+        <evaluate expression="'proceed'" />
+    
+        <transition on="proceed" to="CheckIfAudienceFoundFromClientInformationService" />
+    </action-state>
+    
+    <decision-state id="CheckIfAudienceFoundFromClientInformationService">
+        <if test="opensamlProfileRequestContext.ensureOutboundMessageContext().containsSubcontext(T(net.shibboleth.oidc.metadata.context.OIDCMetadataContext))"
+            then="SelectAudienceProfileConfiguration" else="LookupAudienceSAMLMetadata" />
+    </decision-state>
+    
+    <action-state id="LookupAudienceSAMLMetadata">
+        <evaluate expression="AudienceSAMLProtocolAndRole" />
+        <evaluate expression="SetAudienceEntityIdToSAMLPeerEntityContext" />
+        <evaluate expression="AudienceSAMLMetadataLookup" />
+        <evaluate expression="'proceed'" />
+
+        <transition on="proceed" to="CheckIfAudienceFoundFromSAMLMetadata" />
+    </action-state>
+
+    <decision-state id="CheckIfAudienceFoundFromSAMLMetadata">
+        <if test="opensamlProfileRequestContext.ensureOutboundMessageContext().containsSubcontext(T(org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext)) and opensamlProfileRequestContext.ensureOutboundMessageContext().ensureSubcontext(T(org.opensaml.saml.common.messaging.context.SAMLPeerEntityContext)).containsSubcontext(T(org.opensaml.saml.common.messaging.context.SAMLMetadataContext))"
+            then="PopulateAudienceOIDCMetadataContextFromSAML"
+            else="SelectAudienceProfileConfiguration" />
+    </decision-state>
+    
+    <action-state id="PopulateAudienceOIDCMetadataContextFromSAML">
+        <evaluate expression="PopulateAudienceOIDCMetadataContext" />
+        <evaluate expression="InitializeAudienceRelyingPartyContextFromSAMLPeer" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="SelectAudienceProfileConfiguration" />
+    </action-state>
+
+    <action-state id="SelectAudienceProfileConfiguration">
+        <evaluate expression="SelectAudienceRelyingPartyConfiguration" />
+        <evaluate expression="SelectAudienceProfileConfiguration" />
+        <evaluate expression="'proceed'" />
+
+        <transition on="proceed" to="CheckAttributeResolutionForAudience" />
+    </action-state>
+
+    <decision-state id="CheckAttributeResolutionForClient">
+        <if test="ResolveAttributesForClientPredicate.test(opensamlProfileRequestContext)"
+            then="AttributeResolutionForClient"
+            else="DoConsentLookup" />
+    </decision-state>
+
+    <action-state id="AttributeResolutionForClient">
+        <evaluate expression="ResolveAttributes" />
+        <evaluate expression="FilterAttributes" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="DoConsentLookup" />
+    </action-state>
+    
+    <decision-state id="CheckAttributeResolutionForAudience">
+        <if test="ResolveAttributesForAudiencePredicate.test(opensamlProfileRequestContext)"
+            then="AttributeResolutionForAudience"
+            else="DoConsentLookup" />
+    </decision-state>
+
+    <action-state id="AttributeResolutionForAudience">
+        <evaluate expression="ResolveAttributesForAudience" />
+        <evaluate expression="FilterAttributesForAudience" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="DoConsentLookup" />
+    </action-state>
+    
+    <decision-state id="BuildResponse">
+        <if test="opensamlProfileRequestContext.ensureOutboundMessageContext().ensureSubcontext(T(net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCAuthenticationResponseContext)).getAudience().isEmpty()"
+            then="BuildTokensForUserInfoAccess"
+            else="BuildTokensForThirdPartyAccess" />
+    </decision-state>
+    
+    <!--
+    Note no JWT encryption here. The token shouldn't even be a JWT, but even if it is,
+    the only audience is us, and the client can't be expected to decrypt it, so it
+    wouldn't be usable. If it were encrypted to our key then there would be no point to
+    allowing it to be a JWT.
+    
+    Note also no attribute claims are added to the access token since that isn't a proper
+    delivery mechanism for claims to the OIDC client.
+    -->
+    <action-state id="BuildTokensForUserInfoAccess">
+        <evaluate expression="PopulateUserInfoAccessTokenSignatureSigningParameters" />
+        <evaluate expression="BuildOIDCAccessToken" />
+        <evaluate expression="SignOIDCAccessToken" />
+        <evaluate expression="SetOAuthAccessTokenToResponseContext" />
+        <evaluate expression="SetRefreshTokenToResponseContext" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="ProducingIDToken" />
+    </action-state>
+
+    <!--
+    
+    This includes OIDC and OAuth use cases and all grant types but the primary audience
+    for the access token is the resource/audience. The OP MAY also be an audience for the
+    token if the "oidc" scope is in play, in which case the actions have to behave differently
+    or be disabled in some cases. Encryption is for example impossible in that case, as with
+    the OIDC-only use of JWTs above.
+    -->
+    <action-state id="BuildTokensForThirdPartyAccess">
+        <evaluate expression="PopulateThirdPartyAccessTokenSignatureSigningParameters" />
+        <evaluate expression="PopulateThirdPartyAccessTokenEncryptionParameters" />
+        <evaluate expression="AddAttributeClaimsToAccessToken" />
+        <evaluate expression="BuildAccessToken" />
+        <evaluate expression="SignAccessToken" />
+        <evaluate expression="EncryptAccessToken" />
+        <evaluate expression="SetOAuthAccessTokenToResponseContext" />
+        <evaluate expression="SetRefreshTokenToResponseContext" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="ProducingIDToken" />
+    </action-state>
+
+    <!-- ID token only issued when scope includes "openid" -->
+
+    <decision-state id="ProducingIDToken">
+        <if test="IssueIDTokenCondition.test(opensamlProfileRequestContext)"
+            then="BuildIDToken"
+            else="BuildResponseMessage" />
+    </decision-state>
+
+    <action-state id="BuildIDToken">
+        <evaluate expression="PopulateIDTokenSignatureSigningParameters" />
+        <evaluate expression="PopulateIDTokenEncryptionParameters" />
+        <evaluate expression="AddIDTokenShell" />
+        <evaluate expression="AddAttributeClaimsToIDToken" />
+        <evaluate expression="AddTokenDeliveryAttributesToIDToken" />
+        <evaluate expression="AddAuthTimeToIDToken" />
+        <evaluate expression="AddAcrToIDToken" />
+        <evaluate expression="AddNonceToIDToken" />
+        <evaluate expression="AddAccessTokenHashToIDToken" />
+        <evaluate expression="ManipulateClaimsForIDToken" />
+        <evaluate expression="SignIDToken" />
+        <evaluate expression="EncryptIDToken" />
+        <evaluate expression="'proceed'" />
+        
+        <transition on="proceed" to="BuildResponseMessage" />
+    </action-state>
+
+    <bean-import resource="token-beans.xml" />
 
 </flow>

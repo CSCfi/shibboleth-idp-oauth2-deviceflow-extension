@@ -10,6 +10,12 @@
 -->
 <module name="Checker">
   <property name="severity" value="warning"/>
+  <property name="charset" value="UTF-8"/>
+  <module name="SuppressWithPlainTextCommentFilter">
+    <property name="offCommentFormat" value="\bCheck[Ss]tyle:\s*([\w|]+)\s+OFF\b"/>
+    <property name="onCommentFormat" value="\bCheck[Ss]tyle:\s*([\w|]+)\s+ON\b"/>
+    <property name="checkFormat" value="$1"/>
+  </module>
   <module name="TreeWalker">
     <property name="tabWidth" value="4"/>
     <module name="JavadocMethod"/>
@@ -48,7 +54,10 @@
     <module name="RightCurly"/>
     <module name="EmptyStatement"/>
     <module name="EqualsHashCode"/>
-    <module name="HiddenField"/>
+    <module name="HiddenField">
+      <property name="ignoreConstructorParameter" value="true"/>
+      <property name="ignoreSetter" value="true"/>
+    </module>
     <module name="IllegalInstantiation"/>
     <module name="InnerAssignment"/>
     <module name="MissingSwitchDefault"/>
@@ -107,8 +116,8 @@
   <module name="FileLength">
     <property name="max" value="1000"/>
   </module>
-  <module name="Header">
-    <property name="header" value="/*\n * Licensed to the University Corporation for Advanced Internet Development,\n * Inc. (UCAID) under one or more contributor license agreements.  See the\n * NOTICE file distributed with this work for additional information regarding\n * copyright ownership. The UCAID licenses this file to You under the Apache\n * License, Version 2.0 (the &quot;License&quot;); you may not use this file except in\n * compliance with the License.  You may obtain a copy of the License at\n *\n *    http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */"/>
+  <module name="RegexpHeader">
+    <property name="header" value="^/\*$\n^ \* Copyright \(c\) \d{4}(-\d{4})?,? (CSC- IT Center for Science, www\.csc\.fi|GÉANT)$\n^ \*\s*$\n^ \* Licensed under the Apache License, Version 2\.0 .*$"/>
   </module>
   <module name="JavadocPackage"/>
   <module name="LineLength">

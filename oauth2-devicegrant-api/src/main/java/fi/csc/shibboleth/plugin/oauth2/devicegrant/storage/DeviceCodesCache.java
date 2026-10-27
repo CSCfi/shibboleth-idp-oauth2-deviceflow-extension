@@ -19,6 +19,7 @@ package fi.csc.shibboleth.plugin.oauth2.devicegrant.storage;
 import java.io.IOException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
@@ -26,6 +27,7 @@ import net.minidev.json.parser.ParseException;
 import net.shibboleth.shared.annotation.constraint.NonnullAfterInit;
 import net.shibboleth.shared.annotation.constraint.NotEmpty;
 import net.shibboleth.shared.annotation.constraint.ThreadSafeAfterInit;
+import net.shibboleth.shared.collection.Pair;
 import net.shibboleth.shared.component.AbstractIdentifiableInitializableComponent;
 import net.shibboleth.shared.component.ComponentInitializationException;
 import net.shibboleth.shared.logic.Constraint;
@@ -34,6 +36,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.opensaml.storage.StorageCapabilities;
 import org.opensaml.storage.StorageRecord;
 import org.opensaml.storage.StorageService;
+import org.opensaml.storage.VersionMismatchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,9 +51,6 @@ import org.slf4j.LoggerFactory;
 @ThreadSafeAfterInit
 public class DeviceCodesCache extends AbstractIdentifiableInitializableComponent {
 
-    /** Logger. */
-    private final Logger log = LoggerFactory.getLogger(DeviceCodesCache.class);
-
     /**
      * ID of device code object context.
      */
@@ -64,6 +64,9 @@ public class DeviceCodesCache extends AbstractIdentifiableInitializableComponent
     @Nonnull
     @NotEmpty
     public static final String CONTEXT_STATE = DeviceCodesCache.class.getName() + ".STATE";
+
+    /** Logger. */
+    private final Logger log = LoggerFactory.getLogger(DeviceCodesCache.class);
 
     /** Backing storage for the cache. */
     private StorageService storage;
@@ -110,8 +113,8 @@ public class DeviceCodesCache extends AbstractIdentifiableInitializableComponent
      * @param key key to adjust
      * @return key, either original or adjusted.
      */
-    private String adjustKey(@Nonnull String key) {
-        StorageCapabilities caps = storage.getCapabilities();
+    private String adjustKey(@Nonnull final String key) {
+        final StorageCapabilities caps = storage.getCapabilities();
         return key.length() > caps.getKeySize() ? DigestUtils.sha1Hex(key) : key;
     }
 
@@ -124,18 +127,35 @@ public class DeviceCodesCache extends AbstractIdentifiableInitializableComponent
      * @return true if stored successfully.
      * @throws IOException if something went wrong with storage.
      */
-    public synchronized boolean storeDeviceCode(@Nonnull DeviceCodeObject deviceCodeObject, @Nonnull String userCode,
-            long expiration) throws IOException {
-        String deviceCodeKey = adjustKey(userCode);
+    public synchronized boolean storeDeviceCode(@Nonnull final DeviceCodeObject deviceCodeObject,
+            @Nonnull final String userCode, final long expiration) throws IOException {
+        return storeDeviceCode(deviceCodeObject, userCode, expiration, null);
+    }
+
+    /**
+     * Stores DeviceCodeObject keyed with user code. DeviceStateObject is created simultaneously, keyed by device code.
+     * 
+     * @param deviceCodeObject DeviceCodeObject to store.
+     * @param userCode key for storing the DeviceCodeObject.
+     * @param expiration lifetime in milliseconds.
+     * @param interval polling interval in milliseconds, null for none.
+     * @return true if stored successfully.
+     * @throws IOException if something went wrong with storage.
+     */
+    public synchronized boolean storeDeviceCode(@Nonnull final DeviceCodeObject deviceCodeObject,
+            @Nonnull final String userCode, final long expiration, @Nullable final Long interval) throws IOException {
+        final String deviceCodeKey = adjustKey(userCode);
         if (!storage.create(CONTEXT_DEVICECODE, deviceCodeKey, deviceCodeObject.toJSONObject().toJSONString(),
                 System.currentTimeMillis() + expiration)) {
-            log.debug("User code collision for code {}", userCode);
+            log.debug("User code collision");
             return false;
         }
-        String deviceStateKey = adjustKey(deviceCodeObject.getDeviceCode());
-        if (!storage.create(CONTEXT_STATE, deviceStateKey, new DeviceStateObject().toJSONObject().toJSONString(),
+        final String deviceStateKey = adjustKey(deviceCodeObject.getDeviceCode());
+        final DeviceStateObject deviceStateObject = new DeviceStateObject(DeviceStateObject.State.PENDING, null, null,
+                deviceCodeObject.getClientID().getValue(), interval, null);
+        if (!storage.create(CONTEXT_STATE, deviceStateKey, deviceStateObject.toJSONObject().toJSONString(),
                 System.currentTimeMillis() + expiration)) {
-            log.debug("Device code collision for code {}", deviceCodeObject.getDeviceCode());
+            log.debug("Device code collision");
             return false;
         }
         return true;
@@ -150,13 +170,14 @@ public class DeviceCodesCache extends AbstractIdentifiableInitializableComponent
      * @throws ParseException if DeviceCodeObject was not parsed successfully.
      */
     @SuppressWarnings("rawtypes")
-    public synchronized DeviceCodeObject getDeviceCode(@Nonnull String userCode) throws IOException, ParseException {
-        String deviceCodeKey = adjustKey(userCode);
-        StorageRecord entry = storage.read(CONTEXT_DEVICECODE, deviceCodeKey);
+    public synchronized DeviceCodeObject getDeviceCode(@Nonnull final String userCode)
+            throws IOException, ParseException {
+        final String deviceCodeKey = adjustKey(userCode);
+        final StorageRecord entry = storage.read(CONTEXT_DEVICECODE, deviceCodeKey);
         if (entry == null) {
             return null;
         }
-        Object obj = new JSONParser(JSONParser.MODE_PERMISSIVE).parse(entry.getValue());
+        final Object obj = new JSONParser(JSONParser.MODE_PERMISSIVE).parse(entry.getValue());
         if (obj instanceof JSONObject) {
             return DeviceCodeObject.fromJSONObject((JSONObject) obj);
         }
@@ -171,36 +192,86 @@ public class DeviceCodesCache extends AbstractIdentifiableInitializableComponent
      * @throws IOException if something went wrong with storage.
      * @throws ParseException if DeviceCodeObject was not parsed successfully.
      */
-    @SuppressWarnings("rawtypes")
-    public synchronized DeviceStateObject getDeviceState(@Nonnull String deviceCode)
+    public synchronized DeviceStateObject getDeviceState(@Nonnull final String deviceCode)
             throws IOException, ParseException {
-        String deviceStateKey = adjustKey(deviceCode);
-        StorageRecord entry = storage.read(CONTEXT_STATE, deviceStateKey);
+        final Pair<Long, DeviceStateObject> versionedState = getVersionedDeviceState(deviceCode);
+        return versionedState != null ? versionedState.getSecond() : null;
+    }
+
+    /**
+     * Get DeviceStateObject and the version of its storage record, keyed by device code.
+     * 
+     * @param deviceCode key to DeviceStateObject
+     * @return version and DeviceStateObject keyed with device code. Null if not located.
+     * @throws IOException if something went wrong with storage.
+     * @throws ParseException if DeviceStateObject was not parsed successfully.
+     */
+    @Nullable
+    public synchronized Pair<Long, DeviceStateObject> getVersionedDeviceState(@Nonnull final String deviceCode)
+            throws IOException, ParseException {
+        final String deviceStateKey = adjustKey(deviceCode);
+        final StorageRecord<?> entry = storage.read(CONTEXT_STATE, deviceStateKey);
         if (entry == null) {
             return null;
         }
-        Object obj = new JSONParser(JSONParser.MODE_PERMISSIVE).parse(entry.getValue());
+        final Object obj = new JSONParser(JSONParser.MODE_PERMISSIVE).parse(entry.getValue());
         if (obj instanceof JSONObject) {
-            return DeviceStateObject.fromJSONObject((JSONObject) obj);
+            return new Pair<>(entry.getVersion(), DeviceStateObject.fromJSONObject((JSONObject) obj));
         }
         throw new IOException("Storage record could not be parsed as a JSONObject");
     }
 
     /**
-     * Update DeviceStateObject, keyed by device code.
+     * Remove DeviceCodeObject, keyed by user code.
+     * 
+     * @param userCode key the DeviceCodeObject is stored by.
+     * @return true if the object was removed, false if it did not exist.
+     * @throws IOException if something went wrong with storage.
+     */
+    public synchronized boolean removeDeviceCode(@Nonnull final String userCode) throws IOException {
+        return storage.delete(CONTEXT_DEVICECODE, adjustKey(userCode));
+    }
+
+    /**
+     * Update DeviceStateObject, keyed by device code. The expiration of the stored record is kept.
      * 
      * @param deviceCode key to store DeviceStateObject by.
      * @param deviceStateObject DeviceStateObject containing updated information.
-     * @param expiration lifetime in milliseconds.
      * @return true if the object was successfully updated.
      * @throws IOException if something went wrong with storage.
-     * @throws ParseException if DeviceCodeObject was not parsed successfully.
      */
-    public synchronized boolean updateDeviceState(@Nonnull String deviceCode,
-            @Nonnull DeviceStateObject deviceStateObject, long expiration) throws IOException, ParseException {
-        String deviceStateKey = adjustKey(deviceCode);
+    public synchronized boolean updateDeviceState(@Nonnull final String deviceCode,
+            @Nonnull final DeviceStateObject deviceStateObject) throws IOException {
+        final String deviceStateKey = adjustKey(deviceCode);
+        final StorageRecord<?> record = storage.read(CONTEXT_STATE, deviceStateKey);
+        if (record == null) {
+            return false;
+        }
         return storage.update(CONTEXT_STATE, deviceStateKey, deviceStateObject.toJSONObject().toJSONString(),
-                System.currentTimeMillis() + expiration);
+                record.getExpiration());
+    }
+
+    /**
+     * Update DeviceStateObject, keyed by device code, if its storage record still has the given version. The
+     * expiration of the stored record is kept.
+     * 
+     * @param deviceCode key to store DeviceStateObject by.
+     * @param deviceStateObject DeviceStateObject containing updated information.
+     * @param version version of the storage record the update is based on.
+     * @return true if the object was successfully updated, false if it did not exist.
+     * @throws IOException if something went wrong with storage.
+     * @throws VersionMismatchException if the storage record has another version.
+     */
+    public synchronized boolean updateDeviceState(@Nonnull final String deviceCode,
+            @Nonnull final DeviceStateObject deviceStateObject, final long version)
+            throws IOException, VersionMismatchException {
+        final String deviceStateKey = adjustKey(deviceCode);
+        final StorageRecord<?> record = storage.read(CONTEXT_STATE, deviceStateKey);
+        if (record == null) {
+            return false;
+        }
+        return storage.updateWithVersion(version, CONTEXT_STATE, deviceStateKey,
+                deviceStateObject.toJSONObject().toJSONString(), record.getExpiration()) != null;
     }
 
 }

@@ -14,7 +14,7 @@
 ## environment - Spring Environment object for property resolution
 ## custom - arbitrary object injected by deployer
 ##
-#set ($rpContext = $profileRequestContext.getSubcontext('net.shibboleth.idp.profile.context.RelyingPartyContext'))
+#set ($rpContext = $profileRequestContext.getSubcontext('net.shibboleth.profile.context.RelyingPartyContext'))
 ##
 <!DOCTYPE html>
 <html>
@@ -39,7 +39,7 @@
                   #springMessageText("idp.login.device.loginTo.withCode", "Approve or Deny request with code ") $encoder.encodeForHTML($viewScope.userCode) #springMessageText("idp.login.device.loginTo.from", " from ") $encoder.encodeForHTML($serviceName)
                </legend>
                #end
-               #springMessageText("idp.login.device.loginTo.explanation", "Approve or Deny request with code ") $encoder.encodeForHTML($viewScope.userCode)
+               #springMessageText("idp.login.device.loginTo.explanation", "Approve only if you started this request yourself and your device shows the code ") $encoder.encodeForHTML($viewScope.userCode)
                <div class="form-element-wrapper">
                   <button class="form-element form-button" type="submit" name="_eventId_proceed"
                   onClick="this.childNodes[0].nodeValue='#springMessageText("idp.device.approval.pleasewait", "Approving request, please wait...")'"

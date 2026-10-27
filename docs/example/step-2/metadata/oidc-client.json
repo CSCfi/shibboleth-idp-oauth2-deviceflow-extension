@@ -1,0 +1,10 @@
+[
+  {
+    "client_id": "device-client",
+    "client_name": "Device client",
+    "client_secret": "CHANGE-ME",
+    "token_endpoint_auth_method": "client_secret_basic",
+    "scope": "openid profile",
+    "grant_types": ["urn:ietf:params:oauth:grant-type:device_code"]
+  }
+]

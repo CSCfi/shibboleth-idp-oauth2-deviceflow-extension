@@ -41,11 +41,11 @@ public class DeviceUserApprovalLookupFunction extends AbstractInitializableCompo
 
     /** {@inheritDoc} */
     @Override
-    public Boolean apply(@Nullable MessageContext input) {
+    public Boolean apply(@Nullable final MessageContext input) {
         if (input == null) {
             return false;
         }
-        DeviceUserAuthenticationContext ctx = input.getSubcontext(DeviceUserAuthenticationContext.class);
+        final DeviceUserAuthenticationContext ctx = input.getSubcontext(DeviceUserAuthenticationContext.class);
         if (ctx == null) {
             return false;
         }

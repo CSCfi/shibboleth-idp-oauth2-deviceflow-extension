@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://jetty.org/configure_10_0.dtd">
+<Configure id="Rewrite" class="org.eclipse.jetty.rewrite.handler.RuleContainer">
+  <Call name="addRule">
+    <Arg>
+      <New class="org.eclipse.jetty.rewrite.handler.RedirectRegexRule">
+        <Set name="regex">^/shortExample$</Set>
+        <Set name="matchQuery">false</Set>
+        <Set name="addQueries">true</Set>
+        <Set name="location">/idp/profile/oauth2/devicegrant/authenticate</Set>
+      </New>
+    </Arg>
+  </Call>
+</Configure>

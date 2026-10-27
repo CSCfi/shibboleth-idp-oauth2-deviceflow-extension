@@ -21,6 +21,7 @@ import java.net.URI;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.base.MoreObjects;
 import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.oauth2.sdk.SuccessResponse;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
@@ -59,6 +60,7 @@ public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse
      */
     private final Integer interval;
 
+    // Checkstyle: ParameterNumber OFF
     /**
      * Constructor.
      * 
@@ -70,9 +72,9 @@ public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse
      * @param interval The minimum amount of time in seconds that the client SHOULD wait between polling requests to the
      *            token endpoint
      */
-    public OAuth2DeviceAuthorizationSuccessResponse(@Nonnull String deviceCode, @Nonnull String userCode,
-            @Nonnull URI verificationURI, @Nullable URI verificationURIComplete, @Nonnull Integer expiresIn,
-            @Nullable Integer interval) {
+    public OAuth2DeviceAuthorizationSuccessResponse(@Nonnull final String deviceCode, @Nonnull final String userCode,
+            @Nonnull final URI verificationURI, @Nullable final URI verificationURIComplete,
+            @Nonnull final Integer expiresIn, @Nullable final Integer interval) {
         if (deviceCode == null || userCode == null || verificationURI == null || expiresIn == null) {
             throw new IllegalArgumentException(
                     "device code, user code, verification uri and expiresIn must not be null");
@@ -90,6 +92,7 @@ public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse
         this.expiresIn = expiresIn;
         this.interval = interval;
     }
+    // Checkstyle: ParameterNumber ON
 
     /**
      * Constructor.
@@ -99,8 +102,8 @@ public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse
      * @param verificationURI The end-user verification URI on the authorization server
      * @param expiresIn The lifetime in seconds of the "device_code" and "user_code"
      */
-    public OAuth2DeviceAuthorizationSuccessResponse(@Nonnull String deviceCode, @Nonnull String userCode,
-            @Nonnull URI verificationURI, int expiresIn) {
+    public OAuth2DeviceAuthorizationSuccessResponse(@Nonnull final String deviceCode, @Nonnull final String userCode,
+            @Nonnull final URI verificationURI, final int expiresIn) {
         this(deviceCode, userCode, verificationURI, null, expiresIn, null);
     }
 
@@ -115,7 +118,7 @@ public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse
     }
 
     /**
-     * Get the end-user verification code
+     * Get the end-user verification code.
      * 
      * @return the end-user verification code
      */
@@ -174,13 +177,26 @@ public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse
         return true;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).omitNullValues()
+                .add("deviceCode", deviceCode)
+                .add("userCode", userCode)
+                .add("verificationURI", verificationURI)
+                .add("verificationURIComplete", verificationURIComplete)
+                .add("expiresIn", expiresIn)
+                .add("interval", interval)
+                .toString();
+    }
+
     /**
      * Present the message contents as JSON Object.
      * 
      * @return the message contents as JSON Object
      */
     public JSONObject toJSONObject() {
-        JSONObject content = new JSONObject();
+        final JSONObject content = new JSONObject();
         content.put("device_code", deviceCode);
         content.put("user_code", userCode);
         content.put("verification_uri", verificationURI.toString());
@@ -199,10 +215,8 @@ public class OAuth2DeviceAuthorizationSuccessResponse implements SuccessResponse
      */
     @Override
     public HTTPResponse toHTTPResponse() {
-        HTTPResponse httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
+        final HTTPResponse httpResponse = new HTTPResponse(HTTPResponse.SC_OK);
         httpResponse.setEntityContentType(ContentType.APPLICATION_JSON);
-        httpResponse.setCacheControl("no-store");
-        httpResponse.setPragma("no-cache");
         httpResponse.setContent(toJSONObject().toString());
         return httpResponse;
     }

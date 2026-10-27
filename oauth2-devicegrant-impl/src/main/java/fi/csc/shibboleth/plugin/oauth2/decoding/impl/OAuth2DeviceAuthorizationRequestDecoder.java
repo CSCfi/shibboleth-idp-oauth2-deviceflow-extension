@@ -27,8 +27,9 @@ import org.slf4j.LoggerFactory;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.JakartaServletUtils;
 
-import fi.csc.shibboleth.plugin.oauth2.messaging.impl.BaseOAuth2RequestDecoder;
 import fi.csc.shibboleth.plugin.oauth2.messaging.impl.OAuth2DeviceAuthorizationRequest;
+import net.shibboleth.idp.plugin.oidc.op.decoding.impl.RequestUtil;
+import net.shibboleth.idp.plugin.oidc.op.oauth2.decoding.impl.BaseOAuth2RequestDecoder;
 
 /**
  * Message decoder decoding OAuth2 {@link OAuth2DeviceAuthorizationRequest}s.
@@ -54,7 +55,7 @@ public class OAuth2DeviceAuthorizationRequestDecoder
     }
 
     @Override
-    protected String getMessageToLog(OAuth2DeviceAuthorizationRequest message) {
+    protected String getMessageToLog(final OAuth2DeviceAuthorizationRequest message) {
         // TODO Auto-generated method stub
         return null;
     }

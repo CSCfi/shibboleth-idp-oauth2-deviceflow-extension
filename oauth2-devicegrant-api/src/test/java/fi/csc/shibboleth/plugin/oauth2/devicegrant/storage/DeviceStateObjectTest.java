@@ -38,6 +38,20 @@ public class DeviceStateObjectTest {
         Assert.assertEquals(newDeviceStateObject.getExpiresAt(), (Long) 1000000L);
     }
 
+    @Test
+    public void testPollFieldsSerialization() {
+        deviceStateObject = new DeviceStateObject(State.PENDING, null, null, "client", 5000L, 1234L);
+        DeviceStateObject newDeviceStateObject = DeviceStateObject.fromJSONObject(deviceStateObject.toJSONObject());
+        Assert.assertEquals(newDeviceStateObject.getClientId(), "client");
+        Assert.assertEquals(newDeviceStateObject.getInterval(), (Long) 5000L);
+        Assert.assertEquals(newDeviceStateObject.getLastPoll(), (Long) 1234L);
+        newDeviceStateObject = newDeviceStateObject.withPoll(2345L, 10000L).withState(State.DENIED, null, null);
+        Assert.assertEquals(newDeviceStateObject.getState(), State.DENIED);
+        Assert.assertEquals(newDeviceStateObject.getClientId(), "client");
+        Assert.assertEquals(newDeviceStateObject.getInterval(), (Long) 10000L);
+        Assert.assertEquals(newDeviceStateObject.getLastPoll(), (Long) 2345L);
+    }
+
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testConstructorNullArgument() {
         new DeviceStateObject(State.APPROVED, null, null);

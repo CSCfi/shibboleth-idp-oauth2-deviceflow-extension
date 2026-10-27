@@ -6,7 +6,7 @@
   <parent>
     <groupId>fi.csc.shibboleth.plugin.oauth2.devicegrant</groupId>
     <artifactId>idp-plugin-oauth2-devicegrant</artifactId>
-    <version>0.9.3</version>
+    <version>1.0.0</version>
   </parent>
   <name>Shibboleth IdP :: Plugins :: OAuth 2.0 Device Authorization Grant Implementation</name>
   <description>OAuth 2.0 Device Authorization Grant plugin implementation.</description>
@@ -42,10 +42,26 @@
     <dependency>
       <groupId>net.shibboleth.idp.plugin.oidc</groupId>
       <artifactId>idp-plugin-oidc-op-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.shibboleth.idp.plugin.oidc</groupId>
+      <artifactId>idp-plugin-oidc-op-impl</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>net.shibboleth.oidc</groupId>
       <artifactId>oidc-common-profile-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.shibboleth.oidc</groupId>
+      <artifactId>oidc-common-profile-impl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>

@@ -19,7 +19,6 @@ package fi.csc.shibboleth.plugin.oauth2.profile.impl;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -35,6 +34,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.openid.connect.sdk.claims.ClaimsSet;
 
 import fi.csc.shibboleth.plugin.oauth2.config.OAuth2DeviceGrantConfiguration;
+import fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.DeviceEventIds;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceUserApprovalLookupFunction;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.profile.context.navigate.DeviceUserCodeLookupFunction;
 import fi.csc.shibboleth.plugin.oauth2.devicegrant.storage.DeviceCodeObject;
@@ -46,10 +46,10 @@ import net.shibboleth.idp.authn.context.SubjectContext;
 import net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCAuthenticationResponseConsentContext;
 import net.shibboleth.idp.plugin.oidc.op.messaging.context.OIDCAuthenticationResponseTokenClaimsContext;
 import net.shibboleth.idp.plugin.oidc.op.profile.context.navigate.OIDCAuthenticationResponseContextLookupFunction;
-import net.shibboleth.idp.plugin.oidc.op.token.support.AccessTokenClaimsSet;
+import net.shibboleth.idp.plugin.oidc.op.profile.impl.AbstractOIDCResponseAction;
+import net.shibboleth.idp.plugin.oidc.op.token.support.AuthorizeCodeClaimsSet;
 import net.shibboleth.idp.profile.IdPEventIds;
 import net.shibboleth.oidc.profile.config.logic.AttributeConsentFlowEnabledPredicate;
-import net.shibboleth.oidc.profile.oauth2.config.OAuth2AccessTokenProducingProfileConfiguration;
 import net.shibboleth.profile.config.ProfileConfiguration;
 import net.shibboleth.profile.context.RelyingPartyContext;
 import net.shibboleth.profile.context.navigate.IssuerLookupFunction;
@@ -67,10 +67,7 @@ import org.opensaml.messaging.context.navigate.ChildContextLookup;
 import org.opensaml.profile.action.ActionSupport;
 
 /**
- * Action storing user approval action, approved or denied to
- * {@link DeviceCodesCache} as a {@link DeviceStateObject}. In the case user
- * approved the request the {@link DeviceStateObject} contains a access token
- * that may be queried by a trusted rp using Device Code.
+ * Action storing the user decision to {@link DeviceCodesCache} as a {@link DeviceStateObject}.
  */
 public class StoreDeviceState extends AbstractOIDCResponseAction {
 
@@ -83,16 +80,17 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
 
     /** Device code matching the user code. */
     @Nullable
-    String deviceCode;
+    private String deviceCode;
+
+    /** User code. */
+    @Nullable
+    private String userCode;
 
     /** Cache for DeviceCodeObjects and DeviceStateObjects. */
     @NonnullAfterInit
     private DeviceCodesCache deviceCodesCache;
 
-    /** Access Token lifetime. */
-    private Duration accessTokenLifetime;
-
-    /** Data sealer for handling access token. */
+    /** Data sealer for the grant claims set. */
     @Nonnull
     private final DataSealer dataSealer;
 
@@ -105,7 +103,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
 
     /** Relying party information. */
     @Nullable
-    RelyingPartyContext rpCtx;
+    private RelyingPartyContext rpCtx;
 
     /** Strategy used to obtain the response issuer value. */
     @Nonnull
@@ -134,7 +132,8 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
      * {@link OIDCAuthenticationResponseTokenClaimsContext}.
      */
     @Nonnull
-    private Function<ProfileRequestContext, OIDCAuthenticationResponseTokenClaimsContext> tokenClaimsContextLookupStrategy;
+    private Function<ProfileRequestContext, OIDCAuthenticationResponseTokenClaimsContext>
+            tokenClaimsContextLookupStrategy;
 
     /**
      * Strategy used to locate the {@link OIDCAuthenticationResponseConsentContext}.
@@ -150,12 +149,10 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
     @Nonnull
     private Function<MessageContext, Boolean> userApprovalLookupStrategy;
 
-    Set<String> audiences;
-
     /**
      * Constructor.
      * 
-     * @param sealer sealer to encrypt/hmac access token.
+     * @param sealer sealer to encrypt/hmac the grant claims set.
      */
     public StoreDeviceState(@Nonnull @ParameterName(name = "sealer") final DataSealer sealer) {
         userCodeLookupStrategy = new DeviceUserCodeLookupFunction();
@@ -170,7 +167,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         dataSealer = Constraint.isNotNull(sealer, "DataSealer cannot be null");
         issuerLookupStrategy = (Function<ProfileRequestContext, String>) new IssuerLookupFunction();
         idGeneratorLookupStrategy = new Function<ProfileRequestContext, IdentifierGenerationStrategy>() {
-            public IdentifierGenerationStrategy apply(ProfileRequestContext input) {
+            public IdentifierGenerationStrategy apply(final ProfileRequestContext input) {
                 return new SecureRandomIdentifierGenerationStrategy();
             }
         };
@@ -295,28 +292,28 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
                 "predicate used to check if consent is enabled cannot be null");
     }
 
-    // Checkstyle: CyclomaticComplexity OFF
+    // Checkstyle: CyclomaticComplexity|ReturnCount OFF
     /** {@inheritDoc} */
     @Override
     protected boolean doPreExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
         if (!super.doPreExecute(profileRequestContext)) {
             return false;
         }
-        String userCode = userCodeLookupStrategy.apply(profileRequestContext.getInboundMessageContext());
+        userCode = userCodeLookupStrategy.apply(profileRequestContext.getInboundMessageContext());
         if (userCode == null || userCode.isEmpty()) {
             log.error("{} No user code", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_MESSAGE);
             return false;
         }
         try {
-            DeviceCodeObject deviceCodeObject = deviceCodesCache.getDeviceCode(userCode);
+            final DeviceCodeObject deviceCodeObject = deviceCodesCache.getDeviceCode(userCode);
             if (deviceCodeObject == null || deviceCodeObject.getDeviceCode() == null) {
                 log.error("{} No device code for user code", getLogPrefix());
                 ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_MESSAGE);
                 return false;
             }
             deviceCode = deviceCodeObject.getDeviceCode();
-        } catch (IOException | ParseException e) {
+        } catch (final IOException | ParseException e) {
             log.error("{} Error accessing device code cache", getLogPrefix(), e);
             ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
             return false;
@@ -329,11 +326,7 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         }
         final ProfileConfiguration pc = rpCtx.getProfileConfig();
         if (pc != null && pc instanceof OAuth2DeviceGrantConfiguration) {
-            accessTokenLifetime = ((OAuth2AccessTokenProducingProfileConfiguration) pc)
-                    .getAccessTokenLifetime(profileRequestContext);
             expiration = ((OAuth2DeviceGrantConfiguration) pc).getDeviceCodeLifetime(profileRequestContext);
-            audiences = ((OAuth2DeviceGrantConfiguration) pc)
-                    .getAdditionalAudiencesForAccessToken(profileRequestContext);
         } else {
             log.error("{} No oidc profile configuration associated with this profile request", getLogPrefix());
             ActionSupport.buildEvent(profileRequestContext, IdPEventIds.INVALID_RELYING_PARTY_CTX);
@@ -353,62 +346,89 @@ public class StoreDeviceState extends AbstractOIDCResponseAction {
         }
         return true;
     }
-    // Checkstyle: CyclomaticComplexity ON
+    // Checkstyle: CyclomaticComplexity|ReturnCount ON
 
+    // Checkstyle: CyclomaticComplexity|MethodLength OFF
     /** {@inheritDoc} */
     @Override
     protected void doExecute(@Nonnull final ProfileRequestContext profileRequestContext) {
+        try {
+            if (!deviceCodesCache.removeDeviceCode(userCode)) {
+                log.error("{} User code has already been used", getLogPrefix());
+                ActionSupport.buildEvent(profileRequestContext, DeviceEventIds.INVALID_USER_CODE);
+                return;
+            }
+        } catch (final IOException e) {
+            log.error("{} Error accessing device code cache", getLogPrefix(), e);
+            ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
+            return;
+        }
+        final DeviceStateObject currentStateObject;
+        try {
+            currentStateObject = deviceCodesCache.getDeviceState(deviceCode);
+        } catch (final IOException | ParseException e) {
+            log.error("{} Error accessing device code cache", getLogPrefix(), e);
+            ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
+            return;
+        }
+        if (currentStateObject == null) {
+            log.error("{} No device state for the device code", getLogPrefix());
+            ActionSupport.buildEvent(profileRequestContext, EventIds.INVALID_MESSAGE);
+            return;
+        }
         DeviceStateObject deviceStateObject = null;
         if (!userApprovalLookupStrategy.apply(profileRequestContext.getInboundMessageContext())) {
-            deviceStateObject = new DeviceStateObject(DeviceStateObject.State.DENIED);
+            deviceStateObject = currentStateObject.withState(DeviceStateObject.State.DENIED, null, null);
         } else {
-            Instant dateExp = Instant.now().plus(accessTokenLifetime);
+            final Instant now = Instant.now();
+            final Instant dateExp = now.plus(expiration);
             ClaimsSet claims = null;
             ClaimsSet claimsUI = null;
-            OIDCAuthenticationResponseTokenClaimsContext tokenClaimsCtx = tokenClaimsContextLookupStrategy
+            final OIDCAuthenticationResponseTokenClaimsContext tokenClaimsCtx = tokenClaimsContextLookupStrategy
                     .apply(profileRequestContext);
             if (tokenClaimsCtx != null) {
                 claims = tokenClaimsCtx.getClaims();
                 claimsUI = tokenClaimsCtx.getUserinfoClaims();
             }
-            AccessTokenClaimsSet claimsSet;
+            final AuthorizeCodeClaimsSet claimsSet;
             JSONArray consented = null;
-            OIDCAuthenticationResponseConsentContext consentCtx = consentContextLookupStrategy
+            final OIDCAuthenticationResponseConsentContext consentCtx = consentContextLookupStrategy
                     .apply(profileRequestContext);
             if (consentCtx != null) {
                 consented = consentCtx.getConsentedAttributes();
             }
             try {
-                claimsSet = new AccessTokenClaimsSet.Builder().setJWTID(idGenerator)
-                        .setACR(getOidcResponseContext().getAcr()).setClientID(new ClientID(rpCtx.getRelyingPartyId()))
-                        .setIssuer(issuerLookupStrategy.apply(profileRequestContext)).setAudience(audiences)
+                claimsSet = new AuthorizeCodeClaimsSet.Builder().setJWTID(idGenerator)
+                        .setClientID(new ClientID(rpCtx.getRelyingPartyId()))
+                        .setIssuer(issuerLookupStrategy.apply(profileRequestContext))
                         .setPrincipal(subjectCtx.getPrincipalName()).setSubject(getOidcResponseContext().getSubject())
-                        .setIssuedAt(Instant.now()).setExpiresAt(dateExp).setACR(getOidcResponseContext().getAcr())
+                        .setIssuedAt(now).setExpiresAt(dateExp).setACR(getOidcResponseContext().getAcr())
                         .setAuthenticationTime(getOidcResponseContext().getAuthTime())
                         .setScope(getOidcResponseContext().getScope()).setConsentedClaims(consented).setDlClaims(claims)
                         .setDlClaimsUI(claimsUI).setConsentEnabled(consentEnabledPredicate.test(profileRequestContext))
+                        .setSessionIdentifier(getOidcResponseContext().getSessionId())
                         .build();
-                deviceStateObject = new DeviceStateObject(DeviceStateObject.State.APPROVED,
-                        claimsSet.serialize(dataSealer), System.currentTimeMillis() + accessTokenLifetime.toMillis());
-                log.debug("{} Generated access token {} as {} expiring at {}", getLogPrefix(), claimsSet.serialize(),
-                        deviceStateObject.getAccessToken(), deviceStateObject.getExpiresAt());
-            } catch (DataSealerException e) {
-                log.error("{} Access Token generation failed {}", getLogPrefix(), e);
+                deviceStateObject = currentStateObject.withState(DeviceStateObject.State.APPROVED,
+                        claimsSet.serialize(dataSealer), dateExp.toEpochMilli());
+                log.debug("{} Generated grant claims set {} expiring at {}", getLogPrefix(), claimsSet.serialize(),
+                        dateExp);
+            } catch (final DataSealerException e) {
+                log.error("{} Grant claims set generation failed", getLogPrefix(), e);
                 ActionSupport.buildEvent(profileRequestContext, EventIds.UNABLE_TO_ENCRYPT);
                 return;
             }
         }
         try {
-            if (!deviceCodesCache.updateDeviceState(deviceCode, deviceStateObject, expiration.toMillis())) {
+            if (!deviceCodesCache.updateDeviceState(deviceCode, deviceStateObject)) {
                 log.error("{} Unable to update device state object to approved ", getLogPrefix());
                 ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
                 return;
             }
-            log.debug("{} Device {} state updated as {}", getLogPrefix(), deviceCode,
-                    deviceStateObject.getState().toString());
-        } catch (IOException | ParseException e) {
-            log.error("{} Access Token generation failed {}", getLogPrefix(), e);
-            ActionSupport.buildEvent(profileRequestContext, EventIds.UNABLE_TO_ENCRYPT);
+            log.debug("{} Device state updated as {}", getLogPrefix(), deviceStateObject.getState().toString());
+        } catch (final IOException e) {
+            log.error("{} Error storing device state", getLogPrefix(), e);
+            ActionSupport.buildEvent(profileRequestContext, EventIds.IO_ERROR);
         }
     }
+    // Checkstyle: CyclomaticComplexity|MethodLength ON
 }

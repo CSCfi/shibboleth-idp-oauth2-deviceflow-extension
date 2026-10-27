@@ -44,18 +44,18 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
      * The end-user verification code described in
      * https://tools.ietf.org/html/rfc8628#section-3.2.
      */
-    private final String user_code;
+    private final String userCode;
 
     /**
      * Constructor.
      * 
      * @param uri The URI of the endpoint (HTTP or HTTPS) for which the request is intended, {@code null} if not
      *            specified (if, for example, the {@link #toHTTPRequest()} method will not be used).
-     * @param user_code The end-user verification code.
+     * @param userCode The end-user verification code.
      */
-    public OAuth2DeviceAuthenticationRequest(@Nonnull URI uri, @Nullable String user_code) {
+    public OAuth2DeviceAuthenticationRequest(@Nonnull final URI uri, @Nullable final String userCode) {
         super(uri);
-        this.user_code = user_code;
+        this.userCode = userCode;
     }
 
     /**
@@ -65,7 +65,7 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
      */
     @Nullable
     public String getUserCode() {
-        return user_code;
+        return userCode;
     }
 
     /**
@@ -74,22 +74,23 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
     @Override
     public HTTPRequest toHTTPRequest() {
 
-        if (getEndpointURI() == null)
+        if (getEndpointURI() == null) {
             throw new SerializeException("The endpoint URI is not specified");
+        }
 
-        HTTPRequest httpRequest;
-        URL endpointURL;
+        final HTTPRequest httpRequest;
+        final URL endpointURL;
         try {
             endpointURL = getEndpointURI().toURL();
-        } catch (MalformedURLException e) {
+        } catch (final MalformedURLException e) {
             throw new SerializeException(e.getMessage(), e);
         }
 
         httpRequest = new HTTPRequest(HTTPRequest.Method.GET, endpointURL);
-        Map<String, List<String>> params = new HashMap<>();
+        final Map<String, List<String>> params = new HashMap<>();
         params.putAll(URLUtils.parseParameters(getEndpointURI().getQuery()));
-        if (user_code != null) {
-            params.put("user_code", Arrays.asList(user_code));
+        if (userCode != null) {
+            params.put("user_code", Arrays.asList(userCode));
             httpRequest.setQuery(URLUtils.serializeParameters(params));
         }
         return httpRequest;
@@ -106,8 +107,8 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
     public static OAuth2DeviceAuthenticationRequest parse(final URI uri, final Map<String, List<String>> params)
             throws ParseException {
 
-        String user_code = MultivaluedMapUtils.getFirstValue(params, "user_code");
-        return new OAuth2DeviceAuthenticationRequest(uri, user_code);
+        final String userCode = MultivaluedMapUtils.getFirstValue(params, "user_code");
+        return new OAuth2DeviceAuthenticationRequest(uri, userCode);
     }
 
     /**
@@ -131,11 +132,11 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
      */
     public static OAuth2DeviceAuthenticationRequest parse(final HTTPRequest httpRequest) throws ParseException {
 
-        String query = httpRequest.getQuery();
-        URI endpointURI;
+        final String query = httpRequest.getQuery();
+        final URI endpointURI;
         try {
             endpointURI = httpRequest.getURL().toURI();
-        } catch (URISyntaxException e) {
+        } catch (final URISyntaxException e) {
             throw new ParseException(e.getMessage(), e);
         }
         return parse(endpointURI, query);
@@ -148,12 +149,12 @@ public class OAuth2DeviceAuthenticationRequest extends AbstractRequest {
      */
     public String toQueryString() {
 
-        Map<String, List<String>> params = new HashMap<>();
+        final Map<String, List<String>> params = new HashMap<>();
         if (getEndpointURI() != null) {
             params.putAll(URLUtils.parseParameters(getEndpointURI().getQuery()));
         }
-        if (user_code != null) {
-            params.put("user_code", Arrays.asList(user_code));
+        if (userCode != null) {
+            params.put("user_code", Arrays.asList(userCode));
         }
         return URLUtils.serializeParameters(params);
     }
