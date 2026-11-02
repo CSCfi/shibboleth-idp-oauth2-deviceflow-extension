@@ -32,34 +32,34 @@
 
 ## Overview
 
-Plugin that implements [OAuth 2.0 Device Authorization Grant](https://datatracker.ietf.org/doc/html/rfc8628)
-(RFC 8628) for Shibboleth Identity Provider. A device with no browser or with limited input asks
-the IdP for a device code and a user code. The user opens the verification URI on another device,
-authenticates, enters the user code and approves. Meanwhile the device polls the token endpoint
-with the device code and gets an access token once the user has approved.
+This plugin implements the [OAuth 2.0 Device Authorization Grant](https://datatracker.ietf.org/doc/html/rfc8628)
+(RFC 8628) for Shibboleth Identity Provider. A device with no browser or limited input requests a
+device code and a user code from the IdP. The user opens the verification URI on another device,
+authenticates, enters the user code, and approves the request. Meanwhile, the device polls the token
+endpoint with the device code until the user approves the request and the device receives an access token.
 
-The plugin is built on the OpenID Connect OP plugin. Its endpoints run on the abstract flows of the
-OP, so client authentication, metadata lookup, intercepts, audit and metrics work as in the OP.
+The plugin builds on the OpenID Connect OP plugin. Its endpoints use the OP's abstract flows, so
+client authentication, metadata lookup, intercepts, auditing, and metrics work as they do in the OP.
 
-Three endpoints:
+The plugin provides three endpoints:
 
 | Endpoint | Description |
 |---|---|
 | `/idp/profile/oauth2/devicegrant/authorize` | Device authorization endpoint, RFC 8628 section 3.1. |
 | `/idp/profile/oauth2/devicegrant/authenticate` | Verification URI, the user enters the user code and approves. |
-| `/idp/profile/oauth2/devicegrant/token` | Token endpoint, RFC 8628 section 3.4. Also the grants of the OP token endpoint. |
+| `/idp/profile/oauth2/devicegrant/token` | Token endpoint (RFC 8628, Section 3.4). It also supports the grant types supported by the OP token endpoint. |
 
-Things you need to know about this plugin:
+Key points:
 
-- It works only with OIDC OP 4.3, see [Plugin Installation](#plugin-installation).
-- The token endpoint is the OP 4.3.0 token endpoint with the device code grant added.
+- The plugin supports only OIDC OP 4.3; see [Plugin Installation](#plugin-installation).
+- Its token endpoint is based on the OP 4.3.0 token endpoint, with the device code grant added.
 
 ## Plugin Installation
 
 > **Note**
-> Install this plugin only on OIDC OP **4.3**, that is 4.3.0 and its patch releases. The token
-> endpoint is a copy of the OP 4.3.0 token endpoint and the plugin uses classes and beans of that
-> release. Other OP versions are not supported. It is tested with OP 4.3.1.
+> Install this plugin only with OIDC OP **4.3** (version 4.3.0 or a patch release). The plugin
+> includes a copy of the OP 4.3.0 token endpoint and uses classes and beans from that release.
+> Other OP versions are not supported. The plugin has been tested with OP 4.3.1.
 
 | Plugin | Plugin ID | Module(s) | Depends on | Bug Reporting |
 |---|---|---|---|---|
@@ -70,19 +70,16 @@ Requires IdP **5.0.0** or later and OIDC OP **4.3**.
 ### Dependencies
 
 > **Note**
-> This plugin depends on the OpenID Connect OP plugin and on what that plugin depends on. You need
-> to install them **first**, as
-> [OIDC OP](https://shibboleth.atlassian.net/wiki/spaces/IDPPLUGINS/pages/1376878976/OIDC+OP)
-> of the Shibboleth wiki tells.
+> This plugin depends on the OpenID Connect OP plugin and its dependencies. Install them **first**,
+> following the Shibboleth wiki's [OIDC OP installation instructions](https://shibboleth.atlassian.net/wiki/spaces/IDPPLUGINS/pages/1376878976/OIDC+OP).
 
 ### Installation example
 
-The releases are on the [releases page](https://github.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/releases)
-of this repository.
+Download releases from this repository's [releases page](https://github.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/releases).
 
-The key that signed the releases is
-[keys.txt](oauth2-devicegrant-dist/src/main/resources/bootstrap/keys.txt). It becomes the truststore
-of the plugin.
+The release-signing key is in
+[keys.txt](oauth2-devicegrant-dist/src/main/resources/bootstrap/keys.txt). The plugin uses this key
+as its truststore.
 
 <details>
 <summary>Example installation of this plugin</summary>
@@ -90,7 +87,7 @@ of the plugin.
 ```bash
 cd /opt/shibboleth-idp
 
-# The key that signed the distribution becomes the truststore of the plugin.
+# The distribution-signing key becomes the plugin's truststore.
 mkdir -p credentials/fi.csc.shibboleth.plugin.oauth2.devicegrant
 wget -O credentials/fi.csc.shibboleth.plugin.oauth2.devicegrant/truststore.asc \
   https://raw.githubusercontent.com/CSCfi/shibboleth-idp-oauth2-deviceflow-extension/master/oauth2-devicegrant-dist/src/main/resources/bootstrap/keys.txt
@@ -105,7 +102,7 @@ bin/plugin.sh -u fi.csc.shibboleth.plugin.oauth2.devicegrant
 
 </details>
 
-Installing the plugin activates module `idp.DeviceGrant` and creates four files:
+Installing the plugin activates the `idp.DeviceGrant` module and creates four files:
 
 | File | Description |
 |---|---|
@@ -116,13 +113,13 @@ Installing the plugin activates module `idp.DeviceGrant` and creates four files:
 
 ## First installation, by example
 
-Step 1 sets up the device grant for one confidential client and goes through the grant with curl.
-Step 2 adds a requested authentication method. Step 3 sets the verification URI shown to the user.
-Step 4 makes the token endpoint of the plugin the only token endpoint of the OP.
-The examples are from a test deployment so they fit
-together, but it is not guaranteed that they work for you as such.
+Step 1 configures the device grant for a confidential client and demonstrates the flow with curl.
+Step 2 adds a requested authentication method. Step 3 configures the verification URI shown to the user.
+Step 4 makes the plugin's token endpoint the OP's only token endpoint.
+The examples come from one test deployment and are designed to work together, but may need changes
+for your environment.
 
-`https://idp.example.org` is your IdP everywhere below.
+In the examples below, `https://idp.example.org` is the IdP's base URL.
 
 ### Step 1: A confidential client
 
@@ -131,9 +128,10 @@ together, but it is not guaranteed that they work for you as such.
 **File(s):** *conf/relying-party.xml*
 **Format:** Native Spring
 
-The device authorization and user verification endpoints are enabled with **OAUTH2.DeviceGrant**.
-The token endpoint uses **OAUTH2.Token** of the OP, with the device code grant added to its
-`grantTypes`. The device clients are registered clients, so both go to the default relying party:
+Enable the device authorization and user verification endpoints with **OAUTH2.DeviceGrant**.
+Configure the token endpoint with the OP's **OAUTH2.Token**, adding the device code grant to
+`grantTypes`. Because device clients are registered clients, both configurations belong in the
+default relying party:
 
 <details>
 <summary>conf/relying-party.xml</summary>
@@ -156,16 +154,16 @@ Full file: [conf/relying-party.xml](docs/example/step-1/conf/relying-party.xml)
 
 </details>
 
-Instead of `p:grantTypes` you can add the grant type for all relying parties with property
-`idp.oauth2.grantTypes` of the OP in *conf/oidc.properties*.
+Instead of setting `p:grantTypes` here, you can add the grant type for all relying parties by setting
+the OP property `idp.oauth2.grantTypes` in *conf/oidc.properties*.
 
 #### Client registration
 
 **File(s):** *metadata/oidc-client.json*
 **Format:** JSON
 
-The device is registered as an OIDC client of the OP. The client has to have the device grant in
-its `grant_types`, and the scopes it may ask in `scope`:
+Register the device as an OIDC client of the OP. Add the device grant to `grant_types` and list
+the scopes the client may request in `scope`:
 
 <details>
 <summary>metadata/oidc-client.json</summary>
@@ -189,7 +187,7 @@ Full file: [metadata/oidc-client.json](docs/example/step-1/metadata/oidc-client.
 
 #### Device authorization request
 
-The device asks for a device code and a user code:
+The device requests a device code and a user code:
 
 ```bash
 curl -u device-client:CHANGE-ME \
@@ -208,18 +206,20 @@ curl -u device-client:CHANGE-ME \
 }
 ```
 
-The scope is checked against the `scope` of the client, as the OP does. A scope the client may not
-ask is left out. With strict scope validation of the OP the request fails with `invalid_scope`.
+The OP checks the requested scopes against the client's `scope` value. Scopes the client is not
+allowed to request are omitted. If the OP uses strict scope validation, the request fails with
+`invalid_scope`.
 
 #### User verification
 
-The user opens `verification_uri` and enters the user code, or opens `verification_uri_complete`
-that has the code already. The case of the letters does not matter and dashes and spaces are
-ignored. The user authenticates and approves or denies. A user code can be used once.
+The user opens `verification_uri` and enters the user code, or opens `verification_uri_complete`,
+which already includes the code. Letter case does not matter, and spaces and dashes are ignored.
+The user then authenticates and approves or denies the request. Each user code can be used only once.
 
 #### Token request
 
-The device polls the token endpoint with the device code, at most every `interval` seconds:
+The device polls the token endpoint with the device code, no more frequently than once every
+`interval` seconds:
 
 ```bash
 curl -u device-client:CHANGE-ME \
@@ -248,25 +248,25 @@ After the user has approved:
 }
 ```
 
-A device polling faster than `interval` gets `slow_down`, and from then on it has to wait 5 seconds
-longer between requests, as RFC 8628 section 3.5 says. Each further early request adds another 5
-seconds.
+If the device polls more frequently than `interval`, the endpoint returns `slow_down`. The device
+must then increase the polling interval by 5 seconds, as specified in RFC 8628, Section 3.5. Each
+subsequent request that arrives too early adds another 5 seconds.
 
-The device code gives one token response. A second request with the same device code gets
-`invalid_grant`, as does a request from another client than the one the device code was issued to.
-If the user denied, the error is `access_denied`. After the device code has expired it is
+A device code can be used to obtain only one token response. A second request with the same code
+returns `invalid_grant`; the same error is returned if a different client uses the code. If the user
+denies the request, the endpoint returns `access_denied`. If the device code has expired, it returns
 `expired_token`.
 
-With `scope=openid` in the device authorization request the response has an `id_token` as well.
+If the device authorization request includes `scope=openid`, the response also contains an `id_token`.
 
 ### Step 2: Requesting an authentication method
 
 **File(s):** *conf/authn/authn.properties*
 **Format:** Java properties
 
-The device can ask how the user is authenticated with `acr_values`. There has to be an
-authentication flow that supports a principal of that value. The plugin treats the requested values
-always as essential. In the example the Password flow is enabled and supports the value
+The device can request an authentication method by setting `acr_values`. An authentication flow
+must support a principal with the requested value. The plugin always treats requested values as
+essential. This example enables the Password flow and configures it to support
 `https://example.org/acr/password`:
 
 <details>
@@ -294,9 +294,10 @@ curl -u device-client:CHANGE-ME \
 
 ### Step 3: Setting the verification URI
 
-The verification URI is what the device shows to the user, as `verification_uri` and, with the user
-code added, `verification_uri_complete`. Without a setting the plugin builds it from the host, port
-and context path of the device authorization request, so
+The device displays the verification URI to the user. The authorization response includes it as
+`verification_uri` and includes the URI with the user code appended as `verification_uri_complete`.
+If you do not configure the URI, the plugin builds it from the host, port, and context path of the
+device authorization request. For example:
 `https://idp.example.org/idp/profile/oauth2/devicegrant/authenticate`.
 
 #### A short verification URI
@@ -304,8 +305,8 @@ and context path of the device authorization request, so
 **File(s):** *conf/devicegrant.properties*, *etc/jetty-rewrite-rules.xml* of the Jetty base
 **Format:** Java properties, Jetty XML
 
-A user types the verification URI from the screen of the device, so a short one helps. Set it as
-the verification URI:
+Users may need to type the verification URI shown on the device screen, so a short URI is easier
+to use. Configure it as follows:
 
 <details>
 <summary>conf/devicegrant.properties</summary>
@@ -318,8 +319,9 @@ Full file: [conf/devicegrant.properties](docs/example/step-3/conf/devicegrant.pr
 
 </details>
 
-Redirect it in Jetty to the user verification endpoint and keep the query string, it has the user
-code of `verification_uri_complete`. Enable the `rewrite` module of Jetty and add the rule:
+Configure Jetty to redirect this URI to the user verification endpoint and preserve the query
+string, which contains the user code from `verification_uri_complete`. Enable Jetty's `rewrite`
+module and add this rule:
 
 <details>
 <summary>etc/jetty-rewrite-rules.xml</summary>
@@ -345,7 +347,7 @@ Full file: [etc/jetty-rewrite-rules.xml](docs/example/step-3/jetty-base/etc/jett
 
 </details>
 
-The device authorization response is then:
+The device authorization response now contains the short URI:
 
 ```json
 {
@@ -363,7 +365,7 @@ The device authorization response is then:
 **File(s):** *conf/relying-party.xml*
 **Format:** Native Spring
 
-`verificationURI` is a setting of **OAUTH2.DeviceGrant**, so it can be set for one client in a
+`verificationURI` is a setting of **OAUTH2.DeviceGrant**. To set it for a single client, use a
 relying party override:
 
 <details>
@@ -389,42 +391,42 @@ Full file: [conf/relying-party.xml](docs/example/step-3/conf/relying-party.xml)
 
 ### Step 4: One token endpoint
 
-Do this only when the device clients cannot be configured with the token endpoint of the plugin
-while the other clients keep the OP token endpoint.
+Use this setup only if device clients must use the plugin's token endpoint while other clients
+continue to use the OP's token endpoint.
 
-The token endpoint of the plugin handles the grants of the OP token endpoint too:
-`authorization_code`, `refresh_token`, `client_credentials` and the device code grant. All of them
-use **OAUTH2.Token**. So one token endpoint can serve all clients. The plugin does not publish
-anything. There are two ways to have the clients use the token endpoint of the plugin, choose one:
+The plugin's token endpoint also supports the grant types handled by the OP token endpoint:
+`authorization_code`, `refresh_token`, `client_credentials`, and the device code grant. All use
+**OAUTH2.Token**, so one endpoint can serve all clients. The plugin does not publish this endpoint
+automatically. Choose one of the following options to make clients use it:
 
 - [Option 1: Publishing the token endpoint of the plugin](#option-1-publishing-the-token-endpoint-of-the-plugin):
-  the discovery document names the token endpoint of the plugin. Clients that read the discovery
-  document use it.
+  The discovery document advertises the plugin's token endpoint. Clients that use the discovery
+  document will then use this endpoint.
 - [Option 2: Rewriting the OP token endpoint](#option-2-rewriting-the-op-token-endpoint): the
-  discovery document keeps the OP token endpoint and Jetty passes its requests to the token
-  endpoint of the plugin. All clients use it, also those with the OP token endpoint configured.
+  The discovery document continues to advertise the OP token endpoint, while Jetty rewrites requests
+  to the plugin's token endpoint. This also works for clients configured to use the OP token endpoint.
 
 #### Option 1: Publishing the token endpoint of the plugin
 
 **File(s):** *static/openid-configuration.json*
 **Format:** JSON
 
-Set the token endpoint of the plugin as `token_endpoint` of the discovery document of the OP:
+Set the plugin's token endpoint as the discovery document's `token_endpoint` value:
 
 ```json
 "token_endpoint": "https://idp.example.org/idp/profile/oauth2/devicegrant/token",
 ```
 
-The OP token endpoint `/idp/profile/oidc/token` answers still, for clients that have its address
-configured.
+The OP token endpoint at `/idp/profile/oidc/token` remains available to clients that have its URL
+configured directly.
 
 #### Option 2: Rewriting the OP token endpoint
 
 **File(s):** *etc/jetty-rewrite-rules.xml* of the Jetty base, *conf/oidc.properties*
 **Format:** Jetty XML, Java properties
 
-When `token_endpoint` has to stay `https://idp.example.org/idp/profile/oidc/token`, rewrite it in
-Jetty to the token endpoint of the plugin. Enable the `rewrite` module of Jetty and add the rule:
+If `token_endpoint` must remain `https://idp.example.org/idp/profile/oidc/token`, configure Jetty
+to rewrite requests to the plugin's token endpoint. Enable Jetty's `rewrite` module and add this rule:
 
 <details>
 <summary>etc/jetty-rewrite-rules.xml</summary>
@@ -446,18 +448,18 @@ Jetty to the token endpoint of the plugin. Enable the `rewrite` module of Jetty 
 
 </details>
 
-After the rewrite the IdP sees the request URL of the plugin, while the client signs the URL it
-called:
+After rewriting, the IdP receives the request at the plugin's endpoint, but the client signs the
+URL it originally called:
 
-- **DPoP.** The `htu` claim of a DPoP proof is the URL the client called. Set the DPoP proof claims
-  validator of the plugin to **OAUTH2.Token**, it accepts the OP token endpoint URL as `htu` at the
-  token endpoint of the plugin. Property `devicegrant.token.endpointReplacement` is the path of the OP
-  token endpoint, `/profile/oidc/token` by default. A relying party override with its own
-  **OAUTH2.Token**, as in [One client only](#one-client-only), needs the validator too.
-- **JWT client authentication.** The `aud` of a `client_secret_jwt` or `private_key_jwt` assertion
-  is the issuer or the token endpoint URL. The issuer is always accepted. For the token endpoint
-  URL add the token endpoint of the plugin to the endpoints of the OP that accept the OP token
-  endpoint URL:
+- **DPoP.** The `htu` claim in a DPoP proof contains the URL called by the client. Set the plugin's
+  DPoP proof claims validator to **OAUTH2.Token** so it accepts the OP token endpoint URL as `htu`
+  when the request reaches the plugin's token endpoint. The property
+  `devicegrant.token.endpointReplacement` sets the OP token endpoint path; the default is
+  `/profile/oidc/token`. A relying party override with its own **OAUTH2.Token**, as shown in
+  [One client only](#one-client-only), also needs this validator.
+- **JWT client authentication.** The `aud` claim in a `client_secret_jwt` or `private_key_jwt`
+  assertion can be the issuer or the token endpoint URL. The issuer is always accepted. To accept
+  the OP token endpoint URL, add the plugin's token endpoint to the OP endpoints that accept that URL:
 
 <details>
 <summary>conf/relying-party.xml</summary>
@@ -488,11 +490,12 @@ idp.oauth2.jwtAuth.audienceValidator.endpointTargets = /profile/oauth2/introspec
 
 #### OAUTH2.DeviceGrant
 
-Endpoints `/idp/profile/oauth2/devicegrant/authorize` and `/idp/profile/oauth2/devicegrant/authenticate`,
-profile ID `http://csc.fi/ns/profiles/oauth.net/2/device-flow`.
+This profile configures the endpoints `/idp/profile/oauth2/devicegrant/authorize` and
+`/idp/profile/oauth2/devicegrant/authenticate`. Its profile ID is
+`http://csc.fi/ns/profiles/oauth.net/2/device-flow`.
 
-The bean has parent **AbstractOIDCSSOProfile** of the OIDC Config plugin, so the settings of that
-parent apply as well. **OAUTH2.DeviceGrant.MDDriven** is the metadata-driven variant.
+This bean extends **AbstractOIDCSSOProfile** from the OIDC Config plugin, so that bean's settings
+also apply. **OAUTH2.DeviceGrant.MDDriven** is the metadata-driven variant.
 
 | Name | Type | Default | Description |
 |---|---|---|---|
@@ -509,13 +512,14 @@ parent apply as well. **OAUTH2.DeviceGrant.MDDriven** is the metadata-driven var
 
 #### OAUTH2.Token
 
-Endpoint `/idp/profile/oauth2/devicegrant/token` uses **OAUTH2.Token** of the OIDC Config plugin,
-its settings are those of the OP token endpoint. Add `urn:ietf:params:oauth:grant-type:device_code` to
-its `grantTypes`.
+The endpoint `/idp/profile/oauth2/devicegrant/token` uses **OAUTH2.Token** from the OIDC Config
+plugin and has the same settings as the OP token endpoint. Add
+`urn:ietf:params:oauth:grant-type:device_code` to `grantTypes`.
 
-The plugin defines bean **devicegrant.DPoPProofClaimsValidator** for its `dpopProofClaimsValidator`
-setting: the DPoP proof claims validators of the OP, with `htu` also accepted as the OP token
-endpoint URL. See [Option 2: Rewriting the OP token endpoint](#option-2-rewriting-the-op-token-endpoint).
+The plugin provides the **devicegrant.DPoPProofClaimsValidator** bean for the
+`dpopProofClaimsValidator` setting. It uses the OP's DPoP proof claims validators and also accepts
+the OP token endpoint URL as `htu`. See
+[Option 2: Rewriting the OP token endpoint](#option-2-rewriting-the-op-token-endpoint).
 
 ### Properties
 
@@ -542,7 +546,7 @@ endpoint URL. See [Option 2: Rewriting the OP token endpoint](#option-2-rewritin
 **File(s):** *conf/global.xml*
 **Format:** Native Spring
 
-You define these to change the defaults.
+Define these beans to override the defaults.
 
 | Name | Type | Description |
 |---|---|---|
@@ -561,5 +565,5 @@ You define these to change the defaults.
 | *authenticate-userapproval.vm* | The user approves (`_eventId_proceed`) or denies (`_eventId_deny`). Shows `client_name` of the client. |
 | *authenticate-end.vm* | Shown after the decision. Shows `client_name` of the client. |
 
-The views use message keys `idp.login.usercode*`, `idp.login.device.*` and `idp.device.*` with an English
-default. You add translations to *messages/messages.properties*.
+The views use the message keys `idp.login.usercode*`, `idp.login.device.*`, and `idp.device.*`.
+English text is provided by default. Add translations in *messages/messages.properties*.
