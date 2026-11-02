@@ -1,9 +1,5 @@
 # OAuth 2.0 Device Authorization Grant
 
-> **Note**
-> This plugin is under construction and the features are still subject to change.
-> The examples are not yet tested with the current code.
-
 ## Contents
 
 - [Overview](#overview)
